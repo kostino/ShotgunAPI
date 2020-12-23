@@ -85,3 +85,37 @@ def UserRides(username):
         # get ride data that user participates in for a preview list
         # return json
         return
+
+
+@app.route('/api/event', methods=['POST'])
+def EventAddList():
+    if request.method == 'POST':
+        # get event data from request.json
+        # add event to base
+        return
+    if request.method == 'GET':
+        # get list of future events
+        # here maybe also use query params for search like type etc and general filters
+        return
+
+
+@app.route('/api/event/<int:event_id>', methods=['PUT', 'GET', 'DELETE'])
+def Event(event_id):
+    if request.method == 'PUT':
+        # edit event data
+        # add event to base
+        return
+    elif request.method == 'GET':
+        # return an event's data
+        return
+    elif request.method == 'DELETE':
+        # remove an event from db
+        return
+
+
+@app.route('/api/event/<int:event_id>/rides', methods=['GET'])
+def EventRides(event_id):
+    if request.method == 'GET':
+        # get ride data for a preview list
+        # return json
+        return
