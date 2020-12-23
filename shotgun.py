@@ -204,3 +204,24 @@ def DriverRating(username):
     elif request.method == 'DELETE':
         # delete driver rating for user
         return
+
+
+@app.route('/api/driver', methods=['POST'])
+def DriverAdd():
+    if request.method == 'POST':
+        # add driver data for user to table in base
+        return
+
+
+@app.route('/api/driver/<string:username>', methods=['PUT', 'GET', 'DELETE'])
+def Driver(username):
+    if request.method == 'PUT':
+        # edit driver data
+        # add driver to base
+        return
+    elif request.method == 'GET':
+        # return a driver's data
+        return
+    elif request.method == 'DELETE':
+        # delete a driver's data
+        return
