@@ -72,7 +72,7 @@ def UserPaymentInfo(username):
 
 
 @app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['PUT'])
-def UserPaymentInfo(username, payment_id):
+def EditUserPaymentInfo(username, payment_id):
     if request.method == 'PUT':
         # edit user payment info
         # add to database
@@ -154,4 +154,27 @@ def RideUsers(ride_id):
 def EstimateCost():
     if request.method == 'GET':
         # get a cost estimation for a ride based on location and vehicle etc
+        return
+
+
+@app.route('/api/user/<string:username>/application', methods=['GET'])
+def UserApplicationList(username):
+    if request.method == 'GET':
+        # get list of user applications
+        return
+
+
+@app.route('/api/ride/<int:ride_id>/application', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def RideApplication(ride_id):
+    if request.method == 'GET':
+        # get list of ride applications
+        return
+    elif request.method == 'POST':
+        # post new application for ride and user
+        return
+    elif request.method == 'PUT':
+        # edit application for ride and user
+        return
+    elif request.method == 'DELETE':
+        # delete application for ride and user
         return
