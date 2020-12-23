@@ -87,7 +87,7 @@ def UserRides(username):
         return
 
 
-@app.route('/api/event', methods=['POST'])
+@app.route('/api/event', methods=['POST', 'GET'])
 def EventAddList():
     if request.method == 'POST':
         # get event data from request.json
@@ -118,4 +118,40 @@ def EventRides(event_id):
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
+        return
+
+
+@app.route('/api/ride', methods=['POST'])
+def RideAdd():
+    if request.method == 'POST':
+        # get ride data from request.json
+        # add ride to base
+        return
+
+
+@app.route('/api/ride/<int:ride_id>', methods=['PUT', 'GET', 'DELETE'])
+def Ride(ride_id):
+    if request.method == 'PUT':
+        # edit ride data
+        # add ride to base
+        return
+    elif request.method == 'GET':
+        # return a ride's data
+        return
+    elif request.method == 'DELETE':
+        # remove a ride from db
+        return
+
+
+@app.route('/api/ride/<int:ride_id>/users', methods=['GET'])
+def RideUsers(ride_id):
+    if request.method == 'GET':
+        # return a ride's list of users
+        return
+
+
+@app.route('/estimate_cost', methods=['GET'])
+def EstimateCost():
+    if request.method == 'GET':
+        # get a cost estimation for a ride based on location and vehicle etc
         return
