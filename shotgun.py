@@ -178,3 +178,29 @@ def RideApplication(ride_id):
     elif request.method == 'DELETE':
         # delete application for ride and user
         return
+
+
+@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
+def UserRating(username):
+    if request.method == 'GET':
+        # get list of user ratings for user
+        return
+    elif request.method == 'POST':
+        # post new user rating for user
+        return
+    elif request.method == 'DELETE':
+        # delete user rating for user
+        return
+
+
+@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST', 'DELETE'])
+def DriverRating(username):
+    if request.method == 'GET':
+        # get list of driver ratings for user
+        return
+    elif request.method == 'POST':
+        # post new driver rating for user
+        return
+    elif request.method == 'DELETE':
+        # delete driver rating for user
+        return
