@@ -2,20 +2,18 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from flask import Flask, render_template, request, json
+from flask import Flask, render_template, request, json, jsonify
 
-# Example from personal project on sqlalchemy orm
-'''
-engine = create_engine('mysql://root@localhost/shisha_skg?charset=utf8mb4')
+# Initialize SQL Alchemy
+engine = create_engine('mysql://admin@localhost/shotgundb?charset=utf8mb4')
 Base = automap_base()
 Base.prepare(engine, reflect=True)
-Package = Base.classes.product_packages
-Price = Base.classes.prices
-Product = Base.classes.products
-Order = Base.classes.orders
-OrderItem = Base.classes.order_items
+
+# Shortcuts to database tables
+UserTable = Base.classes.user
+
+# Start
 session = Session(engine)
-'''
 app = Flask(__name__)
 
 
@@ -42,7 +40,17 @@ def User(username):
         # Maybe do a /api/sth for data as json and a /sth for frontend
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
-        return
+        userQuery = session.query(UserTable).filter(UserTable.username == username)
+        if userQuery.count() != 1:
+            return "User Not Found"
+        else:
+            userDict = {'username': userQuery[0].username,
+                        'password': userQuery[0].password,
+                        'first_name': userQuery[0].first_name,
+                        'surname': userQuery[0].surname,
+                        'profile_picture': userQuery[0].profile_picture}
+            return jsonify(userDict)
+
     elif request.method == 'DELETE':
         # return a user data
         # Maybe do a /api/sth for data as json and a /sth for frontend
