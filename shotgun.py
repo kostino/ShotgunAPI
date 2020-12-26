@@ -1,22 +1,26 @@
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
-from flask import Flask, render_template, request, json
+from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
 
-# Example from personal project on sqlalchemy orm
-'''
-engine = create_engine('mysql://root@localhost/shisha_skg?charset=utf8mb4')
+import requests
+
+# Initialize SQL Alchemy
+engine = create_engine('mysql://admin@localhost/shotgundb?charset=utf8mb4')
 Base = automap_base()
 Base.prepare(engine, reflect=True)
-Package = Base.classes.product_packages
-Price = Base.classes.prices
-Product = Base.classes.products
-Order = Base.classes.orders
-OrderItem = Base.classes.order_items
-session = Session(engine)
-'''
+
+# Shortcuts to database tables
+UserTable = Base.classes.user
+
+# Start
+db_session = Session(engine)
 app = Flask(__name__)
+
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
 
 @app.route('/api/user', methods=['POST', 'GET'])
@@ -24,7 +28,18 @@ def UserListAdd():
     if request.method == 'POST':
         # get user data from request.json
         # add user to base
-        return
+        # Insert user into database
+        username = request.form['username']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        surname = request.form['surname']
+        profile_picture = request.form['profile_picture']
+
+        newUser = UserTable(username=username, password=password,
+                            first_name=first_name, surname=surname, profile_picture=profile_picture)
+        db_session.add(newUser)
+        db_session.commit()
+        return {'status':'success'}, 200
     elif request.method == 'GET':
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
@@ -42,7 +57,19 @@ def User(username):
         # Maybe do a /api/sth for data as json and a /sth for frontend
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
-        return
+        try:
+            userQuery = db_session.query(UserTable).filter(UserTable.username == username).one()
+            userDict = {'username': userQuery.username,
+                        'password': userQuery.password,
+                        'first_name': userQuery.first_name,
+                        'surname': userQuery.surname,
+                        'profile_picture': userQuery.profile_picture}
+            return userDict
+        except NoResultFound:
+            return {'error': 'User with provided credentials does not exist in the database'}
+        except Exception as e:
+            return {'error': str(e)}
+
     elif request.method == 'DELETE':
         # return a user data
         # Maybe do a /api/sth for data as json and a /sth for frontend
@@ -225,3 +252,74 @@ def Driver(username):
     elif request.method == 'DELETE':
         # delete a driver's data
         return
+
+''' 
+    Begin of GUI related routes
+'''
+
+@app.route('/login', methods=['GET', 'POST'])
+def Login():
+    if request.method == 'POST':
+        # Validate credentials and redirect accordingly
+        username = request.form['username']
+        password = request.form['password']
+
+        # Request user info via API call
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        user = response.json()
+
+        # Authenticate user
+        if ('error' not in user) and (user['password'] == password):
+            session['username'] = str(username)
+            # Redirect to user profile route (yet to be implemented) and render profile page
+            return render_template("profile.html", username=username)
+        else:
+            # Render error page
+            return render_template("systemMessage.html", messageTitle="Login Failed",
+                                   message="The provided credentials don't match a user in our database")
+
+    # Browser login page
+    elif request.method == 'GET':
+        if 'username' in session:
+            return render_template("profile.html", username=session['username'])
+        else:
+            return render_template("login.html")
+
+@app.route('/logout', methods=['GET'])
+def Logout():
+    if 'username' in session:
+        session.pop('username', None)
+    return redirect(url_for('Login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def Register():
+    if request.method == 'GET':
+        # Render registration page
+        return render_template("register.html")
+    elif request.method == 'POST':
+        # Submitted info
+        username = request.form['username']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        surname = request.form['surname']
+        profile_picture = request.form['profile_picture']
+
+        # Request user info via API call to check if user already exists
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        user = response.json()
+
+        if 'username' in user:
+            # User already exists
+            return render_template("systemMessage.html", messageTitle="User already exists",
+                                   message="A user with this username already exists. If this is your username you can login.")
+        else:
+            # Insert user into database by posting on /api/user
+            requestData = {'username':username, 'password':password, 'first_name':first_name, 'surname':surname,
+                           'profile_picture':profile_picture}
+            internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
+            if internalResponse.json()['status'] != 'error':
+                return render_template("systemMessage.html", messageTitle="Success",
+                                       message="Registration completed successfully!")
+            else:
+                return render_template("systemMessage.html", messageTitle="Error",
+                                       message="An error occurred during registration")
