@@ -15,6 +15,7 @@ Base.prepare(engine, reflect=True)
 # Shortcuts to database tables
 UserTable = Base.classes.user
 DriverTable = Base.classes.driver
+DriverCertificationTable = Base.classes.drivercertificationapplication
 
 # Start
 db_session = Session(engine)
@@ -79,12 +80,26 @@ def User(username):
         return
 
 
-@app.route('/api/user/<string:username>/verify', methods=['POST'])
+@app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
 def UserVerify(username):
     if request.method == 'POST':
         # get verification application data from request
         # add to database
         return
+    elif request.method == 'GET':
+        try:
+            applicationQuery = db_session.query(DriverCertificationTable).filter(DriverCertificationTable.username == username).one()
+            driverApplicationDict = {'username': applicationQuery.username,
+                        'license': applicationQuery.license,
+                        'registration': applicationQuery.registration,
+                        'vehicle': applicationQuery.vehicle,
+                        'vehicle_image': applicationQuery.vehicle_image,
+                        'identification_document': applicationQuery.identification_document}
+            return driverApplicationDict
+        except NoResultFound:
+            return {'error': 'User doesn\'t have an active driver certification application in the database.'}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
@@ -264,7 +279,7 @@ def Driver(username):
         return
 
 ''' 
-    Begin of GUI related routes
+    Begin of Front End related routes
 '''
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -334,11 +349,16 @@ def Register():
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
 
-# @app.route('/driverCertification', methods=['GET'])
-# def DriverCertification():
-#     # Check if user logged in
-#     if 'username' not in session:
-#         return redirect(url_for('Login'))
-#
-#     # Check if user is already a driver
-#     if
+@app.route('/driverCertification', methods=['GET'])
+def DriverCertification():
+    # Check if user logged in
+    if 'username' not in session:
+        return redirect(url_for('Login'))
+
+    # Check if user is already a driver
+    response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+    if 'error' not in response.json():
+        return render_template("systemMessage.html", messageTitle="Already a driver",
+                               message="You are already a driver and do not need to apply for certification.")
+
+    # Check if user has already applied
