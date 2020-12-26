@@ -41,7 +41,7 @@ def UserListAdd():
                             first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
-        return {'status':'success'}, 200
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
@@ -85,7 +85,18 @@ def UserVerify(username):
     if request.method == 'POST':
         # get verification application data from request
         # add to database
-        return
+        driver_license = request.form['license']
+        registration = request.form['registration']
+        vehicle = request.form['vehicle']
+        vehicle_image = request.form['vehicle_image']
+        identification_document = request.form['identification_document']
+
+        newApplication = DriverCertificationTable(username=username, license=driver_license, registration=registration,
+                                                  vehicle=vehicle, vehicle_image=vehicle_image,
+                                                  identification_document=identification_document)
+        db_session.add(newApplication)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
             applicationQuery = db_session.query(DriverCertificationTable).filter(DriverCertificationTable.username == username).one()
