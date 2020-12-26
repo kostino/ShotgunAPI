@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from flask import Flask, render_template, request, json, jsonify
+from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
 
 import requests
 
@@ -16,8 +16,11 @@ Base.prepare(engine, reflect=True)
 UserTable = Base.classes.user
 
 # Start
-session = Session(engine)
+db_session = Session(engine)
 app = Flask(__name__)
+
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
 
 @app.route('/api/user', methods=['POST', 'GET'])
@@ -44,7 +47,7 @@ def User(username):
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
         try:
-            userQuery = session.query(UserTable).filter(UserTable.username == username).one()
+            userQuery = db_session.query(UserTable).filter(UserTable.username == username).one()
             userDict = {'username': userQuery.username,
                         'password': userQuery.password,
                         'first_name': userQuery.first_name,
@@ -256,6 +259,7 @@ def Login():
 
         # Authenticate user
         if ('error' not in user) and (user['password'] == password):
+            session['username'] = str(username)
             # Redirect to user profile route (yet to be implemented) and render profile page
             return render_template("profile.html", username=username)
         else:
@@ -264,4 +268,13 @@ def Login():
 
     # Browser login page
     elif request.method == 'GET':
-        return render_template("login.html")
+        if 'username' in session:
+            return render_template("profile.html", username=session['username'])
+        else:
+            return render_template("login.html")
+
+@app.route('/logout', methods=['GET'])
+def Logout():
+    if 'username' in session:
+        session.pop('username', None)
+    return redirect(url_for('Login'))
