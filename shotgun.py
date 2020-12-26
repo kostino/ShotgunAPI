@@ -28,7 +28,18 @@ def UserListAdd():
     if request.method == 'POST':
         # get user data from request.json
         # add user to base
-        return
+        # Insert user into database
+        username = request.form['username']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        surname = request.form['surname']
+        profile_picture = request.form['profile_picture']
+
+        newUser = UserTable(username=username, password=password,
+                            first_name=first_name, surname=surname, profile_picture=profile_picture)
+        db_session.add(newUser)
+        db_session.commit()
+        return {'status':'success'}, 200
     elif request.method == 'GET':
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
@@ -254,7 +265,7 @@ def Login():
         password = request.form['password']
 
         # Request user info via API call
-        response = requests.get("http://127.0.0.1:5000/api/user/" + username)
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
         user = response.json()
 
         # Authenticate user
@@ -264,7 +275,8 @@ def Login():
             return render_template("profile.html", username=username)
         else:
             # Render error page
-            return render_template("errorPage.html")
+            return render_template("systemMessage.html", messageTitle="Login Failed",
+                                   message="The provided credentials don't match a user in our database")
 
     # Browser login page
     elif request.method == 'GET':
@@ -278,3 +290,36 @@ def Logout():
     if 'username' in session:
         session.pop('username', None)
     return redirect(url_for('Login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def Register():
+    if request.method == 'GET':
+        # Render registration page
+        return render_template("register.html")
+    elif request.method == 'POST':
+        # Submitted info
+        username = request.form['username']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        surname = request.form['surname']
+        profile_picture = request.form['profile_picture']
+
+        # Request user info via API call to check if user already exists
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        user = response.json()
+
+        if 'username' in user:
+            # User already exists
+            return render_template("systemMessage.html", messageTitle="User already exists",
+                                   message="A user with this username already exists. If this is your username you can login.")
+        else:
+            # Insert user into database by posting on /api/user
+            requestData = {'username':username, 'password':password, 'first_name':first_name, 'surname':surname,
+                           'profile_picture':profile_picture}
+            internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
+            if internalResponse.json()['status'] != 'error':
+                return render_template("systemMessage.html", messageTitle="Success",
+                                       message="Registration completed successfully!")
+            else:
+                return render_template("systemMessage.html", messageTitle="Error",
+                                       message="An error occurred during registration")
