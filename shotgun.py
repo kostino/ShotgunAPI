@@ -1,5 +1,5 @@
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -8,14 +8,17 @@ from flask import Flask, render_template, request, session, url_for, redirect, j
 import requests
 
 # Initialize SQL Alchemy
-engine = create_engine('mysql://admin@localhost/shotgundb?charset=utf8mb4')
+engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
 Base = automap_base()
+metadata = MetaData()
 Base.prepare(engine, reflect=True)
 
 # Shortcuts to database tables
 UserTable = Base.classes.user
 DriverTable = Base.classes.driver
 DriverCertificationTable = Base.classes.drivercertificationapplication
+EventTable = Base.classes.event
+FutureEventView = Table("future_events", metadata, autoload=True, autoload_with=engine)
 
 # Start
 db_session = Session(engine)
@@ -150,7 +153,19 @@ def EventAddList():
     if request.method == 'GET':
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
-        return
+        try:
+            eventQuery = db_session.query(FutureEventView).all()
+            eventDict = {'events': [
+                            {
+                                'event_id': e.event_id,
+                                'title': e.title
+                            } for e in eventQuery]
+                        }
+            return eventDict
+        except NoResultFound:
+            return {'error': 'No future events exist in the database', 'events': []}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/api/event/<int:event_id>', methods=['PUT', 'GET', 'DELETE'])
@@ -161,7 +176,24 @@ def Event(event_id):
         return
     elif request.method == 'GET':
         # return an event's data
-        return
+        try:
+            eventQuery = db_session.query(EventTable).filter(EventTable.event_id == event_id).one()
+            eventDict = {
+                            'event_id': eventQuery.event_id,
+                            'title': eventQuery.title,
+                            'type': eventQuery.type,
+                            'status': eventQuery.status,
+                            'latitude': eventQuery.latitude,
+                            'longitude': eventQuery.longitude,
+                            'location_name': eventQuery.location_name,
+                            'datetime': eventQuery.datetime,
+                            'creator': eventQuery.creator
+                        }
+            return eventDict
+        except NoResultFound:
+            return {'error': "Event {} doesn't exist in the database".format(event_id)}
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'DELETE':
         # remove an event from db
         return
