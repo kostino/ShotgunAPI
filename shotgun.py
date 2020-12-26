@@ -14,6 +14,7 @@ Base.prepare(engine, reflect=True)
 
 # Shortcuts to database tables
 UserTable = Base.classes.user
+DriverTable = Base.classes.driver
 
 # Start
 db_session = Session(engine)
@@ -248,7 +249,16 @@ def Driver(username):
         return
     elif request.method == 'GET':
         # return a driver's data
-        return
+        try:
+            driverQuery = db_session.query(DriverTable).filter(DriverTable.username == username).one()
+            driverDict = {'username': driverQuery.username,
+                        'vehicle': driverQuery.vehicle,
+                        'vehicle_image': driverQuery.vehicle_image}
+            return driverDict
+        except NoResultFound:
+            return {'error': 'User with provided credentials does not exist in the drivers table'}
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'DELETE':
         # delete a driver's data
         return
@@ -323,3 +333,12 @@ def Register():
             else:
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
+
+# @app.route('/driverCertification', methods=['GET'])
+# def DriverCertification():
+#     # Check if user logged in
+#     if 'username' not in session:
+#         return redirect(url_for('Login'))
+#
+#     # Check if user is already a driver
+#     if
