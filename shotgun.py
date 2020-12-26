@@ -243,7 +243,7 @@ def Driver(username):
     Begin of GUI related routes
 '''
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def Login():
     if request.method == 'POST':
         # Validate credentials and redirect accordingly
@@ -256,8 +256,12 @@ def Login():
 
         # Authenticate user
         if ('error' not in user) and (user['password'] == password):
-            # Render profile page
-            return render_template("profile.html")
+            # Redirect to user profile route (yet to be implemented) and render profile page
+            return render_template("profile.html", username=username)
         else:
             # Render error page
             return render_template("errorPage.html")
+
+    # Browser login page
+    elif request.method == 'GET':
+        return render_template("login.html")
