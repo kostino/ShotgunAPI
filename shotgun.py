@@ -5,6 +5,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Flask, render_template, request, json, jsonify
 
+import requests
+
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin@localhost/shotgundb?charset=utf8mb4')
 Base = automap_base()
@@ -236,3 +238,26 @@ def Driver(username):
     elif request.method == 'DELETE':
         # delete a driver's data
         return
+
+''' 
+    Begin of GUI related routes
+'''
+
+@app.route('/login', methods=['POST'])
+def Login():
+    if request.method == 'POST':
+        # Validate credentials and redirect accordingly
+        username = request.form['username']
+        password = request.form['password']
+
+        # Request user info via API call
+        response = requests.get("http://127.0.0.1:5000/api/user/" + username)
+        user = response.json()
+
+        # Authenticate user
+        if ('error' not in user) and (user['password'] == password):
+            # Render profile page
+            return render_template("profile.html")
+        else:
+            # Render error page
+            return render_template("errorPage.html")
