@@ -1,6 +1,7 @@
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Flask, render_template, request, json, jsonify
 
@@ -40,16 +41,18 @@ def User(username):
         # Maybe do a /api/sth for data as json and a /sth for frontend
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
-        userQuery = session.query(UserTable).filter(UserTable.username == username)
-        if userQuery.count() != 1:
-            return "User Not Found"
-        else:
-            userDict = {'username': userQuery[0].username,
-                        'password': userQuery[0].password,
-                        'first_name': userQuery[0].first_name,
-                        'surname': userQuery[0].surname,
-                        'profile_picture': userQuery[0].profile_picture}
-            return jsonify(userDict)
+        try:
+            userQuery = session.query(UserTable).filter(UserTable.username == username).one()
+            userDict = {'username': userQuery.username,
+                        'password': userQuery.password,
+                        'first_name': userQuery.first_name,
+                        'surname': userQuery.surname,
+                        'profile_picture': userQuery.profile_picture}
+            return userDict
+        except NoResultFound:
+            return {'error': 'User with provided credentials does not exist in the database'}
+        except Exception as e:
+            return {'error': str(e)}
 
     elif request.method == 'DELETE':
         # return a user data
