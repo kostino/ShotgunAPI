@@ -360,16 +360,42 @@ def Register():
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
 
-@app.route('/driverCertification', methods=['GET'])
+@app.route('/driverCertification', methods=['GET', 'POST'])
 def DriverCertification():
-    # Check if user logged in
-    if 'username' not in session:
-        return redirect(url_for('Login'))
+    if request.method == 'GET':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
 
-    # Check if user is already a driver
-    response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
-    if 'error' not in response.json():
-        return render_template("systemMessage.html", messageTitle="Already a driver",
-                               message="You are already a driver and do not need to apply for certification.")
+        # Check if user is already a driver
+        response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+        if 'error' not in response.json():
+            return render_template("systemMessage.html", messageTitle="Already a driver",
+                                   message="You are already a driver and do not need to apply for certification.")
 
-    # Check if user has already applied
+        # Check if user has already applied
+        response = requests.get("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']))
+        if 'error' not in response.json():
+            return render_template("systemMessage.html", messageTitle="Already applied",
+                                   message="You have already applied to be a driver, please wait until we review your application.")
+
+        # If none of the above hold, present the driver certification application form
+        return render_template("driverCertification.html")
+
+    elif request.method == 'POST':
+
+        # Get verification application data from request and pass on the request to the API endpoint
+        driver_license = request.form['license']
+        registration = request.form['registration']
+        vehicle = request.form['vehicle']
+        vehicle_image = request.form['vehicle_image']
+        identification_document = request.form['identification_document']
+
+        requestData = dict(license=driver_license, registration=registration,
+                           vehicle=vehicle, vehicle_image=vehicle_image,
+                           identification_document=identification_document)
+
+        response = requests.post("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']), data=requestData)
+
+        return render_template("systemMessage.html", messageTitle="Application Submitted Successfully",
+                               message="Your application to be a driver has been submitted, please wait until we review your application.")
