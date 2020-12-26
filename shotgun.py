@@ -14,6 +14,8 @@ Base.prepare(engine, reflect=True)
 
 # Shortcuts to database tables
 UserTable = Base.classes.user
+DriverTable = Base.classes.driver
+DriverCertificationTable = Base.classes.drivercertificationapplication
 
 # Start
 db_session = Session(engine)
@@ -39,7 +41,7 @@ def UserListAdd():
                             first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
-        return {'status':'success'}, 200
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
@@ -78,12 +80,37 @@ def User(username):
         return
 
 
-@app.route('/api/user/<string:username>/verify', methods=['POST'])
+@app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
 def UserVerify(username):
     if request.method == 'POST':
         # get verification application data from request
         # add to database
-        return
+        driver_license = request.form['license']
+        registration = request.form['registration']
+        vehicle = request.form['vehicle']
+        vehicle_image = request.form['vehicle_image']
+        identification_document = request.form['identification_document']
+
+        newApplication = DriverCertificationTable(username=username, license=driver_license, registration=registration,
+                                                  vehicle=vehicle, vehicle_image=vehicle_image,
+                                                  identification_document=identification_document)
+        db_session.add(newApplication)
+        db_session.commit()
+        return {'status': 'success'}, 200
+    elif request.method == 'GET':
+        try:
+            applicationQuery = db_session.query(DriverCertificationTable).filter(DriverCertificationTable.username == username).one()
+            driverApplicationDict = {'username': applicationQuery.username,
+                        'license': applicationQuery.license,
+                        'registration': applicationQuery.registration,
+                        'vehicle': applicationQuery.vehicle,
+                        'vehicle_image': applicationQuery.vehicle_image,
+                        'identification_document': applicationQuery.identification_document}
+            return driverApplicationDict
+        except NoResultFound:
+            return {'error': 'User doesn\'t have an active driver certification application in the database.'}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
@@ -248,13 +275,22 @@ def Driver(username):
         return
     elif request.method == 'GET':
         # return a driver's data
-        return
+        try:
+            driverQuery = db_session.query(DriverTable).filter(DriverTable.username == username).one()
+            driverDict = {'username': driverQuery.username,
+                        'vehicle': driverQuery.vehicle,
+                        'vehicle_image': driverQuery.vehicle_image}
+            return driverDict
+        except NoResultFound:
+            return {'error': 'User with provided credentials does not exist in the drivers table'}
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'DELETE':
         # delete a driver's data
         return
 
 ''' 
-    Begin of GUI related routes
+    Begin of Front End related routes
 '''
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -323,3 +359,43 @@ def Register():
             else:
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
+
+@app.route('/driverCertification', methods=['GET', 'POST'])
+def DriverCertification():
+    if request.method == 'GET':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if user is already a driver
+        response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+        if 'error' not in response.json():
+            return render_template("systemMessage.html", messageTitle="Already a driver",
+                                   message="You are already a driver and do not need to apply for certification.")
+
+        # Check if user has already applied
+        response = requests.get("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']))
+        if 'error' not in response.json():
+            return render_template("systemMessage.html", messageTitle="Already applied",
+                                   message="You have already applied to be a driver, please wait until we review your application.")
+
+        # If none of the above hold, present the driver certification application form
+        return render_template("driverCertification.html")
+
+    elif request.method == 'POST':
+
+        # Get verification application data from request and pass on the request to the API endpoint
+        driver_license = request.form['license']
+        registration = request.form['registration']
+        vehicle = request.form['vehicle']
+        vehicle_image = request.form['vehicle_image']
+        identification_document = request.form['identification_document']
+
+        requestData = dict(license=driver_license, registration=registration,
+                           vehicle=vehicle, vehicle_image=vehicle_image,
+                           identification_document=identification_document)
+
+        response = requests.post("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']), data=requestData)
+
+        return render_template("systemMessage.html", messageTitle="Application Submitted Successfully",
+                               message="Your application to be a driver has been submitted, please wait until we review your application.")
