@@ -451,19 +451,19 @@ def Register():
                                    message="A user with this username already exists. If this is your username you can login.")
         else:
             # Upload profile picture
-            profile_picture_path = None
+            profile_picture = None
             if 'profile_picture' in request.files:
                 f = request.files['profile_picture']
                 ext = os.path.splitext(f.filename)[1]
                 if ext not in ALLOWED_IMG_EXTENSIONS:
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture format is not supported.')
-                profile_picture_path = os.path.join(DATA_FOLDER, 'profile', username + ext)
-                f.save(profile_picture_path)
+                profile_picture = username + ext
+                f.save(os.path.join(DATA_FOLDER, 'profile', profile_picture))
 
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                           'profile_picture': username + ext}
+                           'profile_picture': profile_picture}
             internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
@@ -544,4 +544,4 @@ def UserProfile(username):
 
 @app.route('/uploads/<filename>')
 def UploadedFile(filename):
-    return send_from_directory(DATA_FOLDER + '/profile/', filename)
+    return send_from_directory(os.path.join(DATA_FOLDER, 'profile'), filename)
