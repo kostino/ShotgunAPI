@@ -19,9 +19,23 @@
         <!-- TODO: Remove default login options. They are here for development convenience -->
 
         <div id="login-box" class=".container-m text-center position-absolute top-50 start-50 translate-middle"
-             style="max-width: 40%; min-width: 40%; padding: 20px; border-radius: 10px; box-shadow: 3px 3px 3px grey;
+             style="max-width: 20%; min-width: 20%; padding: 20px; border-radius: 10px; box-shadow: 3px 3px 3px grey;
                     background-color: #ffffff;">
-            <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo" style="min-width: 100px; width: 20%">
+            <div class=".container">
+                <div class="row">
+                    <div class="col">
+                        <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo" style="min-width: 100px; width: 20%">
+                    </div>
+                    <div class="col">
+                        <div class="row" style="padding: 5px;">
+                            <a href="{{ url_for('Login') }}"><button type="button" class="btn btn-success">Login</button></a>
+                        </div>
+                        <div class="row" style="padding: 5px;">
+                            <a href="{{ url_for('Register') }}"><button type="button" class="btn btn-primary">Register</button></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
