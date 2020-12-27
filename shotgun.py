@@ -5,6 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
 
+import re
 import requests
 import os
 from hashlib import sha256
@@ -39,6 +40,10 @@ if not os.path.exists(os.path.join(DATA_FOLDER, 'profile')):
 def password_hash(password):
     # Create a SHA256 password hash. This method returns a 64-byte string.
     return sha256(password.encode('utf-8')).hexdigest()
+
+def is_username_valid(username):
+    # Validates a username.
+    return re.match(r'^[A-Za-z0-9_-]+$', username) and len(username) >= 3 and len(username) <= 16;
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
@@ -420,6 +425,10 @@ def Register():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
+
+        if not is_username_valid(username):
+            return render_template('systemMessage.html', messageTitle='Invalid username',
+                                   message='A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.')
 
         # Request user info via API call to check if user already exists
         response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
