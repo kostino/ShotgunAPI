@@ -325,6 +325,14 @@ def Driver(username):
     Begin of Front End related routes
 '''
 
+@app.route('/', methods=['GET'])
+def Login():
+    if request.method == 'GET':
+        if 'username' in session:
+            return render_template("profile.html", username=session['username'])
+        else:
+            return render_template("index.html")
+
 @app.route('/login', methods=['GET', 'POST'])
 def Login():
     if request.method == 'POST':
@@ -352,6 +360,7 @@ def Login():
             return render_template("profile.html", username=session['username'])
         else:
             return render_template("login.html")
+
 
 @app.route('/logout', methods=['GET'])
 def Logout():
