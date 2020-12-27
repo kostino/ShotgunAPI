@@ -6,7 +6,11 @@ from sqlalchemy.orm.exc import NoResultFound
 from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
 
 import requests
+import os
 from hashlib import sha256
+
+DATA_FOLDER = './data'
+ALLOWED_IMG_EXTENSIONS = {'.png', '.jpg'}
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -28,6 +32,10 @@ app = Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
+# Create data directory
+if not os.path.exists(os.path.join(DATA_FOLDER, 'profile')):
+    os.makedirs(os.path.join(DATA_FOLDER, 'profile'))
+
 def password_hash(password):
     # Create a SHA256 password hash. This method returns a 64-byte string.
     return sha256(password.encode('utf-8')).hexdigest()
@@ -42,7 +50,7 @@ def UserListAdd():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-        profile_picture = request.form['profile_picture']
+        profile_picture = request.form.get('profile_picture')
 
         pwd_hash = password_hash(password)
         newUser = UserTable(username=username, password=pwd_hash,
@@ -407,7 +415,6 @@ def Register():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-        profile_picture = request.form['profile_picture']
 
         # Request user info via API call to check if user already exists
         response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
@@ -418,14 +425,26 @@ def Register():
             return render_template("systemMessage.html", messageTitle="User already exists",
                                    message="A user with this username already exists. If this is your username you can login.")
         else:
+            # Upload profile picture
+            profile_picture_path = None
+            if 'profile_picture' in request.files:
+                f = request.files['profile_picture']
+                ext = os.path.splitext(f.filename)[1]
+                if ext not in ALLOWED_IMG_EXTENSIONS:
+                    return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                           message='The profile picture format is not supported.')
+                profile_picture_path = os.path.join(DATA_FOLDER, 'profile', username + ext)
+                f.save(profile_picture_path)
+
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                           'profile_picture': profile_picture}
+                           'profile_picture': profile_picture_path}
             internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
                                        message="Registration completed successfully!")
             else:
+                # TODO: Delete profile picture
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
 
