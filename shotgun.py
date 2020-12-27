@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
 
 import requests
+from hashlib import sha256
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -27,6 +28,9 @@ app = Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
+def password_hash(password):
+    # Create a SHA256 password hash. This method returns a 64-byte string.
+    return sha256(password.encode('utf-8')).hexdigest()
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
@@ -40,7 +44,8 @@ def UserListAdd():
         surname = request.form['surname']
         profile_picture = request.form['profile_picture']
 
-        newUser = UserTable(username=username, password=password,
+        pwd_hash = password_hash(password)
+        newUser = UserTable(username=username, password=pwd_hash,
                             first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
@@ -363,8 +368,11 @@ def Login():
         response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
         user = response.json()
 
+        # Hash password
+        pwd_hash = password_hash(password)
+
         # Authenticate user
-        if ('error' not in user) and (user['password'] == password):
+        if ('error' not in user) and (user['password'] == pwd_hash):
             session['username'] = str(username)
             # Redirect to user profile route (yet to be implemented) and render profile page
             return render_template("profile.html", username=username)
