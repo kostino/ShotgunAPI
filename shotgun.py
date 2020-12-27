@@ -458,12 +458,12 @@ def Register():
                 if ext not in ALLOWED_IMG_EXTENSIONS:
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture format is not supported.')
-                profile_picture_path = os.path.join(username + ext)
+                profile_picture_path = os.path.join(DATA_FOLDER, 'profile', username + ext)
                 f.save(profile_picture_path)
 
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                           'profile_picture': profile_picture_path}
+                           'profile_picture': username + ext}
             internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
