@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from flask import Flask, render_template, request, session, url_for, redirect, json, jsonify
+from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect, json, jsonify
 
 import re
 import requests
@@ -388,9 +388,12 @@ def Login():
         if ('error' not in user) and (user['password'] == pwd_hash):
             session['username'] = str(username)
 
-            # If driver add driver variable to session and set it to true, else set to false
+            # If user is a driver add driver variable to session and set it to true, else set to false
             response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
             session['driver'] = 'error' not in response.json()
+
+            # Load profile picture directory to session
+            session['profile_picture'] = user['profile_picture']
 
             # Redirect to user profile route (yet to be implemented) and render profile page
             return render_template("home.html", username=username)
@@ -447,7 +450,7 @@ def Register():
                 if ext not in ALLOWED_IMG_EXTENSIONS:
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture format is not supported.')
-                profile_picture_path = os.path.join(DATA_FOLDER, 'profile', username + ext)
+                profile_picture_path = os.path.join(username + ext)
                 f.save(profile_picture_path)
 
             # Insert user into database by posting on /api/user
@@ -529,3 +532,8 @@ def UserProfile(username):
 
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+
+
+@app.route('/uploads/<filename>')
+def UploadedFile(filename):
+    return send_from_directory(DATA_FOLDER + '/profile/', filename)
