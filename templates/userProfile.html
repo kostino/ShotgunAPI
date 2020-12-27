@@ -26,8 +26,10 @@
         <div id="login-box" class=".container-m text-center position-absolute top-50 start-50 translate-middle"
              style="max-width: 50%; min-width: 50%;max-height: 70%; min-height: 70%; padding: 20px; border-radius: 10px;
              box-shadow: 3px 3px 3px grey;background-color: #ffffff;">
+            {% if driverFlag %}
             <img src="{{ url_for('static', filename='verify.png') }}" alt="Verify Logo" class="verified"
                       style="min-width: 7%; max-width: 7%; width: 7%">
+            {% endif %}
             <div class=".container">
                 <div class="row">
                     <div class="col-sm-4">
