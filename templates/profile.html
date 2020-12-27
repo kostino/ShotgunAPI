@@ -1,9 +1,0 @@
-{% extends 'base.html' %}
-{% block title %}{{ username }}'s Profile{% endblock %}
-
-{% block content %}
-
-    <h1 style="color:green">{{ username }}'s User Profile</h1>
-    <a href="{{ url_for('Logout') }}"><button type="button" class="btn btn-danger">Logout</button></a>
-
-{% endblock %}
