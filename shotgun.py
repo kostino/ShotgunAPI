@@ -41,9 +41,13 @@ def password_hash(password):
     # Create a SHA256 password hash. This method returns a 64-byte string.
     return sha256(password.encode('utf-8')).hexdigest()
 
-def is_username_valid(username):
+def is_valid_username(username):
     # Validates a username.
     return re.match(r'^[A-Za-z0-9_-]+$', username) and len(username) >= 3 and len(username) <= 16;
+
+def is_valid_password(password):
+    # Validates a password.
+    return password.isprintable() and len(password) >= 6;
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
@@ -426,9 +430,13 @@ def Register():
         first_name = request.form['first_name']
         surname = request.form['surname']
 
-        if not is_username_valid(username):
+        # Valildate form data
+        if not is_valid_username(username):
             return render_template('systemMessage.html', messageTitle='Invalid username',
                                    message='A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.')
+        if not is_valid_password(password):
+            return render_template('systemMessage.html', messageTitle='Invalid password',
+                                   message='A username must be at least 6 characters long.')
 
         # Request user info via API call to check if user already exists
         response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
