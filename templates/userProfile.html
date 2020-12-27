@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ userData['username'] }}{% endblock %}
+
+{% block style %}
+    body{
+        background-image: url("{{ url_for('static', filename='pexels-dominika-roseclay-1252500.jpg') }}");
+        height: 100%;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+    .verified{
+        position:absolute;
+        top:0;
+        left:0;
+    }
+
+{% endblock %}
+
+{% block content %}
+
+    <div class=".container" style="width: 80%; margin:auto;">
+        {#        <div class=".container-fluid" style="background-color: green; height: 50px"></div>#}
+
+        <!-- TODO: Remove default login options. They are here for development convenience -->
+
+        <div id="login-box" class=".container-m text-center position-absolute top-50 start-50 translate-middle"
+             style="max-width: 50%; min-width: 50%;max-height: 70%; min-height: 70%; padding: 20px; border-radius: 10px;
+             box-shadow: 3px 3px 3px grey;background-color: #ffffff;">
+            <img src="{{ url_for('static', filename='verify.png') }}" alt="Verify Logo" class="verified"
+                      style="min-width: 7%; max-width: 7%; width: 7%">
+            <div class=".container">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo"
+                             style="min-width:100px; width: 80%">
+                    </div>
+                    <div class="col-sm">
+                        <div class="row" style="padding: 5px; height: 50%">
+                            <h2>{{ userData['first_name'] + " " + userData['surname'] }}</h2>
+                        </div>
+                        <div class="row" style="padding: 5px; height: 50%">
+                            <h5>Avg user rating</h5>
+                        </div>
+                    </div>
+                </div>
+                {% if driverFlag %}
+                <div class="row">
+                    <div class="col-sm-4">
+                        <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo"
+                             style="min-width:100px; width: 60%">
+                    </div>
+                    <div class="col-sm">
+                        <div class="row" style="padding: 5px; height: 50%">
+                            <h4>{{ driverData['vehicle'] }}</h4>
+                        </div>
+                        <div class="row" style="padding: 5px; height: 50%">
+                            <h5>Avg driver rating</h5>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+
+{% endblock %}
