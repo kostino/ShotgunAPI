@@ -326,7 +326,7 @@ def Driver(username):
 '''
 
 @app.route('/', methods=['GET'])
-def Login():
+def Index():
     if request.method == 'GET':
         if 'username' in session:
             return render_template("profile.html", username=session['username'])
