@@ -48,7 +48,21 @@ def UserListAdd():
     elif request.method == 'GET':
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
-        return
+        try:
+            userQuery = db_session.query(UserTable).all()
+            # return all data except from passwords
+            userDict = {'users': [{
+                            'username': u.username,
+                            'first_name': u.first_name,
+                            'surname': u.surname,
+                            'profile_picture': u.profile_picture
+                        } for u in userQuery]
+                        }
+            return userDict
+        except NoResultFound:
+            return {'error': 'No users exist in the database'}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/api/user/<string:username>', methods=['PUT', 'GET', 'DELETE'])
@@ -64,8 +78,8 @@ def User(username):
         # multiple api endpoints like /api/rating/ or /api/driver/
         try:
             userQuery = db_session.query(UserTable).filter(UserTable.username == username).one()
+            # return all data except from passwords
             userDict = {'username': userQuery.username,
-                        'password': userQuery.password,
                         'first_name': userQuery.first_name,
                         'surname': userQuery.surname,
                         'profile_picture': userQuery.profile_picture}
