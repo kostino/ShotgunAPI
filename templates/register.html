@@ -23,7 +23,7 @@
                     background-color: #ffffff;">
             <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo" style="min-width: 100px; width: 20%">
             <h2>Register</h2>
-            <form action="/register" method="post">
+            <form action="/register" method="post" enctype="multipart/form-data">
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">Username</span>
                     <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" name="username">
@@ -42,7 +42,7 @@
                 </div>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">Profile Picture Link</span>
-                    <input type="text" class="form-control" placeholder="Profile Picture URL" aria-label="Surname" aria-describedby="basic-addon1" name="profile_picture">
+                    <input type="file" class="form-control" placeholder="Profile Picture" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture">
                 </div>
                 <button type="submit" class="btn btn-success">Register</button>
             </form>
