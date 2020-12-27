@@ -52,12 +52,12 @@ def UserListAdd():
             userQuery = db_session.query(UserTable).all()
             # return all data except from passwords
             userDict = {'users': [{
-                            'username': u.username,
-                            'first_name': u.first_name,
-                            'surname': u.surname,
-                            'profile_picture': u.profile_picture
-                        } for u in userQuery]
-                        }
+                'username': u.username,
+                'first_name': u.first_name,
+                'surname': u.surname,
+                'profile_picture': u.profile_picture
+            } for u in userQuery]
+            }
             return userDict
         except NoResultFound:
             return {'error': 'No users exist in the database'}
@@ -80,6 +80,7 @@ def User(username):
             userQuery = db_session.query(UserTable).filter(UserTable.username == username).one()
             # return all data except from passwords
             userDict = {'username': userQuery.username,
+                        'password': userQuery.password,
                         'first_name': userQuery.first_name,
                         'surname': userQuery.surname,
                         'profile_picture': userQuery.profile_picture}
@@ -116,13 +117,14 @@ def UserVerify(username):
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
-            applicationQuery = db_session.query(DriverCertificationTable).filter(DriverCertificationTable.username == username).one()
+            applicationQuery = db_session.query(DriverCertificationTable).filter(
+                DriverCertificationTable.username == username).one()
             driverApplicationDict = {'username': applicationQuery.username,
-                        'license': applicationQuery.license,
-                        'registration': applicationQuery.registration,
-                        'vehicle': applicationQuery.vehicle,
-                        'vehicle_image': applicationQuery.vehicle_image,
-                        'identification_document': applicationQuery.identification_document}
+                                     'license': applicationQuery.license,
+                                     'registration': applicationQuery.registration,
+                                     'vehicle': applicationQuery.vehicle,
+                                     'vehicle_image': applicationQuery.vehicle_image,
+                                     'identification_document': applicationQuery.identification_document}
             return driverApplicationDict
         except NoResultFound:
             return {'error': 'User doesn\'t have an active driver certification application in the database.'}
@@ -170,11 +172,11 @@ def EventAddList():
         try:
             eventQuery = db_session.query(FutureEventView).all()
             eventDict = {'events': [
-                            {
-                                'event_id': e.event_id,
-                                'title': e.title
-                            } for e in eventQuery]
-                        }
+                {
+                    'event_id': e.event_id,
+                    'title': e.title
+                } for e in eventQuery]
+            }
             return eventDict
         except NoResultFound:
             return {'error': 'No future events exist in the database', 'events': []}
@@ -193,16 +195,16 @@ def Event(event_id):
         try:
             eventQuery = db_session.query(EventTable).filter(EventTable.event_id == event_id).one()
             eventDict = {
-                            'event_id': eventQuery.event_id,
-                            'title': eventQuery.title,
-                            'type': eventQuery.type,
-                            'status': eventQuery.status,
-                            'latitude': eventQuery.latitude,
-                            'longitude': eventQuery.longitude,
-                            'location_name': eventQuery.location_name,
-                            'datetime': eventQuery.datetime,
-                            'creator': eventQuery.creator
-                        }
+                'event_id': eventQuery.event_id,
+                'title': eventQuery.title,
+                'type': eventQuery.type,
+                'status': eventQuery.status,
+                'latitude': eventQuery.latitude,
+                'longitude': eventQuery.longitude,
+                'location_name': eventQuery.location_name,
+                'datetime': eventQuery.datetime,
+                'creator': eventQuery.creator
+            }
             return eventDict
         except NoResultFound:
             return {'error': "Event {} doesn't exist in the database".format(event_id)}
@@ -324,8 +326,8 @@ def Driver(username):
         try:
             driverQuery = db_session.query(DriverTable).filter(DriverTable.username == username).one()
             driverDict = {'username': driverQuery.username,
-                        'vehicle': driverQuery.vehicle,
-                        'vehicle_image': driverQuery.vehicle_image}
+                          'vehicle': driverQuery.vehicle,
+                          'vehicle_image': driverQuery.vehicle_image}
             return driverDict
         except NoResultFound:
             return {'error': 'User with provided credentials does not exist in the drivers table'}
@@ -335,9 +337,11 @@ def Driver(username):
         # delete a driver's data
         return
 
+
 ''' 
     Begin of Front End related routes
 '''
+
 
 @app.route('/', methods=['GET'])
 def Index():
@@ -346,6 +350,7 @@ def Index():
             return render_template("profile.html", username=session['username'])
         else:
             return render_template("index.html")
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def Login():
@@ -382,6 +387,7 @@ def Logout():
         session.pop('username', None)
     return redirect(url_for('Login'))
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def Register():
     if request.method == 'GET':
@@ -405,8 +411,8 @@ def Register():
                                    message="A user with this username already exists. If this is your username you can login.")
         else:
             # Insert user into database by posting on /api/user
-            requestData = {'username':username, 'password':password, 'first_name':first_name, 'surname':surname,
-                           'profile_picture':profile_picture}
+            requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
+                           'profile_picture': profile_picture}
             internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
@@ -414,6 +420,7 @@ def Register():
             else:
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred during registration")
+
 
 @app.route('/driverCertification', methods=['GET', 'POST'])
 def DriverCertification():
@@ -450,7 +457,34 @@ def DriverCertification():
                            vehicle=vehicle, vehicle_image=vehicle_image,
                            identification_document=identification_document)
 
-        response = requests.post("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']), data=requestData)
+        response = requests.post("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']),
+                                 data=requestData)
 
         return render_template("systemMessage.html", messageTitle="Application Submitted Successfully",
                                message="Your application to be a driver has been submitted, please wait until we review your application.")
+
+
+@app.route('/user/<string:username>', methods=['GET'])
+def UserProfile(username):
+    if request.method == 'GET':
+        driverFlag = False
+        driverData = {}
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+        # Check if user:username exists
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        if 'error' in response.json():
+            return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
+                                   message="This user doesn't exist.")
+        else:
+            userData = response.json()
+
+        # Check if user:username is a driver
+        response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=username))
+        if 'error' not in response.json():
+            driverFlag = True
+            driverData = response.json()
+
+        # Render the user profile
+        return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
