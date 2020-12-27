@@ -347,7 +347,7 @@ def Driver(username):
 def Index():
     if request.method == 'GET':
         if 'username' in session:
-            return render_template("profile.html", username=session['username'])
+            return render_template("home.html", username=session['username'])
         else:
             return render_template("index.html")
 
@@ -365,9 +365,15 @@ def Login():
 
         # Authenticate user
         if ('error' not in user) and (user['password'] == password):
+            # Add username variable to session
             session['username'] = str(username)
+
+            # If driver add driver variable to session and set it to true, else set to false
+            response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+            session['driver'] = 'error' not in response.json()
+
             # Redirect to user profile route (yet to be implemented) and render profile page
-            return render_template("profile.html", username=username)
+            return render_template("home.html", username=username)
         else:
             # Render error page
             return render_template("systemMessage.html", messageTitle="Login Failed",
@@ -376,7 +382,7 @@ def Login():
     # Browser login page
     elif request.method == 'GET':
         if 'username' in session:
-            return render_template("profile.html", username=session['username'])
+            return render_template("home.html", username=session['username'])
         else:
             return render_template("login.html")
 

@@ -15,7 +15,90 @@
     <!-- Per page style -->
     <style>{% block style %}{% endblock %}</style>
 </head>
+
 <body>
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+
+            <!-- Home Button -->
+            <a class="navbar-brand" href="{{ url_for('Index') }}">
+                <img src="{{ url_for('static', filename='Shotgun4.png') }}" style="max-height: 40px">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="{{ url_for('Index') }}">Home</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Events
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="#">Concerts</a></li>
+                            <li><a class="dropdown-item" href="#">Theatre</a></li>
+                            <li><a class="dropdown-item" href="#">Sports</a></li>
+                            <li><a class="dropdown-item" href="#">Theatre</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About Us</a>
+                    </li>
+                </ul>
+
+                <!-- Search -->
+                <form class="d-flex">
+                    <input class="form-control me-2" type="search" placeholder="Search for Events" aria-label="Search">
+                    <button class="btn btn-outline-success me-2" type="submit">Search</button>
+                </form>
+
+                <!-- User Profile & Logout button -->
+                {% if 'username' in session %}
+                    <div class="" style="border-left-style: solid; border-color: darkgray; border-width: thin;">
+                        <div class="nav-item dropdown">
+
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img class="ms-2" src="{{ url_for('static', filename='Shotgun4.png') }}"
+                                     style="border-radius: 50%; max-height: 35px" alt="User icon">
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item disabled" href="{{ session['username'] }}">{{ session['username'] }}</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('UserProfile', username=session['username']) }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="#">Payment Methods</a></li>
+                                <li><a class="dropdown-item" href="#">My Ride Applications</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- Driver only options -->
+                                {% if session['driver'] == true %}
+                                <li><a class="dropdown-item" href="#">Create Ride</a></li>
+                                <li><a class="dropdown-item" href="#">Manage My Rides</a></li>
+                                {% else %}
+                                <!-- Non driver only options -->
+                                <li><a class="dropdown-item" href="{{ url_for('DriverCertification') }}">Become a driver</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('Logout') }}">Logout</a></li>
+                            </ul>
+                        </div>
+
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
     <div class="content">
         {% block content %}{% endblock %}
     </div>
