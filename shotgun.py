@@ -41,9 +41,13 @@ def password_hash(password):
     # Create a SHA256 password hash. This method returns a 64-byte string.
     return sha256(password.encode('utf-8')).hexdigest()
 
-def is_username_valid(username):
+def is_valid_username(username):
     # Validates a username.
     return re.match(r'^[A-Za-z0-9_-]+$', username) and len(username) >= 3 and len(username) <= 16;
+
+def is_valid_password(password):
+    # Validates a password.
+    return password.isprintable() and len(password) >= 6;
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
@@ -429,9 +433,13 @@ def Register():
         first_name = request.form['first_name']
         surname = request.form['surname']
 
-        if not is_username_valid(username):
+        # Valildate form data
+        if not is_valid_username(username):
             return render_template('systemMessage.html', messageTitle='Invalid username',
                                    message='A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.')
+        if not is_valid_password(password):
+            return render_template('systemMessage.html', messageTitle='Invalid password',
+                                   message='A username must be at least 6 characters long.')
 
         # Request user info via API call to check if user already exists
         response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
@@ -443,19 +451,19 @@ def Register():
                                    message="A user with this username already exists. If this is your username you can login.")
         else:
             # Upload profile picture
-            profile_picture_path = None
+            profile_picture = None
             if 'profile_picture' in request.files:
                 f = request.files['profile_picture']
                 ext = os.path.splitext(f.filename)[1]
                 if ext not in ALLOWED_IMG_EXTENSIONS:
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture format is not supported.')
-                profile_picture_path = os.path.join(username + ext)
-                f.save(profile_picture_path)
+                profile_picture = username + ext
+                f.save(os.path.join(DATA_FOLDER, 'profile', profile_picture))
 
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                           'profile_picture': profile_picture_path}
+                           'profile_picture': profile_picture}
             internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
