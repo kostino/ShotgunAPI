@@ -536,4 +536,4 @@ def UserProfile(username):
 
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
-    return send_from_directory(DATA_FOLDER + '/' + directory + '/', filename)
+    return send_from_directory(os.path.join(DATA_FOLDER, directory), filename)
