@@ -19,7 +19,7 @@
 
 {% block content %}
 
-    <div class="container-md px-4 py-3" style="width: 65%; margin:5% auto auto auto; background-color: white; border-radius: 15px">
+    <div class="container-md px-4 py-3" style="width: 65%; margin:5% auto 5% auto; background-color: white; border-radius: 15px">
 {#        <div class=".container-fluid" style="background-color: green; height: 50px"></div>#}
 
         <div class="row pb-1">
@@ -28,7 +28,7 @@
                     {% if session['username'] == userData['username'] %}
                         My Profile
                     {% else %}
-                        {{ userData['first_name'] }} {{ userData['surname'] }}'s Profile
+                        {{ userData['username'] }}'s Profile
                     {% endif %}
                 </h3>
             </div>
@@ -44,7 +44,7 @@
             <!-- Profile picture and driver tick mark -->
             <div class="col-md" style="">
                 <div class="container d-flex justify-content-center" style="position: relative">
-                    <img class="" src="{{ url_for('UploadedFile', filename=userData['profile_picture']) }}"
+                    <img class="" src="{{ url_for('UploadedFile', directory='profile', filename=userData['profile_picture']) }}"
                          style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 75%" alt="User icon">
                     {% if driverFlag %}
 {#                        <div class="position-absolute top-50 start-50">#}
@@ -54,20 +54,20 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col-sm">
-                    <div class="row my-4">
-                        <h3>First Name</h3>
-                        <h4>{{ userData['first_name'] }}</h4>
-                    </div>
-                    <div class="row my-4">
-                        <h3>Last Name</h3>
-                        <h4>{{ userData['surname'] }}</h4>
-                    </div>
-            </div>
-            <div class="col-sm">
+            <div class="col-md">
                 <div class="row my-4">
-                    <h3>Username</h3>
-                    <h4>{{ userData['username'] }}</h4>
+                    <h3>First Name</h3>
+                    <h4>{{ userData['first_name'] }}</h4>
+                </div>
+                <div class="row my-4">
+                    <h3>Last Name</h3>
+                    <h4>{{ userData['surname'] }}</h4>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="row my-4">
+                    <h3>Average Passenger Rating</h3>
+                    <h4>⭐ Placeholder</h4>
                 </div>
                 {% if session['username'] == userData['username'] %}
                 <div class="row my-4">
@@ -90,39 +90,93 @@
                          style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 50%" alt="User icon">
                 </div>
             </div>
-            <div class="col-sm">
+            <div class="col-md">
                 <div class="row my-4">
                     <h3>Vehicle</h3>
                     <h4>{{ driverData['vehicle'] }}</h4>
                 </div>
             </div>
-            <div class="col-sm">
+            <div class="col-md">
                 <div class="row my-4">
                     <h3>Average Driver Rating</h3>
                     <h4>⭐ Placeholder</h4>
                 </div>
             </div>
         </div>
-        {% endif %}
 
         <hr/>
+        {% endif %}
 
         <div class="row my-4">
             <!-- Passenger ratings -->
-            <div class="col">
+            <div class="col-md mx-3">
+
                 <div class="row">
                     <div class="container d-flex justify-content-center">
-                        <h3>Passenger Ratings</h3>
+                        <h3>Latest Passenger Ratings</h3>
                     </div>
                 </div>
+
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+
+
             </div>
 
             <!-- Driver ratings -->
             {% if driverFlag %}
-            <div class="col">
+            <div class="col-md mx-3">
                 <div class="row">
                     <div class="container d-flex justify-content-center">
-                        <h3>Driver Ratings</h3>
+                        <h3>Latest Driver Ratings</h3>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                        <h5>Rater 1 Rating - 5 ⭐</h5>
+                        <p>So good ride... 11/10 recommend</p>
                     </div>
                 </div>
             </div>
