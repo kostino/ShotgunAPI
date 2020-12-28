@@ -542,6 +542,6 @@ def UserProfile(username):
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
 
 
-@app.route('/uploads/<filename>')
-def UploadedFile(filename):
-    return send_from_directory(os.path.join(DATA_FOLDER, 'profile'), filename)
+@app.route('/uploads/<directory>/<filename>')
+def UploadedFile(directory, filename):
+    return send_from_directory(os.path.join(DATA_FOLDER, directory), filename)
