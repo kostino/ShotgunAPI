@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{{ userData['username'] }}{% endblock %}
+
+
+{% block style %}
+    body{
+        background-image: url("{{ url_for('static', filename='pexels-dominika-roseclay-1252500.jpg') }}");
+        height: 100%;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+    .verified{
+        position:absolute;
+        top:0;
+        left:0;
+    }
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
+        <form action="{{ url_for('EditUserProfile', username=session['username']) }}" method="post" enctype="multipart/form-data">
+
+            <div class="row pb-1 my-2">
+                <div class="col-md">
+                    <h3 class="mx-auto">
+                        {% if session['username'] == userData['username'] %}
+                            My Profile
+                        {% else %}
+                            {{ userData['username'] }}'s Profile
+                        {% endif %}
+                    </h3>
+                </div>
+
+                <div class="col-md d-flex justify-content-end">
+                    <a href="{{ url_for('UserProfile', username=session['username']) }}">
+                        <button type="button" class="btn btn-outline-danger mx-1">Cancel</button>
+                    </a>
+                    <button type="submit" class="btn btn-success">Save Profile</button>
+                </div>
+
+            </div>
+
+            <!-- User row -->
+            <div class="row">
+                <!-- Profile picture and driver tick mark -->
+                <div class="col-md">
+                    <div class="container d-flex justify-content-center" style="position: relative">
+                        <img class="" src="{{ url_for('UploadedFile', directory='profile', filename=userData['profile_picture']) }}"
+                             style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 75%" alt="User icon">
+                            {% if driverFlag %}
+                            <img class="position-absolute" src="{{ url_for('static', filename='verify.png') }}" alt="Verify Logo"
+                                 style="max-width: 15%; left:65%">
+                            {% endif %}
+                    </div>
+                </div>
+                <div class="col-md me-4">
+                    <div class="row my-4">
+                        <h3><label for="first_name" class="form-label">First Name</label></h3>
+                        <input class="form-control form-control-lg" type="text" name="first_name" placeholder="First Name" value="{{ userData['first_name'] }}" aria-label="default input example" id="first_name" >
+                    </div>
+                    <div class="row my-4">
+                        <h3><label for="surname" class="form-label">Last Name</label></h3>
+                        <input class="form-control form-control-lg" type="text" name="surname" placeholder="Last Name" value="{{ userData['surname'] }}" aria-label="default input example" id="surname" >
+                    </div>
+                    <div class="row my-4">
+                        <h3><label for="profile_picture" class="form-label">Profile Picture</label></h3>
+                        <input type="file" class="form-control form-control-lg" placeholder="Keep Current" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture">
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        </form>
+    </div>
+
+
+{% endblock %}
