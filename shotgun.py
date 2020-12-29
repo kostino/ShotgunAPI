@@ -92,6 +92,16 @@ def User(username):
     if request.method == 'PUT':
         # edit user data
         # add user to base
+
+        if request.form:
+            user = db_session.query(UserTable).filter(UserTable.username == username).one()
+            if 'first_name' in request.form:
+                user.first_name = request.form['first_name']
+            if 'surname' in request.form:
+                user.surname = request.form['surname']
+            if 'profile_picture' in request.form:
+                user.profile_picture = request.form['profile_picture']
+            user.commit()
         return
     elif request.method == 'GET':
         # return a user data
