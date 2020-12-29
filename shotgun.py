@@ -24,6 +24,9 @@ UserTable = Base.classes.user
 DriverTable = Base.classes.driver
 DriverCertificationTable = Base.classes.drivercertificationapplication
 EventTable = Base.classes.event
+PaymentMethodTable = Base.classes.paymentmethod
+CreditCardTable = Base.classes.creditcard
+PayPalTable = Base.classes.paypalaccount
 FutureEventView = Table("future_events", metadata, autoload=True, autoload_with=engine)
 
 # Start
@@ -37,17 +40,21 @@ app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 if not os.path.exists(os.path.join(DATA_FOLDER, 'profile')):
     os.makedirs(os.path.join(DATA_FOLDER, 'profile'))
 
+
 def password_hash(password):
     # Create a SHA256 password hash. This method returns a 64-byte string.
     return sha256(password.encode('utf-8')).hexdigest()
+
 
 def is_valid_username(username):
     # Validates a username.
     return re.match(r'^[A-Za-z0-9_-]+$', username) and len(username) >= 3 and len(username) <= 16;
 
+
 def is_valid_password(password):
     # Validates a password.
     return password.isprintable() and len(password) >= 6;
+
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
@@ -173,7 +180,65 @@ def UserPaymentInfo(username):
     elif request.method == 'GET':
         # get a list of users payment info
         # return json
-        return
+        if not session['username'] == username:
+            return {'error': 'Access denied!'}
+        try:
+            creditCardQuery = db_session.query(
+                CreditCardTable).join(
+                PaymentMethodTable, (PaymentMethodTable.username == CreditCardTable.username) &
+                                    (PaymentMethodTable.payment_id == CreditCardTable.payment_id)).filter(
+                CreditCardTable.username == username).all()
+            payPalQuery = db_session.query(
+                PayPalTable).join(
+                PaymentMethodTable, (PaymentMethodTable.username == PayPalTable.username) &
+                                    (PaymentMethodTable.payment_id == PayPalTable.payment_id)).filter(
+                PayPalTable.username == username).all()
+            # return all data except from passwords
+            paymentDict = {'credit_cards':
+                               [{'name': cc.paymentmethod.name,
+                                 'payment_id': cc.payment_id,
+                                 'is_primary': cc.paymentmethod.is_primary,
+                                 'number': cc.number,
+                                 'cvv': cc.cvv,
+                                 'exp date': cc.exp_date,
+                                 'type': cc.type
+                                 } for cc in creditCardQuery],
+                           'paypal_accounts':
+                               [{'name': pp.paymentmethod.name,
+                                 'payment_id': pp.payment_id,
+                                 'is_primary': pp.paymentmethod.is_primary,
+                                 'token': pp.paypal_token,
+                                 } for pp in payPalQuery]
+                           }
+            return paymentDict
+        except NoResultFound:
+            return {'error': 'User has no payment info in the database'}
+        except Exception as e:
+            return {'error': str(e)}
+
+
+@app.route('/api/user/<string:username>/set_primary_pm', methods=['PUT'])
+def SetPrimary(username):
+    if request.method == 'PUT':
+        # useful api for setting primary payment methods
+        # autochanges every other to non primary
+        #if not session['username'] == username:
+        #    return {'error': 'Access denied!'}
+        if request.values:
+            try:
+                paymentmethods = db_session.query(PaymentMethodTable).filter(PaymentMethodTable.username == username).all()
+                if int(request.values['payment_id']) in [int(pm.payment_id) for pm in paymentmethods]:
+                    for pm in paymentmethods:
+                        if pm.payment_id == int(request.values['payment_id']):
+                            pm.is_primary = 1
+                        else:
+                            pm.is_primary = 0
+                    db_session.commit()
+                    return {'status': 'success'}, 200
+            except NoResultFound:
+                return {'error': 'User has no payment info in the database'}
+            except Exception as e:
+                return {'error': str(e)}
 
 
 @app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['PUT'])
@@ -551,6 +616,7 @@ def UserProfile(username):
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
 
+
 @app.route('/user/<string:username>/edit', methods=['GET', 'POST'])
 def EditUserProfile(username):
     if request.method == 'GET':
@@ -574,7 +640,8 @@ def EditUserProfile(username):
                 driverFlag = True
                 driverData = driverCheck.json()
 
-            return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+            return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag,
+                                   driverData=driverData)
         else:
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
                                    message="User does not exist or unauthorized edit was attempted.")
