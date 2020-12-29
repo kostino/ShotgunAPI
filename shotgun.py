@@ -551,27 +551,78 @@ def UserProfile(username):
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
 
-@app.route('/user/<string:username>/edit', methods=['GET'])
+@app.route('/user/<string:username>/edit', methods=['GET', 'POST'])
 def EditUserProfile(username):
     if request.method == 'GET':
         driverFlag = False
         driverData = {}
+
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user and if user exists
-        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
-        if (session['username'] == username) and ('error' not in response.json()):
+        # Check if the provided username belongs to the currently logged in user
+        if (session['username'] == username):
 
-            # Check if user is a driver
+            # Get user data
+            response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+            userData = response.json()
+
+            # Check if user is a driver and get data
             driverCheck = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=username))
             if 'error' not in driverCheck.json():
                 driverFlag = True
                 driverData = driverCheck.json()
 
-            userData = response.json()
             return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+        else:
+            return render_template("systemMessage.html", messageTitle="Edit user profile error",
+                                   message="User does not exist or unauthorized edit was attempted.")
+
+    elif request.method == 'POST':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user
+        if session['username'] == username:
+
+            # Data to be PUT to /api/user/<username>
+            updatedData = {}
+
+            # Request user info via API call
+            response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+            user = response.json()
+
+            # If a new profile picture is added, update the existing one
+            if request.files['profile_picture'].filename != '':
+                f = request.files['profile_picture']
+                ext = os.path.splitext(f.filename)[1]
+                if ext not in ALLOWED_IMG_EXTENSIONS:
+                    return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                           message='The profile picture format is not supported.')
+                profile_picture = username + ext
+                os.remove(os.path.join(DATA_FOLDER, 'profile', user['profile_picture']))
+                f.save(os.path.join(DATA_FOLDER, 'profile', profile_picture))
+                updatedData['profile_picture'] = profile_picture
+                session['profile_picture'] = profile_picture
+
+            # If a new first name is sent, update the one in the database
+            if (request.form['first_name'] != user['first_name']) and (request.form['first_name'] != ''):
+                updatedData['first_name'] = request.form['first_name']
+
+            # If a new surname is sent, update the one in the database
+            if (request.form['surname'] != user['surname']) and (request.form['surname'] != ''):
+                updatedData['surname'] = request.form['surname']
+
+            # PUT the updated data to /api/user/<username>
+            if updatedData:
+                putResponse = requests.put("http://127.0.0.1:5000" + url_for('User', username=session['username']),
+                                           data=updatedData)
+
+            return redirect(url_for('UserProfile', username=session['username']))
+
         else:
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
                                    message="User does not exist or unauthorized edit was attempted.")
