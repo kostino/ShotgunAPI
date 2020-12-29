@@ -541,6 +541,31 @@ def UserProfile(username):
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
 
+@app.route('/user/<string:username>/edit', methods=['GET'])
+def EditUserProfile(username):
+    if request.method == 'GET':
+        driverFlag = False
+        driverData = {}
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user and if user exists
+        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        if (session['username'] == username) and ('error' not in response.json()):
+
+            # Check if user is a driver
+            driverCheck = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=username))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+                driverData = driverCheck.json()
+
+            userData = response.json()
+            return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+        else:
+            return render_template("systemMessage.html", messageTitle="Edit user profile error",
+                                   message="User does not exist or unauthorized edit was attempted.")
+
 
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
