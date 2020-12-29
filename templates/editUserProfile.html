@@ -22,7 +22,7 @@
     <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
         <form action="{{ url_for('EditUserProfile', username=session['username']) }}" method="post" enctype="multipart/form-data">
 
-            <div class="row pb-1">
+            <div class="row pb-1 my-2">
                 <div class="col-md">
                     <h3 class="mx-auto">
                         {% if session['username'] == userData['username'] %}
@@ -45,7 +45,7 @@
             <!-- User row -->
             <div class="row">
                 <!-- Profile picture and driver tick mark -->
-                <div class="col-md" style="">
+                <div class="col-md">
                     <div class="container d-flex justify-content-center" style="position: relative">
                         <img class="" src="{{ url_for('UploadedFile', directory='profile', filename=userData['profile_picture']) }}"
                              style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 75%" alt="User icon">
@@ -61,14 +61,12 @@
                         <input class="form-control form-control-lg" type="text" name="first_name" placeholder="First Name" value="{{ userData['first_name'] }}" aria-label="default input example" id="first_name" >
                     </div>
                     <div class="row my-4">
-                        <h3><label for="profile_picture" class="form-label">Profile Picture</label></h3>
-                        <input type="file" class="form-control form-control-lg" placeholder="Keep Current" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture">
-                    </div>
-                </div>
-                <div class="col-md">
-                    <div class="row my-4">
                         <h3><label for="surname" class="form-label">Last Name</label></h3>
                         <input class="form-control form-control-lg" type="text" name="surname" placeholder="Last Name" value="{{ userData['surname'] }}" aria-label="default input example" id="surname" >
+                    </div>
+                    <div class="row my-4">
+                        <h3><label for="profile_picture" class="form-label">Profile Picture</label></h3>
+                        <input type="file" class="form-control form-control-lg" placeholder="Keep Current" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture">
                     </div>
                 </div>
             </div>
