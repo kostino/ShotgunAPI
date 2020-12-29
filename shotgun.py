@@ -222,8 +222,8 @@ def SetPrimary(username):
     if request.method == 'PUT':
         # useful api for setting primary payment methods
         # autochanges every other to non primary
-        #if not session['username'] == username:
-        #    return {'error': 'Access denied!'}
+        if not session['username'] == username:
+            return {'error': 'Access denied!'}
         if request.values:
             try:
                 paymentmethods = db_session.query(PaymentMethodTable).filter(PaymentMethodTable.username == username).all()
