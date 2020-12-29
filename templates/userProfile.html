@@ -1,26 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}{{ userData['username'] }}{% endblock %}
 
-
-{% block style %}
-    body{
-        background-image: url("{{ url_for('static', filename='pexels-dominika-roseclay-1252500.jpg') }}");
-        height: 100%;
-        background-repeat: no-repeat;
-        background-size: cover;
-    }
-    .verified{
-        position:absolute;
-        top:0;
-        left:0;
-    }
-
-{% endblock %}
+{% block style %}{% endblock %}
 
 {% block content %}
 
     <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
-{#        <div class=".container-fluid" style="background-color: green; height: 50px"></div>#}
 
         <div class="row pb-1">
             <div class="col-md">

@@ -1,20 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Shotgun!{% endblock %}
 
-{% block style %}
-    body{
-        background-image: url("{{ url_for('static', filename='pexels-dominika-roseclay-1252500.jpg') }}");
-        height: 100%;
-        background-repeat: no-repeat;
-        background-size: cover;
-    }
-
-{% endblock %}
+{% block style %}{% endblock %}
 
 {% block content %}
 
     <div class=".container" style="width: 80%; margin:auto;">
-        {#        <div class=".container-fluid" style="background-color: green; height: 50px"></div>#}
 
         <!-- TODO: Remove default login options. They are here for development convenience -->
 

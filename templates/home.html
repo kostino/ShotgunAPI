@@ -3,8 +3,14 @@
 
 {% block content %}
 
-    <div class="container">
-        <h1 style="color:green; text-align: center">{{ username }}'s Homepage</h1>
+    <div class="container-md py-5 my-5 text-center">
+        <div class="row">
+            <div class="col-md"></div>
+            <div class="col-md container py-4"  style="background-color: white; border-radius: 15px">
+                <h1 style="color:green; text-align: center">{{ username }}'s Homepage</h1>
+            </div>
+            <div class="col-md"></div>
+        </div>
     </div>
 
 {% endblock %}
