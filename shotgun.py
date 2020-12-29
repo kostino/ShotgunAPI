@@ -457,7 +457,7 @@ def Login():
         password = request.form['password']
 
         # Request user info via API call
-        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        response = requests.get(url_for('User', username=username, _external=True))
         user = response.json()
 
         # Hash password
@@ -468,7 +468,7 @@ def Login():
             session['username'] = str(username)
 
             # If user is a driver add driver variable to session and set it to true, else set to false
-            response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+            response = requests.get(url_for('Driver', username=session['username'], _external=True))
             session['driver'] = 'error' not in response.json()
 
             # Load profile picture directory to session
@@ -517,7 +517,7 @@ def Register():
                                    message='A username must be at least 6 characters long.')
 
         # Request user info via API call to check if user already exists
-        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        response = requests.get(url_for('User', username=username, _external=True))
         user = response.json()
 
         if 'username' in user:
@@ -539,7 +539,7 @@ def Register():
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
                            'profile_picture': profile_picture}
-            internalResponse = requests.post("http://127.0.0.1:5000" + url_for('UserListAdd'), data=requestData)
+            internalResponse = requests.post(url_for('UserListAdd', _external=True), data=requestData)
             if internalResponse.json()['status'] != 'error':
                 return render_template("systemMessage.html", messageTitle="Success",
                                        message="Registration completed successfully!")
@@ -557,13 +557,13 @@ def DriverCertification():
             return redirect(url_for('Login'))
 
         # Check if user is already a driver
-        response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=session['username']))
+        response = requests.get(url_for('Driver', username=session['username'], _external=True))
         if 'error' not in response.json():
             return render_template("systemMessage.html", messageTitle="Already a driver",
                                    message="You are already a driver and do not need to apply for certification.")
 
         # Check if user has already applied
-        response = requests.get("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']))
+        response = requests.get(url_for('UserVerify', username=session['username'], _external=True))
         if 'error' not in response.json():
             return render_template("systemMessage.html", messageTitle="Already applied",
                                    message="You have already applied to be a driver, please wait until we review your application.")
@@ -584,7 +584,7 @@ def DriverCertification():
                            vehicle=vehicle, vehicle_image=vehicle_image,
                            identification_document=identification_document)
 
-        response = requests.post("http://127.0.0.1:5000" + url_for('UserVerify', username=session['username']),
+        response = requests.post(url_for('UserVerify', username=session['username'], _external=True),
                                  data=requestData)
 
         return render_template("systemMessage.html", messageTitle="Application Submitted Successfully",
@@ -600,7 +600,7 @@ def UserProfile(username):
         if 'username' not in session:
             return redirect(url_for('Login'))
         # Check if user:username exists
-        response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+        response = requests.get(url_for('User', username=username, _external=True))
         if 'error' in response.json():
             return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
                                    message="This user doesn't exist.")
@@ -608,7 +608,7 @@ def UserProfile(username):
             userData = response.json()
 
         # Check if user:username is a driver
-        response = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=username))
+        response = requests.get(url_for('Driver', username=username, _external=True))
         if 'error' not in response.json():
             driverFlag = True
             driverData = response.json()
@@ -631,11 +631,11 @@ def EditUserProfile(username):
         if (session['username'] == username):
 
             # Get user data
-            response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+            response = requests.get(url_for('User', username=username, _external=True))
             userData = response.json()
 
             # Check if user is a driver and get data
-            driverCheck = requests.get("http://127.0.0.1:5000" + url_for('Driver', username=username))
+            driverCheck = requests.get(url_for('Driver', username=username, _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
                 driverData = driverCheck.json()
@@ -659,7 +659,7 @@ def EditUserProfile(username):
             updatedData = {}
 
             # Request user info via API call
-            response = requests.get("http://127.0.0.1:5000" + url_for('User', username=username))
+            response = requests.get(url_for('User', username=username, _external=True))
             user = response.json()
 
             # If a new profile picture is added, update the existing one
@@ -685,7 +685,7 @@ def EditUserProfile(username):
 
             # PUT the updated data to /api/user/<username>
             if updatedData:
-                putResponse = requests.put("http://127.0.0.1:5000" + url_for('User', username=session['username']),
+                putResponse = requests.put(url_for('User', username=session['username'], _external=True),
                                            data=updatedData)
 
             return redirect(url_for('UserProfile', username=session['username']))
