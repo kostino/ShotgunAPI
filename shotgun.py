@@ -27,6 +27,8 @@ EventTable = Base.classes.event
 PaymentMethodTable = Base.classes.paymentmethod
 CreditCardTable = Base.classes.creditcard
 PayPalTable = Base.classes.paypalaccount
+UserRatingTable = Base.classes.userrating
+DriverRatingTable = Base.classes.driverrating
 FutureEventView = Table("future_events", metadata, autoload=True, autoload_with=engine)
 
 # Start
@@ -383,7 +385,18 @@ def RideApplication(ride_id):
 def UserRating(username):
     if request.method == 'GET':
         # get list of user ratings for user
-        return
+        try:
+            userRatingQuery = db_session.query(UserRatingTable).filter(UserRatingTable.ratee == username).all()
+            userRatingDict = [{
+                'rater': u.rater,
+                'comment': u.commment,
+                'stars': u.stars
+            } for u in userRatingQuery]
+            return userRatingDict
+        except NoResultFound:
+            return {'error': "No user ratings found for user {}".format(username)}
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'POST':
         # post new user rating for user
         return
@@ -396,7 +409,23 @@ def UserRating(username):
 def DriverRating(username):
     if request.method == 'GET':
         # get list of driver ratings for user
-        return
+        # Check if user:username is a driver
+        response = requests.get(url_for('Driver', username=username, _external=True))
+        if 'error' not in response.json():
+            try:
+                driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
+                driverRatingDict = [{
+                    'rater': u.rater,
+                    'comment': u.commment,
+                    'stars': u.stars
+                } for u in driverRatingQuery]
+                return driverRatingDict
+            except NoResultFound:
+                return {'error': "No driver ratings found for driver {}".format(username)}
+            except Exception as e:
+                return {'error': str(e)}
+        else:
+            return {'error': "User {} is not a driver".format(username)}
     elif request.method == 'POST':
         # post new driver rating for user
         return
