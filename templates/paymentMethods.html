@@ -20,22 +20,26 @@
             </div>
         </div>
 
+        <hr>
+
         <!-- Credit Cards row -->
         <div class="row row-cols-auto justify-content-center">
             {% for card in creditCards %}
-                {% for i in range(3) %}
+{#                {% for i in range(3) %}#}
 
             <!-- Outer card container -->
-            <div class="col-xl-4 px-2" style="border-style: dotted; border-radius: 15px; border-color: darkgray">
+{#            <div class="col-xl-4 px-2" style="border-style: dotted; border-radius: 15px; border-color: darkgray">#}
+            <div class="col-xl-4 px-2">
 
                 <!-- Card name -->
                 <div class="row">
                     <h3>{{ card['name'] }}</h3>
                 </div>
 
-                <!-- Card container -->
-                <div class="row px-2">
-                    <div class="container my-2" style="border-style: solid; border-radius: 15px; border-color: darkgray;
+                <!-- Card row & container -->
+                <div class="row px-3">
+                    <div class="container my-2 px-4" style="border-radius: 15px;
+                    border-width: thin; box-shadow: 4px 3px 8px 1px #969696;
                     background-image: url('https://image.ibb.co/bVnMrc/g3095.png'), linear-gradient(to right top, #a2beeb, #8ecfee, #8edde5, #a4e7d5, #c7eec7);">
 
                         <!-- Card logo -->
@@ -57,28 +61,68 @@
                             </div>
                         </div>
 
-                        <div class="row my-4">
-                            <div class="col">CVV: {{ card['cvv'] }}</div>
-                            <div class="col">Exp Date: {{ card['exp_date'] }}</div>
+                        <div class="row my-4" style="color:white">
+                            <div class="col">CVV: <br>{{ card['cvv'] }}</div>
+                            <div class="col">Exp Date: <br>{{ card['exp_date'][:16] }}</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Card Actions row -->
-            <div class="row justify-content-center">
-                <div class="col-auto"><button type="button" class="btn btn-outline-danger">Remove</button></div>
-                <div class="col-auto">
-                    {% if card['is_primary'] == 1 %}
-                        <button type="button" class="btn btn-outline-success" disabled>Primary</button>
-                    {% else %}
-                        <button type="button" class="btn btn-outline-primary">Set Primary</button>
-                    {% endif %}
+                <div class="row justify-content-center mb-3">
+                    <div class="col-auto">
+                        {% if card['is_primary'] == 1 %}
+                            <button type="button" class="btn btn-success" disabled>Primary</button>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-primary">Set Primary</button>
+                        {% endif %}
+                    </div>
+                    <div class="col-auto"><button type="button" class="btn btn-danger">Remove</button></div>
                 </div>
-            </div>
-
 
             </div>
-                {% endfor %}
+{#                {% endfor %}#}
+            {% endfor %}
+        </div>
+
+        <!-- PayPal Accounts row -->
+        <div class="row row-cols-auto justify-content-center">
+            {% for account in paypalAccounts %}
+                {#                {% for i in range(3) %}#}
+
+                <!-- Outer account container -->
+                {#            <div class="col-xl-4 px-2" style="border-style: dotted; border-radius: 15px; border-color: darkgray">#}
+                <div class="col-xl-4 px-2">
+
+                    <!-- Account name -->
+                    <div class="row">
+                        <h3>{{ account['name'] }}</h3>
+                    </div>
+
+                    <!-- Account row & container -->
+                    <div class="row px-3">
+                        <div class="container my-2 px-4" style="border-radius: 15px; text-align: center;
+                    border-width: thin; box-shadow: 4px 3px 8px 1px #969696;
+                    background-image: url('{{ url_for('static', filename='g3095.png') }}'), linear-gradient(to right top, #a2beeb, #8ecfee, #8edde5, #a4e7d5, #c7eec7);">
+                            <!-- Card logo -->
+                                <img class="my-5" src="{{ url_for('static', filename='paypal.png') }}" style="max-width: 35%;">
+                        </div>
+                    </div>
+
+                    <!-- Account Actions row -->
+                    <div class="row justify-content-center mb-3">
+                        <div class="col-auto">
+                            {% if account['is_primary'] == 1 %}
+                                <button type="button" class="btn btn-success" disabled>Primary</button>
+                            {% else %}
+                                <button type="button" class="btn btn-outline-primary">Set Primary</button>
+                            {% endif %}
+                        </div>
+                        <div class="col-auto"><button type="button" class="btn btn-danger">Remove</button></div>
+                    </div>
+
+                </div>
+                {#                {% endfor %}#}
             {% endfor %}
         </div>
 
