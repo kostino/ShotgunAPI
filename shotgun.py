@@ -180,8 +180,8 @@ def UserPaymentInfo(username):
     elif request.method == 'GET':
         # get a list of users payment info
         # return json
-        if not session['username'] == username:
-            return {'error': 'Access denied!'}
+        # if not session['username'] == username:
+        #     return {'error': 'Access denied!'}
         try:
             creditCardQuery = db_session.query(
                 CreditCardTable).join(
@@ -200,7 +200,7 @@ def UserPaymentInfo(username):
                                  'is_primary': cc.paymentmethod.is_primary,
                                  'number': cc.number,
                                  'cvv': cc.cvv,
-                                 'exp date': cc.exp_date,
+                                 'exp_date': cc.exp_date,
                                  'type': cc.type
                                  } for cc in creditCardQuery],
                            'paypal_accounts':
@@ -694,6 +694,37 @@ def EditUserProfile(username):
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
                                    message="User does not exist or unauthorized edit was attempted.")
 
+@app.route('/user/<string:username>/paymentmethods', methods=['GET', 'POST'])
+def PaymentMethods(username):
+    if request.method == 'GET':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user
+        if (session['username'] == username):
+
+            # Get payment methods
+            paymentMethods = requests.get(url_for('UserPaymentInfo', username=username, _external=True))
+            # Check for errors
+            # TODO: Possibly handle this more gracefully in the future
+            if ('error' in paymentMethods.json()) and (paymentMethods.json()['error'] != 'User has no payment info in the database'):
+                return render_template("systemMessage.html", messageTitle="An error occurred",
+                                       message=paymentMethods.json()['error'])
+
+            creditCards = paymentMethods.json()['credit_cards']
+
+            # Censor Credit Card Numbers
+            for card in creditCards:
+                card['number'] = 3 * '**** ' + card['number'][-4:]
+
+            # Render page
+            return render_template("paymentMethods.html", creditCards=creditCards,
+                                   paypalAccounts=paymentMethods.json()['paypal_accounts'])
+        else:
+            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
+                                   message="You tried to access another user's payment methods.")
 
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
