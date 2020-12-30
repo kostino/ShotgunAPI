@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Payment Methods{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+
+    <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
+
+        <div class="row pb-1">
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    Payment Methods
+                </h3>
+            </div>
+            <div class="col-md d-flex justify-content-end">
+                <a href="">
+                    <button type="button" class="btn btn-outline-info">Add Payment Method</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Credit Cards row -->
+        <div class="row row-cols-auto justify-content-center">
+            {% for card in creditCards %}
+                {% for i in range(3) %}
+
+            <!-- Outer card container -->
+            <div class="col-xl-4 px-2" style="border-style: dotted; border-radius: 15px; border-color: darkgray">
+
+                <!-- Card name -->
+                <div class="row">
+                    <h3>{{ card['name'] }}</h3>
+                </div>
+
+                <!-- Card container -->
+                <div class="row px-2">
+                    <div class="container my-2" style="border-style: solid; border-radius: 15px; border-color: darkgray;
+                    background-image: url('https://image.ibb.co/bVnMrc/g3095.png'), linear-gradient(to right top, #a2beeb, #8ecfee, #8edde5, #a4e7d5, #c7eec7);">
+
+                        <!-- Card logo -->
+                        <div class="row my-4">
+                            {% if card['type'] == 'VISA' %}
+                                <div class="col"><img src="{{ url_for('static', filename='visa.png') }}" style="max-width: 15%;"></div>
+                            {% elif card['type'] == 'AmEx' %}
+                                <div class="col"><img src="{{ url_for('static', filename='american-express.png') }}" style="max-width: 15%;"></div>
+                            {% elif card['type'] == 'MasterCard' %}
+                                <div class="col"><img src="{{ url_for('static', filename='mastercard.png') }}" style="max-width: 15%;"></div>
+                            {% elif card['type'] == 'DinersClub' %}
+                                <div class="col"><img src="{{ url_for('static', filename='diners-club.png') }}" style="max-width: 15%;"></div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row my-4">
+                            <div class="col">
+                                <h3 style="color: white">{{ card['number'] }}</h3>
+                            </div>
+                        </div>
+
+                        <div class="row my-4">
+                            <div class="col">CVV: {{ card['cvv'] }}</div>
+                            <div class="col">Exp Date: {{ card['exp_date'] }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Actions row -->
+            <div class="row justify-content-center">
+                <div class="col-auto"><button type="button" class="btn btn-outline-danger">Remove</button></div>
+                <div class="col-auto">
+                    {% if card['is_primary'] == 1 %}
+                        <button type="button" class="btn btn-outline-success" disabled>Primary</button>
+                    {% else %}
+                        <button type="button" class="btn btn-outline-primary">Set Primary</button>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+{% endblock %}
