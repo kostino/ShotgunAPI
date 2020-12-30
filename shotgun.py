@@ -387,11 +387,11 @@ def UserRating(username):
         # get list of user ratings for user
         try:
             userRatingQuery = db_session.query(UserRatingTable).filter(UserRatingTable.ratee == username).all()
-            userRatingDict = [{
+            userRatingDict = {'ratings': [{
                 'rater': u.rater,
-                'comment': u.commment,
+                'comment': u.comment,
                 'stars': u.stars
-            } for u in userRatingQuery]
+            } for u in userRatingQuery]}
             return userRatingDict
         except NoResultFound:
             return {'error': "No user ratings found for user {}".format(username)}
@@ -414,11 +414,11 @@ def DriverRating(username):
         if 'error' not in response.json():
             try:
                 driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
-                driverRatingDict = [{
+                driverRatingDict = {'ratings': [{
                     'rater': u.rater,
                     'comment': u.commment,
                     'stars': u.stars
-                } for u in driverRatingQuery]
+                } for u in driverRatingQuery]}
                 return driverRatingDict
             except NoResultFound:
                 return {'error': "No driver ratings found for driver {}".format(username)}
