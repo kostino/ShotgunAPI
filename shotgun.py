@@ -174,17 +174,17 @@ def UserVerify(username):
         driver_license_path = 'lic_{}.jpg'.format(username)
         registration_path = 'reg_{}.jpg'.format(username)
         vehicle_image_path = 'vim_{}.jpg'.format(username)
-        id_path = 'id_{}.jpg'.format(username)
-        save_image(request.form['license'], os.path.join(DOCS_ROOT, driver_license_path))
+        identity_path = 'id_{}.jpg'.format(username)
+        save_image(request.form['driver_license'], os.path.join(DOCS_ROOT, driver_license_path))
         save_image(request.form['registration'], os.path.join(DOCS_ROOT, registration_path))
         save_image(request.form['vehicle_image'], os.path.join(DOCS_ROOT, vehicle_image_path))
-        save_image(request.form['identification_document'], os.path.join(DOCS_ROOT, id_path))
+        save_image(request.form['identity'], os.path.join(DOCS_ROOT, id_path))
 
         # Add to database
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
                                                   registration=registration_path,
                                                   vehicle=vehicle, vehicle_image=vehicle_image_path,
-                                                  identification_document=id_path)
+                                                  identification_document=identity_path)
         db_session.add(newApplication)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -197,7 +197,7 @@ def UserVerify(username):
                                      'registration': applicationQuery.registration,
                                      'vehicle': applicationQuery.vehicle,
                                      'vehicle_image': applicationQuery.vehicle_image,
-                                     'identification_document': applicationQuery.identification_document}
+                                     'identity': applicationQuery.identification_document}
             return driverApplicationDict
         except NoResultFound:
             return {'error': 'User doesn\'t have an active driver certification application in the database.'}
@@ -613,37 +613,23 @@ def DriverCertification():
         return render_template("driverCertification.html")
 
     elif request.method == 'POST':
-        # Check format of images
-        if not check_image_ext(request.files['driver_license'].filename):
-            return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                   message='The driver license must be a JPEG image.')
-        if not check_image_ext(request.files['registration'].filename):
-            return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                   message='The registration certificate must be a JPEG image.')
-        if not check_image_ext(request.files['vehicle_image'].filename):
-            return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                   message='The vehicle image must be a JPEG image.')
-        if not check_image_ext(request.files['identification_document'].filename):
-            return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                   message='The identification document must be a JPEG image.')
+        requestData = {'vehicle': request.form['vehicle']}
 
-        # Encode images
-        driver_license = b64encode(request.files['driver_license'].read()).decode('ascii')
-        registration = b64encode(request.files['registration'].read()).decode('ascii')
-        vehicle_image = b64encode(request.files['vehicle_image'].read()).decode('ascii')
-        identification_doc = b64encode(request.files['identification_document'].read()).decode('ascii')
+        # Read images
+        fields = ['driver_license', 'registration', 'vehicle_image', 'identity']
+        for field in fields:
+            f = request.files[field]
+            if not check_image_ext(f.filename):
+                return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                       message='The required documents must be JPEG images.')
+            requestData[field] = b64encode(f.read()).decode('ascii')
 
         # Pass request to the API endpoint
-        vehicle = request.form['vehicle']
-        requestData = dict(license=driver_license, registration=registration,
-                           vehicle=vehicle, vehicle_image=vehicle_image,
-                           identification_document=identification_doc)
-
         response = requests.post(url_for('UserVerify', username=session['username'], _external=True),
                                  data=requestData)
 
-        return render_template("systemMessage.html", messageTitle="Application Submitted Successfully",
-                               message="Your application to be a driver has been submitted, please wait until we review your application.")
+        return render_template('systemMessage.html', messageTitle='Application Submitted Successfully',
+                               message='Your application to be a driver has been submitted, please wait until we review your application.')
 
 
 @app.route('/user/<string:username>', methods=['GET'])
