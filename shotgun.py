@@ -63,9 +63,15 @@ def is_valid_password(password):
 
 
 def save_image(data, filename):
-    # Saves a base64-encoded image in the specified data directory.
+    # Saves a base64-encoded image.
     with open(filename, 'wb') as f:
         f.write(b64decode(data.encode('ascii')))
+
+
+def check_image_ext(filename):
+    # Checks whether the image file format is allowed.
+    _, ext = os.path.splitext(filename)
+    return ext in ['.jpg']
 
 
 @app.route('/api/user', methods=['POST', 'GET'])
@@ -572,8 +578,7 @@ def Register():
             profile_picture = None
             if 'profile_picture' in request.files:
                 f = request.files['profile_picture']
-                ext = os.path.splitext(f.filename)[1]
-                if ext != '.jpg':
+                if not check_image_ext(f.filename):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
                 profile_picture = b64encode(f.read()).decode('ascii')
@@ -612,17 +617,31 @@ def DriverCertification():
         return render_template("driverCertification.html")
 
     elif request.method == 'POST':
+        # Check format of images
+        if not check_image_ext(request.files['driver_license'].filename):
+            return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                   message='The driver license must be a JPEG image.')
+        if not check_image_ext(request.files['registration'].filename):
+            return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                   message='The registration document must be a JPEG image.')
+        if not check_image_ext(request.files['vehicle_image'].filename):
+            return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                   message='The vehicle image must be a JPEG image.')
+        if not check_image_ext(request.files['identification_document'].filename):
+            return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                   message='The identification document must be a JPEG image.')
 
-        # Get verification application data from request and pass on the request to the API endpoint
-        driver_license = request.form['license']
-        registration = request.form['registration']
+        # Encode images
+        driver_license = b64encode(request.files['driver_license'].read()).decode('ascii')
+        registration = b64encode(request.files['registration'].read()).decode('ascii')
+        vehicle_image = b64encode(request.files['vehicle_image'].read()).decode('ascii')
+        identification_doc = b64encode(request.files['identification_document'].read()).decode('ascii')
+
+        # Pass request to the API endpoint
         vehicle = request.form['vehicle']
-        vehicle_image = request.form['vehicle_image']
-        identification_document = request.form['identification_document']
-
         requestData = dict(license=driver_license, registration=registration,
                            vehicle=vehicle, vehicle_image=vehicle_image,
-                           identification_document=identification_document)
+                           identification_document=identification_doc)
 
         response = requests.post(url_for('UserVerify', username=session['username'], _external=True),
                                  data=requestData)
@@ -719,8 +738,7 @@ def EditUserProfile(username):
             # If a new profile picture is added, update the existing one
             if request.files['profile_picture'].filename != '':
                 f = request.files['profile_picture']
-                ext = os.path.splitext(f.filename)[1]
-                if ext != '.jpg':
+                if not check_image_ext(f.filename):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
                 updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
