@@ -61,17 +61,21 @@ def is_valid_password(password):
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
     if request.method == 'POST':
-        # get user data from request.json
-        # add user to base
-        # Insert user into database
+        # Get request data
         username = request.form['username']
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
         profile_picture = request.form.get('profile_picture')
 
-        pwd_hash = password_hash(password)
-        newUser = UserTable(username=username, password=pwd_hash,
+        # Valildate data
+        if not is_valid_username(username):
+            return {'error': 'A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.'}
+        if not is_valid_password(password):
+            return {'error': 'A username must be at least 6 characters long.'}
+
+        # Insert user into database
+        newUser = UserTable(username=username, password=password_hash(password),
                             first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
@@ -532,14 +536,6 @@ def Register():
         first_name = request.form['first_name']
         surname = request.form['surname']
 
-        # Valildate form data
-        if not is_valid_username(username):
-            return render_template('systemMessage.html', messageTitle='Invalid username',
-                                   message='A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.')
-        if not is_valid_password(password):
-            return render_template('systemMessage.html', messageTitle='Invalid password',
-                                   message='A username must be at least 6 characters long.')
-
         # Request user info via API call to check if user already exists
         response = requests.get(url_for('User', username=username, _external=True))
         user = response.json()
@@ -563,14 +559,13 @@ def Register():
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
                            'profile_picture': profile_picture}
-            internalResponse = requests.post(url_for('UserListAdd', _external=True), data=requestData)
-            if internalResponse.json()['status'] != 'error':
-                return render_template("systemMessage.html", messageTitle="Success",
-                                       message="Registration completed successfully!")
+            response = requests.post(url_for('UserListAdd', _external=True), data=requestData).json()
+            if 'error' not in response:
+                return render_template('systemMessage.html', messageTitle='Success',
+                                       message='Registration completed successfully!')
             else:
                 # TODO: Delete profile picture
-                return render_template("systemMessage.html", messageTitle="Error",
-                                       message="An error occurred during registration")
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
 
 @app.route('/driverCertification', methods=['GET', 'POST'])
