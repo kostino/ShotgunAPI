@@ -41,6 +41,8 @@ app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 # Create data directory
 if not os.path.exists(os.path.join(DATA_FOLDER, 'profile')):
     os.makedirs(os.path.join(DATA_FOLDER, 'profile'))
+if not os.path.exists(os.path.join(DATA_FOLDER, 'driver_app')):
+    os.makedirs(os.path.join(DATA_FOLDER, 'driver_app'))
 
 
 def password_hash(password):
@@ -83,14 +85,14 @@ def UserListAdd():
             return {'error': 'A password must be at least 6 characters long.'}
 
         # Save profile picture
-        profile_picture_name = None
+        profile_picture_path = None
         if profile_picture:
-            profile_picture_name = username + '.jpg'
-            save_image(profile_picture, 'profile', profile_picture_name)
+            profile_picture_path = username + '.jpg'
+            save_image(profile_picture, 'profile', profile_picture_path)
 
         # Insert user into database
         newUser = UserTable(username=username, password=password_hash(password),
-                            first_name=first_name, surname=surname, profile_picture=profile_picture_name)
+                            first_name=first_name, surname=surname, profile_picture=profile_picture_path)
         db_session.add(newUser)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -161,17 +163,23 @@ def User(username):
 @app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
 def UserVerify(username):
     if request.method == 'POST':
-        # get verification application data from request
-        # add to database
-        driver_license = request.form['license']
-        registration = request.form['registration']
         vehicle = request.form['vehicle']
-        vehicle_image = request.form['vehicle_image']
-        identification_document = request.form['identification_document']
 
-        newApplication = DriverCertificationTable(username=username, license=driver_license, registration=registration,
-                                                  vehicle=vehicle, vehicle_image=vehicle_image,
-                                                  identification_document=identification_document)
+        # Save images
+        driver_license_path = 'lic_{}.jpg'.format(username)
+        registration_path = 'reg_{}.jpg'.format(username)
+        vehicle_image_path = 'vim_{}.jpg'.format(username)
+        id_path = 'id_{}.jpg'.format(username)
+        save_image(request.form['license'], 'driver_app', driver_license_path)
+        save_image(request.form['registration'], 'driver_app', registration_path)
+        save_image(request.form['vehicle_image'], 'driver_app', vehicle_image_path)
+        save_image(request.form['identification_document'], 'driver_app', id_path)
+
+        # Add to database
+        newApplication = DriverCertificationTable(username=username, license=driver_license_path,
+                                                  registration=registration_path,
+                                                  vehicle=vehicle, vehicle_image=vehicle_image_path,
+                                                  identification_document=id_path)
         db_session.add(newApplication)
         db_session.commit()
         return {'status': 'success'}, 200
