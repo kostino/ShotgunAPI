@@ -106,32 +106,22 @@
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
+                {% if userRatings['ratings'] %}
+                    {% for rating in userRatings['ratings'] %}
+                    <div class="row my-2">
+                        <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                            <h5>{{ rating['rater'] }} - {{ rating['stars']  * '⭐'  }}</h5>
+                            <p>{{ rating['comment'] }}</p>
+                        </div>
                     </div>
-                </div>
-
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
+                    {% endfor %}
+                {% else %}
+                    <div class="row my-2">
+                        <div class="container-md ps-4 py-2" style="text-align: center">
+                            <h5>{{ userData['username'] }} currently has no passenger ratings</h5>
+                        </div>
                     </div>
-                </div>
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
-                    </div>
-                </div>
-
+                {% endif %}
 
             </div>
 
@@ -144,30 +134,23 @@
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
+                {% if driverRatings['ratings'] %}
+                    {% for rating in driverRatings['ratings'] %}
+                        <div class="row my-2">
+                            <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
+                                <h5>{{ rating['rater'] }} - {{ rating['stars']  * '⭐'  }}</h5>
+                                <p>{{ rating['comment'] }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="row my-2">
+                        <div class="container-md ps-4 py-2" style="text-align: center">
+                            <h5>{{ userData['username'] }} currently has no driver ratings</h5>
+                        </div>
                     </div>
-                </div>
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <div class="container-md ps-4 py-2" style="border-style: solid; border-width:thin; border-color: darkgray; border-radius: 15px; box-shadow: 4px 3px 8px 1px #969696;">
-                        <h5>Rater 1 Rating - 5 ⭐</h5>
-                        <p>So good ride... 11/10 recommend</p>
-                    </div>
-                </div>
+                {% endif %}
+
             </div>
             {% endif %}
         </div>

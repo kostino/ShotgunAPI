@@ -620,18 +620,27 @@ def DriverCertification():
 @app.route('/user/<string:username>', methods=['GET'])
 def UserProfile(username):
     if request.method == 'GET':
+
+        # Initialize empty driver variables
         driverFlag = False
         driverData = {}
+        driverRatings = None
+
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
+
         # Check if user:username exists
-        response = requests.get(url_for('User', username=username, _external=True))
-        if 'error' in response.json():
+        responseUser = requests.get(url_for('User', username=username, _external=True))
+        if 'error' in responseUser.json():
             return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
                                    message="This user doesn't exist.")
         else:
-            userData = response.json()
+            userData = responseUser.json()
+
+        # Get user ratings
+        responseUserRatings = requests.get(url_for('UserRating', username=username, _external=True))
+        userRatings = responseUserRatings.json()
 
         # Check if user:username is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
@@ -639,8 +648,13 @@ def UserProfile(username):
             driverFlag = True
             driverData = response.json()
 
+            # Get driver ratings
+            responseDriverRatings = requests.get(url_for('DriverRating', username=username, _external=True))
+            driverRatings = responseDriverRatings.json()
+
         # Render the user profile
-        return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+        return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData,
+                               userRatings=userRatings, driverRatings=driverRatings)
 
 
 @app.route('/user/<string:username>/edit', methods=['GET', 'POST'])
