@@ -224,8 +224,6 @@ def SetPrimary(username):
     if request.method == 'PUT':
         # useful api for setting primary payment methods
         # autochanges every other to non primary
-        if not session['username'] == username:
-            return {'error': 'Access denied!'}
         if request.values:
             try:
                 paymentmethods = db_session.query(PaymentMethodTable).filter(PaymentMethodTable.username == username).all()
@@ -237,10 +235,10 @@ def SetPrimary(username):
                             pm.is_primary = 0
                     db_session.commit()
                     return {'status': 'success'}, 200
-            except NoResultFound:
-                return {'error': 'User has no payment info in the database'}
             except Exception as e:
                 return {'error': str(e)}
+        else:
+            return {'error': 'Invalid request, data missing'}
 
 
 @app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['PUT'])
@@ -393,8 +391,6 @@ def UserRating(username):
                 'stars': u.stars
             } for u in userRatingQuery]}
             return userRatingDict
-        except NoResultFound:
-            return {'error': "No user ratings found for user {}".format(username)}
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'POST':
@@ -414,14 +410,13 @@ def DriverRating(username):
         if 'error' not in response.json():
             try:
                 driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
-                driverRatingDict = {'ratings': [{
-                    'rater': u.rater,
-                    'comment': u.commment,
-                    'stars': u.stars
+                driverRatingDict = {
+                    'ratings': [{
+                        'rater': u.rater,
+                        'comment': u.comment,
+                        'stars': u.stars
                 } for u in driverRatingQuery]}
                 return driverRatingDict
-            except NoResultFound:
-                return {'error': "No driver ratings found for driver {}".format(username)}
             except Exception as e:
                 return {'error': str(e)}
         else:
@@ -623,18 +618,27 @@ def DriverCertification():
 @app.route('/user/<string:username>', methods=['GET'])
 def UserProfile(username):
     if request.method == 'GET':
+
+        # Initialize empty driver variables
         driverFlag = False
         driverData = {}
+        driverRatings = None
+
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
+
         # Check if user:username exists
-        response = requests.get(url_for('User', username=username, _external=True))
-        if 'error' in response.json():
+        responseUser = requests.get(url_for('User', username=username, _external=True))
+        if 'error' in responseUser.json():
             return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
                                    message="This user doesn't exist.")
         else:
-            userData = response.json()
+            userData = responseUser.json()
+
+        # Get user ratings
+        responseUserRatings = requests.get(url_for('UserRating', username=username, _external=True))
+        userRatings = responseUserRatings.json()
 
         # Check if user:username is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
@@ -642,8 +646,13 @@ def UserProfile(username):
             driverFlag = True
             driverData = response.json()
 
+            # Get driver ratings
+            responseDriverRatings = requests.get(url_for('DriverRating', username=username, _external=True))
+            driverRatings = responseDriverRatings.json()
+
         # Render the user profile
-        return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData)
+        return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData,
+                               userRatings=userRatings, driverRatings=driverRatings)
 
 
 @app.route('/user/<string:username>/edit', methods=['GET', 'POST'])
@@ -723,6 +732,7 @@ def EditUserProfile(username):
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
                                    message="User does not exist or unauthorized edit was attempted.")
 
+
 @app.route('/user/<string:username>/paymentmethods', methods=['GET', 'POST'])
 def PaymentMethods(username):
     if request.method == 'GET':
@@ -754,6 +764,32 @@ def PaymentMethods(username):
         else:
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
+
+@app.route('/user/<string:username>/set_primary_pm', methods=['POST'])
+def UserSetPrimary(username):
+    if request.method == 'POST':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user
+        if (session['username'] == username):
+
+            # API call to set
+            response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
+                                    params={'payment_id': request.form['payment_id']})
+
+            if 'error' in response.json():
+                return render_template("systemMessage.html", messageTitle="Error",
+                                       message="An error occurred while setting the primary payment method.")
+
+
+            return redirect(url_for('PaymentMethods', username=session['username']))
+
+        else:
+            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
+                                   message="You tried to alter another user's payment methods.")
 
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
