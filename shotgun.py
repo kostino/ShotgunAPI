@@ -623,7 +623,7 @@ def DriverCertification():
                                    message='The driver license must be a JPEG image.')
         if not check_image_ext(request.files['registration'].filename):
             return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                   message='The registration document must be a JPEG image.')
+                                   message='The registration certificate must be a JPEG image.')
         if not check_image_ext(request.files['vehicle_image'].filename):
             return render_template('systemMessage.html', messageTitle='Invalid image format',
                                    message='The vehicle image must be a JPEG image.')

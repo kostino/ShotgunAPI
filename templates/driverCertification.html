@@ -20,14 +20,14 @@
             <div class="col-md container py-4"  style="background-color: white; border-radius: 15px">
                 <img src="{{ url_for('static', filename='Shotgun4.png') }}" alt="Shotgun Logo" style="min-width: 100px; width: 20%">
                 <h2>Apply to be a Driver</h2>
-                <form action="{{ url_for('DriverCertification') }}" method="post">
+                <form action="{{ url_for('DriverCertification') }}" method="post" enctype="multipart/form-data">
                     <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1">License</span>
-                        <input type="text" class="form-control" placeholder="License" aria-label="License" aria-describedby="basic-addon1" name="license">
+                        <span class="input-group-text" id="basic-addon1">Driver's License</span>
+                        <input type="file" class="form-control" placeholder="Driver's License" aria-label="Driver's License" aria-describedby="basic-addon1" name="driver_license">
                     </div>
                     <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1">Registration Number</span>
-                        <input type="text" class="form-control" placeholder="Registration Number" aria-label="Registration Number" aria-describedby="basic-addon1" name="registration">
+                        <span class="input-group-text" id="basic-addon1">Registration Certificate</span>
+                        <input type="file" class="form-control" placeholder="Registration Certificate" aria-label="Registration Certificate" aria-describedby="basic-addon1" name="registration">
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Vehicle</span>
@@ -35,11 +35,11 @@
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Vehicle Image</span>
-                        <input type="text" class="form-control" placeholder="Vehicle Image" aria-label="Vehicle Image" aria-describedby="basic-addon1" name="vehicle_image">
+                        <input type="file" class="form-control" placeholder="Vehicle Image" aria-label="Vehicle Image" aria-describedby="basic-addon1" name="vehicle_image">
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Identification Document</span>
-                        <input type="text" class="form-control" placeholder="Identification Document" aria-label="Identification Document" aria-describedby="basic-addon1" name="identification_document">
+                        <input type="file" class="form-control" placeholder="Identification Document" aria-label="Identification Document" aria-describedby="basic-addon1" name="identification_document">
                     </div>
                     <button type="submit" class="btn btn-success">Register</button>
                 </form>
