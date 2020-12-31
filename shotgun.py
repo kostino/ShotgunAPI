@@ -5,6 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect, json, jsonify
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 
 import re
 import requests
@@ -46,11 +47,6 @@ if not os.path.exists(PROFILE_ROOT):
     os.makedirs(PROFILE_ROOT)
 if not os.path.exists(DOCS_ROOT):
     os.makedirs(DOCS_ROOT)
-
-
-def password_hash(password):
-    # Create a SHA256 password hash. This method returns a 64-byte string.
-    return sha256(password.encode('utf-8')).hexdigest()
 
 
 def is_valid_username(username):
@@ -97,8 +93,11 @@ def UserListAdd():
             profile_picture_path = username + '.jpg'
             save_image(profile_picture, os.path.join(PROFILE_ROOT, profile_picture_path))
 
+        # Hash password
+        pwd_hash = generate_password_hash(password)
+
         # Insert user into database
-        newUser = UserTable(username=username, password=password_hash(password),
+        newUser = UserTable(username=username, password=pwd_hash,
                             first_name=first_name, surname=surname, profile_picture=profile_picture_path)
         db_session.add(newUser)
         db_session.commit()
@@ -517,11 +516,8 @@ def Login():
         response = requests.get(url_for('User', username=username, _external=True))
         user = response.json()
 
-        # Hash password
-        pwd_hash = password_hash(password)
-
         # Authenticate user
-        if ('error' not in user) and (user['password'] == pwd_hash):
+        if ('error' not in user) and check_password_hash(user['password'], password):
             session['username'] = str(username)
 
             # If user is a driver add driver variable to session and set it to true, else set to false
