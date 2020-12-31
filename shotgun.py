@@ -9,9 +9,9 @@ import re
 import requests
 import os
 from hashlib import sha256
+from base64 import b64encode, b64decode
 
 DATA_FOLDER = './data'
-ALLOWED_IMG_EXTENSIONS = {'.png', '.jpg'}
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -72,11 +72,20 @@ def UserListAdd():
         if not is_valid_username(username):
             return {'error': 'A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.'}
         if not is_valid_password(password):
-            return {'error': 'A username must be at least 6 characters long.'}
+            return {'error': 'A password must be at least 6 characters long.'}
+
+        # Save profile picture
+        profile_picture_name = None
+        if profile_picture:
+            profile_picture_name = username + '.jpg'
+            data = b64decode(profile_picture.encode('ascii'))
+            filename = os.path.join(DATA_FOLDER, 'profile', profile_picture_name)
+            with open(filename, 'wb') as f:
+                f.write(data)
 
         # Insert user into database
         newUser = UserTable(username=username, password=password_hash(password),
-                            first_name=first_name, surname=surname, profile_picture=profile_picture)
+                            first_name=first_name, surname=surname, profile_picture=profile_picture_name)
         db_session.add(newUser)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -113,8 +122,12 @@ def User(username):
             if 'surname' in request.form:
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
-                user.profile_picture = request.form['profile_picture']
-            user.commit()
+                profile_picture_name = username + '.jpg'
+                data = b64decode(request.form['profile_picture'].encode('ascii'))
+                filename = os.path.join(DATA_FOLDER, 'profile', profile_picture_name)
+                with open(filename, 'wb') as f:
+                    f.write(data)
+            db_session.commit()
         return
     elif request.method == 'GET':
         # return a user data
@@ -545,16 +558,15 @@ def Register():
             return render_template("systemMessage.html", messageTitle="User already exists",
                                    message="A user with this username already exists. If this is your username you can login.")
         else:
-            # Upload profile picture
+            # Encode profile picture
             profile_picture = None
             if 'profile_picture' in request.files:
                 f = request.files['profile_picture']
                 ext = os.path.splitext(f.filename)[1]
-                if ext not in ALLOWED_IMG_EXTENSIONS:
+                if ext != '.jpg':
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                           message='The profile picture format is not supported.')
-                profile_picture = username + ext
-                f.save(os.path.join(DATA_FOLDER, 'profile', profile_picture))
+                                           message='The profile picture must be a JPEG image.')
+                profile_picture = b64encode(f.read()).decode('ascii')
 
             # Insert user into database by posting on /api/user
             requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
@@ -564,7 +576,6 @@ def Register():
                 return render_template('systemMessage.html', messageTitle='Success',
                                        message='Registration completed successfully!')
             else:
-                # TODO: Delete profile picture
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
 
@@ -699,14 +710,11 @@ def EditUserProfile(username):
             if request.files['profile_picture'].filename != '':
                 f = request.files['profile_picture']
                 ext = os.path.splitext(f.filename)[1]
-                if ext not in ALLOWED_IMG_EXTENSIONS:
+                if ext != '.jpg':
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                           message='The profile picture format is not supported.')
-                profile_picture = username + ext
-                os.remove(os.path.join(DATA_FOLDER, 'profile', user['profile_picture']))
-                f.save(os.path.join(DATA_FOLDER, 'profile', profile_picture))
-                updatedData['profile_picture'] = profile_picture
-                session['profile_picture'] = profile_picture
+                                           message='The profile picture must be a JPEG image.')
+                updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
+                session['profile_picture'] = username + '.jpg'
 
             # If a new first name is sent, update the one in the database
             if (request.form['first_name'] != user['first_name']) and (request.form['first_name'] != ''):
