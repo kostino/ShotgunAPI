@@ -765,6 +765,32 @@ def PaymentMethods(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
 
+@app.route('/user/<string:username>/set_primary_pm', methods=['POST'])
+def UserSetPrimary(username):
+    if request.method == 'POST':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user
+        if (session['username'] == username):
+
+            # API call to set
+            response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
+                                    params={'payment_id': request.form['payment_id']})
+
+            if 'error' in response.json():
+                return render_template("systemMessage.html", messageTitle="Error",
+                                       message="An error occurred while setting the primary payment method.")
+
+
+            return redirect(url_for('PaymentMethods', username=session['username']))
+
+        else:
+            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
+                                   message="You tried to alter another user's payment methods.")
+
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
     return send_from_directory(os.path.join(DATA_FOLDER, directory), filename)
