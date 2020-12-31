@@ -393,8 +393,6 @@ def UserRating(username):
                 'stars': u.stars
             } for u in userRatingQuery]}
             return userRatingDict
-        except NoResultFound:
-            return {'error': "No user ratings found for user {}".format(username)}
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'POST':
@@ -414,14 +412,13 @@ def DriverRating(username):
         if 'error' not in response.json():
             try:
                 driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
-                driverRatingDict = {'ratings': [{
-                    'rater': u.rater,
-                    'comment': u.commment,
-                    'stars': u.stars
+                driverRatingDict = {
+                    'ratings': [{
+                        'rater': u.rater,
+                        'comment': u.comment,
+                        'stars': u.stars
                 } for u in driverRatingQuery]}
                 return driverRatingDict
-            except NoResultFound:
-                return {'error': "No driver ratings found for driver {}".format(username)}
             except Exception as e:
                 return {'error': str(e)}
         else:
