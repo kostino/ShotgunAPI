@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Add Payment Method{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+
+    <div class="container-md py-5 my-5 text-center">
+        <div class="row">
+            <div class="col-md"></div>
+
+            <div class="col-md container py-4"  style="background-color: white; border-radius: 15px">
+                <div class="row">
+                    <h2>Add Payment Method</h2>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="container">
+                            <ul class="nav nav-pills nav-justified mb-3" id="pills-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link active" id="pills-cc-tab" data-bs-toggle="pill" href="#pills-cc"
+                                       role="tab" aria-controls="pills-cc" aria-selected="true">Credit Card</a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link" id="pills-paypal-tab" data-bs-toggle="pill" href="#pills-paypal"
+                                       role="tab" aria-controls="pills-paypal" aria-selected="false">PayPal Account</a>
+                                </li>
+                            </ul>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="tab-content" id="pills-tabContent">
+
+                        <!-- Credit Card form -->
+                        <div class="tab-pane fade show active" id="pills-cc" role="tabpanel" aria-labelledby="pills-cc-tab">
+                            <form action="/register" method="post">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">Number</span>
+                                    <input type="text" class="form-control" placeholder="Credit Card Number" maxlength="16" aria-label="Number" aria-describedby="basic-addon1" name="number">
+                                </div>
+                                <select class="form-select mb-3" aria-label="Credit Card Type" name="type">
+                                    <option selected>Select Credit Card Type</option>
+                                    <option value="AmEx">American Express</option>
+                                    <option value="DinersClub">Diner's Club</option>
+                                    <option value="MasterCard">MasterCard</option>
+                                    <option value="VISA">VISA</option>
+                                </select>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">Expiry Date</span>
+                                    <input type="date" class="form-control" placeholder="Expiry Date" aria-label="Expiry Date" aria-describedby="basic-addon1" name="exp_date">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">CVV</span>
+                                    <input type="text" class="form-control" placeholder="CVV" maxlength="3" aria-label="CVV" aria-describedby="basic-addon1" name="cvv">
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Credit Card</button>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-paypal" role="tabpanel" aria-labelledby="pills-paypal-tab">
+                            <form action="/register" method="post">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">PayPal Token</span>
+                                    <input type="text" class="form-control" placeholder="PayPal Token" maxlength="16" aria-label="Number" aria-describedby="basic-addon1" name="paypal_token">
+                                </div>
+                                <button type="submit" class="btn btn-success">Add PayPal Account</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md"></div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

@@ -786,6 +786,25 @@ def UserSetPrimary(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to alter another user's payment methods.")
 
+@app.route('/user/<string:username>/addpaymentmethod', methods=['GET', 'POST'])
+def AddPaymentMethod(username):
+    if request.method == 'GET':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check if the provided username belongs to the currently logged in user
+        if (session['username'] == username):
+            
+            # Render page
+            return render_template("addPaymentMethod.html")
+
+        else:
+            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
+                                   message="You tried to access another user's payment methods.")
+
+
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
     return send_from_directory(os.path.join(DATA_FOLDER, directory), filename)
