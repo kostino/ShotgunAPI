@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect, json, jsonify
+from werkzeug.utils import secure_filename
 
 import re
 import requests
@@ -127,7 +128,6 @@ def User(username):
     if request.method == 'PUT':
         # edit user data
         # add user to base
-
         if request.form:
             user = db_session.query(UserTable).filter(UserTable.username == username).one()
             if 'first_name' in request.form:
@@ -840,6 +840,7 @@ def AddPaymentMethod(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
 
-@app.route('/uploads/<directory>/<filename>')
-def UploadedFile(directory, filename):
-    return send_from_directory(os.path.join(DATA_ROOT, directory), filename)
+@app.route('/data/profile/<filename>')
+def ProfilePicture(filename):
+    filename = secure_filename(filename)
+    return send_from_directory(PROFILE_ROOT, filename)
