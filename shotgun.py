@@ -11,7 +11,9 @@ import os
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
-DATA_FOLDER = './data'
+DATA_ROOT = './data'
+PROFILE_ROOT = os.path.join(DATA_ROOT, 'profile')
+DOCS_ROOT = os.path.join(DATA_ROOT, 'docs')
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -38,11 +40,11 @@ app = Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
-# Create data directory
-if not os.path.exists(os.path.join(DATA_FOLDER, 'profile')):
-    os.makedirs(os.path.join(DATA_FOLDER, 'profile'))
-if not os.path.exists(os.path.join(DATA_FOLDER, 'driver_app')):
-    os.makedirs(os.path.join(DATA_FOLDER, 'driver_app'))
+# Create data directories
+if not os.path.exists(PROFILE_ROOT):
+    os.makedirs(PROFILE_ROOT)
+if not os.path.exists(DOCS_ROOT):
+    os.makedirs(DOCS_ROOT)
 
 
 def password_hash(password):
@@ -60,12 +62,10 @@ def is_valid_password(password):
     return password.isprintable() and len(password) >= 6;
 
 
-def save_image(data, dirname, filename):
+def save_image(data, filename):
     # Saves a base64-encoded image in the specified data directory.
-    data = b64decode(data.encode('ascii'))
-    path = os.path.join(DATA_FOLDER, dirname, filename)
-    with open(path, 'wb') as f:
-        f.write(data)
+    with open(filename, 'wb') as f:
+        f.write(b64decode(data.encode('ascii')))
 
 
 @app.route('/api/user', methods=['POST', 'GET'])
@@ -88,7 +88,7 @@ def UserListAdd():
         profile_picture_path = None
         if profile_picture:
             profile_picture_path = username + '.jpg'
-            save_image(profile_picture, 'profile', profile_picture_path)
+            save_image(profile_picture, os.path.join(PROFILE_ROOT, profile_picture_path))
 
         # Insert user into database
         newUser = UserTable(username=username, password=password_hash(password),
@@ -130,7 +130,7 @@ def User(username):
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
                 user.profile_picture = username + '.jpg'
-                save_image(request.form['profile_picture'], 'profile', user.profile_picture)
+                save_image(request.form['profile_picture'], os.path.join(PROFILE_ROOT, user.profile_picture))
             db_session.commit()
         return
     elif request.method == 'GET':
@@ -170,10 +170,10 @@ def UserVerify(username):
         registration_path = 'reg_{}.jpg'.format(username)
         vehicle_image_path = 'vim_{}.jpg'.format(username)
         id_path = 'id_{}.jpg'.format(username)
-        save_image(request.form['license'], 'driver_app', driver_license_path)
-        save_image(request.form['registration'], 'driver_app', registration_path)
-        save_image(request.form['vehicle_image'], 'driver_app', vehicle_image_path)
-        save_image(request.form['identification_document'], 'driver_app', id_path)
+        save_image(request.form['license'], os.path.join(DOCS_ROOT, driver_license_path))
+        save_image(request.form['registration'], os.path.join(DOCS_ROOT, registration_path))
+        save_image(request.form['vehicle_image'], os.path.join(DOCS_ROOT, vehicle_image_path))
+        save_image(request.form['identification_document'], os.path.join(DOCS_ROOT, id_path))
 
         # Add to database
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
@@ -822,7 +822,6 @@ def AddPaymentMethod(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
 
-
 @app.route('/uploads/<directory>/<filename>')
 def UploadedFile(directory, filename):
-    return send_from_directory(os.path.join(DATA_FOLDER, directory), filename)
+    return send_from_directory(os.path.join(DATA_ROOT, directory), filename)
