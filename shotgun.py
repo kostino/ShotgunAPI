@@ -58,6 +58,14 @@ def is_valid_password(password):
     return password.isprintable() and len(password) >= 6;
 
 
+def save_image(data, dirname, filename):
+    # Saves a base64-encoded image in the specified data directory.
+    data = b64decode(data.encode('ascii'))
+    path = os.path.join(DATA_FOLDER, dirname, filename)
+    with open(path, 'wb') as f:
+        f.write(data)
+
+
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
     if request.method == 'POST':
@@ -78,10 +86,7 @@ def UserListAdd():
         profile_picture_name = None
         if profile_picture:
             profile_picture_name = username + '.jpg'
-            data = b64decode(profile_picture.encode('ascii'))
-            filename = os.path.join(DATA_FOLDER, 'profile', profile_picture_name)
-            with open(filename, 'wb') as f:
-                f.write(data)
+            save_image(profile_picture, 'profile', profile_picture_name)
 
         # Insert user into database
         newUser = UserTable(username=username, password=password_hash(password),
@@ -122,11 +127,8 @@ def User(username):
             if 'surname' in request.form:
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
-                profile_picture_name = username + '.jpg'
-                data = b64decode(request.form['profile_picture'].encode('ascii'))
-                filename = os.path.join(DATA_FOLDER, 'profile', profile_picture_name)
-                with open(filename, 'wb') as f:
-                    f.write(data)
+                user.profile_picture = username + '.jpg'
+                save_image(request.form['profile_picture'], 'profile', user.profile_picture)
             db_session.commit()
         return
     elif request.method == 'GET':
