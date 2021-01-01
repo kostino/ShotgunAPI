@@ -178,7 +178,7 @@ def UserVerify(username):
         save_image(request.form['driver_license'], os.path.join(DOCS_ROOT, driver_license_path))
         save_image(request.form['registration'], os.path.join(DOCS_ROOT, registration_path))
         save_image(request.form['vehicle_image'], os.path.join(DOCS_ROOT, vehicle_image_path))
-        save_image(request.form['identity'], os.path.join(DOCS_ROOT, id_path))
+        save_image(request.form['identity'], os.path.join(DOCS_ROOT, identity_path))
 
         # Add to database
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
