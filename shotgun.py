@@ -845,6 +845,18 @@ def BrowseEvents():
         return render_template("browseEvents.html", events=events)
 
 
+@app.route('/events/new', methods=['GET'])
+def CreateEvent():
+    if request.method == 'GET':
+
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Render template
+        return render_template("createEvent.html")
+
+
 @app.route('/data/profile/<filename>')
 def ProfilePicture(filename):
     filename = secure_filename(filename)

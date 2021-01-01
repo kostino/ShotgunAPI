@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Create Event{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+
+    <div class="container-md py-5 my-5 text-center">
+        <div class="row">
+            <div class="col-md"></div>
+
+            <div class="col-md container"  style="background-color: white; border-radius: 15px">
+                <h2 class="my-3">Create an Event</h2>
+                <form action="{{ url_for('DriverCertification') }}" method="post" enctype="multipart/form-data">
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Title</span>
+                        <input type="text" class="form-control" placeholder="Event Title" aria-label="Title" aria-describedby="basic-addon1" name="title">
+                    </div>
+                    <div class="mb-3">
+                        <span class="input-group-text" id="basic-addon1">Event Type</span>
+                        <select class="form-select mb-3" aria-label="Event Type" name="type">
+                            <option selected>Select Event Type</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Music">Music</option>
+                            <option value="Theatre">Theatre</option>
+                            <option value="Dance">Dance</option>
+                            <option value="Film">Film</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Food">Food</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Education">Education</option>
+                            <option value="Outdoors">Outdoors</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Location Name</span>
+                        <input type="text" class="form-control" placeholder="Location Name" aria-label="Location Name" aria-describedby="basic-addon1" name="location_name">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Location Coordinates</span>
+                        <input type="text" class="form-control" placeholder="Latitude" aria-label="Latitude" aria-describedby="basic-addon1" name="latitude">
+                        <input type="text" class="form-control" placeholder="Longitude" aria-label="Longitude" aria-describedby="basic-addon1" name="longitude">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Date</span>
+                        <input type="date" class="form-control" placeholder="Event Date" aria-label="Event Date" aria-describedby="basic-addon1" name="date">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Time</span>
+                        <input type="time" class="form-control" placeholder="Event Time" aria-label="Event Time" aria-describedby="basic-addon1" name="time">
+                    </div>
+                    <button type="submit" class="btn btn-success mb-3">Create</button>
+                </form>
+            </div>
+
+            <div class="col-md"></div>
+        </div>
+
+    </div>
+
+
+{% endblock %}
