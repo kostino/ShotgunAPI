@@ -171,14 +171,19 @@ def UserVerify(username):
         vehicle = request.form['vehicle']
 
         # Save images
-        driver_license_path = 'lic_{}.jpg'.format(username)
-        registration_path = 'reg_{}.jpg'.format(username)
-        vehicle_image_path = 'vim_{}.jpg'.format(username)
-        identity_path = 'id_{}.jpg'.format(username)
-        save_image(request.form['driver_license'], os.path.join(DOCS_ROOT, driver_license_path))
-        save_image(request.form['registration'], os.path.join(DOCS_ROOT, registration_path))
-        save_image(request.form['vehicle_image'], os.path.join(DOCS_ROOT, vehicle_image_path))
-        save_image(request.form['identity'], os.path.join(DOCS_ROOT, identity_path))
+        user_dir = os.path.join(DOCS_ROOT, username)
+        if not os.path.exists(user_dir):
+            os.mkdir(user_dir)
+
+        driver_license_path = os.path.join(user_dir, 'license.jpg')
+        registration_path = os.path.join(user_dir, 'registration.jpg')
+        vehicle_image_path = os.path.join(user_dir, 'vehicle.jpg')
+        identity_path = os.path.join(user_dir, 'identity.jpg')
+
+        save_image(request.form['driver_license'], driver_license_path)
+        save_image(request.form['registration'], registration_path)
+        save_image(request.form['vehicle_image'], vehicle_image_path)
+        save_image(request.form['identity'], identity_path)
 
         # Add to database
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
