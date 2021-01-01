@@ -577,8 +577,8 @@ def Register():
         else:
             # Encode profile picture
             profile_picture = None
-            if 'profile_picture' in request.files:
-                f = request.files['profile_picture']
+            f = request.files['profile_picture']
+            if f.filename != '':
                 if not check_image_ext(f.filename):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
@@ -723,8 +723,8 @@ def EditUserProfile(username):
             user = response.json()
 
             # If a new profile picture is added, update the existing one
-            if request.files['profile_picture'].filename != '':
-                f = request.files['profile_picture']
+            f = request.files['profile_picture']
+            if f.filename != '':
                 if not check_image_ext(f.filename):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
