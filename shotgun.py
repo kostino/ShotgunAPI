@@ -783,6 +783,7 @@ def PaymentMethods(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
 
+
 @app.route('/user/<string:username>/set_primary_pm', methods=['POST'])
 def UserSetPrimary(username):
     if request.method == 'POST':
@@ -809,6 +810,7 @@ def UserSetPrimary(username):
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to alter another user's payment methods.")
 
+
 @app.route('/user/<string:username>/addpaymentmethod', methods=['GET', 'POST'])
 def AddPaymentMethod(username):
     if request.method == 'GET':
@@ -826,6 +828,22 @@ def AddPaymentMethod(username):
         else:
             return render_template("systemMessage.html", messageTitle="Unauthorized Access",
                                    message="You tried to access another user's payment methods.")
+
+
+@app.route('/events', methods=['GET', 'POST'])
+def BrowseEvents():
+    if request.method == 'GET':
+
+        # Get future events and then their info via API call
+        futureEventsRequest = requests.get(url_for('EventAddList', _external=True))
+        events = []
+        for futureEvent in futureEventsRequest.json()['events']:
+            eventInfoRequest = requests.get(url_for('Event', event_id=futureEvent['event_id'], _external=True))
+            events.append(eventInfoRequest.json())
+
+        # Render template
+        return render_template("browseEvents.html", events=events)
+
 
 @app.route('/data/profile/<filename>')
 def ProfilePicture(filename):
