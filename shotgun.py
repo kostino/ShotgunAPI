@@ -2,6 +2,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import func
+import datetime as DT
 
 from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect, json, jsonify
 from werkzeug.utils import secure_filename
@@ -47,6 +49,10 @@ if not os.path.exists(PROFILE_ROOT):
     os.makedirs(PROFILE_ROOT)
 if not os.path.exists(DOCS_ROOT):
     os.makedirs(DOCS_ROOT)
+
+
+def is_valid_geolocation(lat, long):
+    return len(lat) <= 16 and len(long) <= 16 and 90 > float(lat) > -90 and 180 > float(long) > -180
 
 
 def is_valid_username(username):
@@ -297,9 +303,31 @@ def UserRides(username):
 @app.route('/api/event', methods=['POST', 'GET'])
 def EventAddList():
     if request.method == 'POST':
-        # get event data from request.json
-        # add event to base
-        return
+        # Get request data
+        title = request.form['title'] if 'title' in request.form.keys() else ''
+        event_type = request.form['type'] if 'type' in request.form.keys() and not request.form['type'] == 'Select Event Type' else None
+        creator = request.form['creator'] if 'creator' in request.form.keys() else None
+        longitude = request.form['longitude'] if 'longitude' in request.form.keys() and len(request.form['longitude']) > 0 else '-1000'
+        latitude = request.form['latitude'] if 'latitude' in request.form.keys() and len(request.form['latitude']) > 0 else '-1000'
+        location_name = request.form['location_name'] if 'location_name' in request.form.keys() else ''
+        date = request.form['date']
+        time = request.form['time']
+        event_id = db_session.query(func.max(EventTable.event_id)).scalar() + 1
+        datetime = DT.datetime.combine(DT.datetime.strptime(date, '%Y-%m-%d').date(),
+                                       DT.datetime.strptime(time, '%H:%M').time())
+        # Validate data
+        if not is_valid_geolocation(latitude, longitude):
+            return {'error': 'invalid geolocation'}, 400
+        if len(title) == 0 or len(date) == 0 or len(time) == 0 or len(location_name) ==0:
+            return {'error': 'empty data'}, 400
+
+        # Insert event into database
+        newEvent = EventTable(event_id=event_id, title=title, type=event_type,
+                              status='pending', creator=creator, datetime=datetime,
+                              latitude=latitude, longitude=longitude, location_name=location_name)
+        db_session.add(newEvent)
+        db_session.commit()
+        return {'status': 'success'}, 200
     if request.method == 'GET':
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
