@@ -5,14 +5,13 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 import datetime as DT
 
-from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect, json, jsonify
+from flask import Flask, render_template, request, session, send_from_directory, url_for, redirect
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import re
 import requests
 import os
-from hashlib import sha256
 from base64 import b64encode, b64decode
 
 DATA_ROOT = './data'
@@ -87,7 +86,7 @@ def UserListAdd():
         surname = request.form['surname']
         profile_picture = request.form.get('profile_picture')
 
-        # Valildate data
+        # Validate data
         if not is_valid_username(username):
             return {'error': 'A username must be between 3 and 16 characters. Letters, numbers, underscores and dashes only.'}
         if not is_valid_password(password):
@@ -318,7 +317,7 @@ def EventAddList():
         # Validate data
         if not is_valid_geolocation(latitude, longitude):
             return {'error': 'invalid geolocation'}, 400
-        if len(title) == 0 or len(date) == 0 or len(time) == 0 or len(location_name) ==0:
+        if len(title) == 0 or len(date) == 0 or len(time) == 0 or len(location_name) == 0:
             return {'error': 'empty data'}, 400
 
         # Insert event into database
@@ -483,12 +482,11 @@ def DriverRating(username):
         if 'error' not in response.json():
             try:
                 driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
-                driverRatingDict = {
-                    'ratings': [{
-                        'rater': u.rater,
-                        'comment': u.comment,
-                        'stars': u.stars
-                } for u in driverRatingQuery]}
+                driverRatingDict = {'ratings': [{
+                                'rater': u.rater,
+                                'comment': u.comment,
+                                'stars': u.stars
+                                } for u in driverRatingQuery]}
                 return driverRatingDict
             except Exception as e:
                 return {'error': str(e)}
@@ -724,7 +722,7 @@ def EditUserProfile(username):
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
-        if (session['username'] == username):
+        if session['username'] == username:
 
             # Get user data
             response = requests.get(url_for('User', username=username, _external=True))
@@ -796,7 +794,7 @@ def PaymentMethods(username):
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
-        if (session['username'] == username):
+        if session['username'] == username:
 
             # Get payment methods
             paymentMethods = requests.get(url_for('UserPaymentInfo', username=username, _external=True))
@@ -829,7 +827,7 @@ def UserSetPrimary(username):
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
-        if (session['username'] == username):
+        if session['username'] == username:
 
             # API call to set
             response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
@@ -838,7 +836,6 @@ def UserSetPrimary(username):
             if 'error' in response.json():
                 return render_template("systemMessage.html", messageTitle="Error",
                                        message="An error occurred while setting the primary payment method.")
-
 
             return redirect(url_for('PaymentMethods', username=session['username']))
 
@@ -856,7 +853,7 @@ def AddPaymentMethod(username):
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
-        if (session['username'] == username):
+        if session['username'] == username:
             
             # Render page
             return render_template("addPaymentMethod.html")
