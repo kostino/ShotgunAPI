@@ -875,7 +875,7 @@ def BrowseEvents():
         return render_template("browseEvents.html", events=events)
 
 
-@app.route('/events/new', methods=['GET'])
+@app.route('/events/new', methods=['GET','POST'])
 def CreateEvent():
     if request.method == 'GET':
 
@@ -885,6 +885,23 @@ def CreateEvent():
 
         # Render template
         return render_template("createEvent.html")
+    elif request.method == 'POST':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+        required_fields = ['title', 'location_name', 'latitude', 'longitude', 'date', 'time']
+        missing_fields = not all(field in request.form.keys() for field in required_fields)
+        if missing_fields:
+            return render_template("systemMessage.html", messageTitle="Missing Fields",
+                                   message="Please fill all the required fields.")
+        requestData = {field: request.form[field] for field in required_fields}
+        requestData['type'] = request.form['type'] if 'type' in request.form.keys() else ''
+        requestData['creator'] = session['username']
+        response = requests.post(url_for('EventAddList', _external=True),
+                                 data=requestData)
+        return render_template('systemMessage.html', messageTitle='Event Submitted Successfully',
+                               message='Your event has been submitted! Please wait for a mod to approve it.')
+
 
 
 @app.route('/data/profile/<filename>')

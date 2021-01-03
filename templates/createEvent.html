@@ -11,7 +11,7 @@
 
             <div class="col-md container"  style="background-color: white; border-radius: 15px">
                 <h2 class="my-3">Create an Event</h2>
-                <form action="{{ url_for('EventAddList') }}" method="post" enctype="multipart/form-data">
+                <form action="{{ url_for('CreateEvent') }}" method="post" enctype="multipart/form-data">
 
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Title</span>
@@ -50,7 +50,6 @@
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Time</span>
                         <input type="time" class="form-control" placeholder="Event Time" aria-label="Event Time" aria-describedby="basic-addon1" name="time">
-                        <input type="hidden" name="creator" value="{{ session['username'] }}">
                     </div>
                     <button type="submit" class="btn btn-success mb-3">Create</button>
                 </form>
