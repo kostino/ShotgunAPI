@@ -332,11 +332,19 @@ def EventAddList():
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
         try:
-            eventQuery = db_session.query(FutureEventView).all()
+            eventQuery = db_session.query(EventTable).join(
+                FutureEventView, FutureEventView.columns.event_id == EventTable.event_id).all()
             eventDict = {'events': [
                 {
                     'event_id': e.event_id,
-                    'title': e.title
+                    'title': e.title,
+                    'type': e.type,
+                    'status': e.status,
+                    'latitude': e.latitude,
+                    'longitude': e.longitude,
+                    'location_name': e.location_name,
+                    'datetime': e.datetime,
+                    'creator': e.creator
                 } for e in eventQuery]
             }
             return eventDict
@@ -864,10 +872,7 @@ def BrowseEvents():
 
         # Get future events and then their info via API call
         futureEventsRequest = requests.get(url_for('EventAddList', _external=True))
-        events = []
-        for futureEvent in futureEventsRequest.json()['events']:
-            eventInfoRequest = requests.get(url_for('Event', event_id=futureEvent['event_id'], _external=True))
-            events.append(eventInfoRequest.json())
+        events = futureEventsRequest.json()['events']
 
         # Render template
         return render_template("browseEvents.html", events=events)
