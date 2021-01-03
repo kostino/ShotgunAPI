@@ -57,12 +57,12 @@ def is_valid_geolocation(lat, long):
 
 def is_valid_username(username):
     # Validates a username.
-    return re.match(r'^[A-Za-z0-9_-]+$', username) and len(username) >= 3 and len(username) <= 16;
+    return re.match(r'^[A-Za-z0-9_-]+$', username) and 3 <= len(username) <= 16
 
 
 def is_valid_password(password):
     # Validates a password.
-    return password.isprintable() and len(password) >= 6;
+    return password.isprintable() and len(password) >= 6
 
 
 def save_image(data, filename):
