@@ -1,17 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}Browse Events{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block style %}{% endblock %}
 
 {% block content %}
 
-    <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
+    <div class="container-md px-4 py-3 my-4" style="background-color: #ffffff; border-radius: 15px">
+        <!-- Search -->
+        <form class="d-flex input-group-lg" action="{{ url_for('SearchEvents') }}" method="post">
+            <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
+            <button class="btn btn-outline-success me-2" type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
 
         <!-- Title and actions row -->
         <div class="row pb-1">
             <div class="col-md">
                 <h3 class="mx-auto">
-                    Browse Events
+                    {{ title }}
                 </h3>
             </div>
             <div class="col-md d-flex justify-content-end">
@@ -43,6 +51,10 @@
                             {{ event['location_name'] }}
                         </p>
                         <button type="button" class="btn btn-primary">Find Rides</button>
+                        <!-- If user is a driver, place a 'Create Ride' button -->
+                        {% if driverFlag %}
+                        <button type="button" class="btn btn-outline-success">Create Ride</button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
