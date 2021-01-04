@@ -871,8 +871,15 @@ def BrowseEvents():
         futureEventsRequest = requests.get(url_for('EventAddList', _external=True))
         events = futureEventsRequest.json()['events']
 
+        # Check if user is logged in and is a driver so he can create rides
+        driverFlag = False
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+
         # Render template
-        return render_template("browseEvents.html", events=events)
+        return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag)
 
 
 @app.route('/events/new', methods=['GET','POST'])

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Browse Events{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block style %}{% endblock %}
 
@@ -11,7 +11,7 @@
         <div class="row pb-1">
             <div class="col-md">
                 <h3 class="mx-auto">
-                    Browse Events
+                    {{ title }}
                 </h3>
             </div>
             <div class="col-md d-flex justify-content-end">
@@ -43,6 +43,10 @@
                             {{ event['location_name'] }}
                         </p>
                         <button type="button" class="btn btn-primary">Find Rides</button>
+                        <!-- If user is a driver, place a 'Create Ride' button -->
+                        {% if driverFlag %}
+                        <button type="button" class="btn btn-outline-success">Create Ride</button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
