@@ -910,6 +910,30 @@ def CreateEvent():
                                message='Your event has been submitted! Please wait for a mod to approve it.')
 
 
+@app.route('/events/search', methods=['GET', 'POST'])
+def SearchEvents():
+
+    if request.method == 'GET':
+        # Render template
+        return redirect(url_for('BrowseEvents', _external=True))
+
+    if request.method == 'POST':
+
+        # Query the database
+        searchQuery = request.form['searchQuery']
+        #TODO: Add DB querying
+        events = []
+
+        # Check if user is logged in and is a driver so he can create rides
+        driverFlag = False
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+
+        # Render template
+        return render_template("browseEvents.html", events=events, title="Search Results for {}".format(searchQuery), driverFlag=driverFlag)
+
 
 @app.route('/data/profile/<filename>')
 def ProfilePicture(filename):

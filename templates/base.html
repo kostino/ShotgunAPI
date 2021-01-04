@@ -68,8 +68,8 @@
                 </ul>
 
                 <!-- Search -->
-                <form class="d-flex">
-                    <input class="form-control me-2" type="search" placeholder="Search for Events" aria-label="Search">
+                <form class="d-flex" action="{{ url_for('SearchEvents') }}" method="post">
+                    <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
                     <button class="btn btn-outline-success me-2" type="submit">Search</button>
                 </form>
 

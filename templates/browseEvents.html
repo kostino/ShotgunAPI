@@ -5,7 +5,15 @@
 
 {% block content %}
 
-    <div class="container-md px-4 py-3 my-5" style="background-color: white; border-radius: 15px">
+    <div class="container-md px-4 py-3 my-4" style="background-color: #ffffff; border-radius: 15px">
+        <!-- Search -->
+        <form class="d-flex input-group-lg" action="{{ url_for('SearchEvents') }}" method="post">
+            <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
+            <button class="btn btn-outline-success me-2" type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
 
         <!-- Title and actions row -->
         <div class="row pb-1">
