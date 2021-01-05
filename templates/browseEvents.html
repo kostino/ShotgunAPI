@@ -9,6 +9,12 @@
         <!-- Search -->
         <form class="d-flex input-group-lg" action="{{ url_for('SearchEvents') }}" method="post">
             <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
+            <div class="form-check justify-content-center">
+                <label class="form-check-label" for="flexCheckDefault">
+                    Include Past Events
+                </label>
+                <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="oldEvents">
+            </div>
             <button class="btn btn-outline-success me-2" type="submit">Search</button>
         </form>
     </div>
@@ -33,6 +39,11 @@
 
         <!-- Events container row -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+            <!-- If there are no events print message -->
+            {% if not events %}
+                <h4 class="mx-auto" style="text-align: center">Currently there are no events that match your search.</h4>
+            {% endif %}
 
             {% for event in events %}
 

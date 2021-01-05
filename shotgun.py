@@ -956,8 +956,9 @@ def SearchEvents():
 
         # Query the database
         searchQuery = request.form['searchQuery']
-        #TODO: Add DB querying
-        events = []
+        oldEventsFlag = 1 if 'oldEvents' in request.form else 0
+        response = requests.get(url_for('EventSearchAPI', _external=True), params={'tag':searchQuery, 'old': oldEventsFlag})
+        events = response.json()['events']
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
