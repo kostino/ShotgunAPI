@@ -353,6 +353,41 @@ def EventAddList():
             return {'error': str(e)}
 
 
+@app.route('/api/event/search', methods=['GET'])
+def EventSearchAPI():
+    if request.method == 'GET':
+        # perform search on events
+        old_events = (request.args.get('old') == '1')
+        search_tag = request.args.get('tag')
+        sql_like_tag = "%{}%".format(search_tag)
+        try:
+            if not old_events:
+                eventQuery = db_session.query(EventTable).join(
+                    FutureEventView, FutureEventView.columns.event_id == EventTable.event_id).filter(
+                    EventTable.title.like(sql_like_tag)).all()
+            else:
+                eventQuery = db_session.query(EventTable).filter(
+                    EventTable.title.like(sql_like_tag)).all()
+            eventDict = {'events': [
+                {
+                    'event_id': e.event_id,
+                    'title': e.title,
+                    'type': e.type,
+                    'status': e.status,
+                    'latitude': e.latitude,
+                    'longitude': e.longitude,
+                    'location_name': e.location_name,
+                    'datetime': e.datetime,
+                    'creator': e.creator
+                } for e in eventQuery]
+            }
+            return eventDict
+        except NoResultFound:
+            return {'error': 'No events match the given tags', 'events': []}
+        except Exception as e:
+            return {'error': str(e)}
+
+
 @app.route('/api/event/<int:event_id>', methods=['PUT', 'GET', 'DELETE'])
 def Event(event_id):
     if request.method == 'PUT':
