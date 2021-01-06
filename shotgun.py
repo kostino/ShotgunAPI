@@ -986,6 +986,7 @@ def BrowseEvents():
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
+        userEventsWithRide = []
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
