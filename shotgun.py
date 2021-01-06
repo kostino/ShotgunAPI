@@ -179,6 +179,12 @@ def User(username):
         for row in events:
             row.creator = None
 
+        # Delete user rides
+        rides = db_session.query(RideTable.ride_id).filter_by(driver_username=username)
+        apps = db_session.query(ApplicationTable).filter(ApplicationTable.ride_id.in_(rides.subquery()))
+        apps.delete(synchronize_session=False)
+        rides.delete()
+
         # Delete user data
         db_session.query(UserRatingTable).filter(
                 (UserRatingTable.rater == username) | (UserRatingTable.ratee == username)).delete()
@@ -466,12 +472,10 @@ def Event(event_id):
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'DELETE':
-        # Delete event applications
+        # Delete event rides
         rides = db_session.query(RideTable.ride_id).filter_by(event_id=event_id)
         apps = db_session.query(ApplicationTable).filter(ApplicationTable.ride_id.in_(rides.subquery()))
         apps.delete(synchronize_session=False)
-
-        # Delete event rides
         rides.delete()
 
         # Delete event
