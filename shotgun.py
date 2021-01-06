@@ -15,8 +15,8 @@ import os
 from base64 import b64encode, b64decode
 
 DATA_ROOT = './data'
-PROFILE_ROOT = os.path.join(DATA_ROOT, 'profile')
-DOCS_ROOT = os.path.join(DATA_ROOT, 'docs')
+PROFILE_DIR = 'profile'
+DOCS_DIR = 'docs'
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -48,14 +48,15 @@ app = Flask(__name__)
 app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
 # Create data directories
-if not os.path.exists(PROFILE_ROOT):
-    os.makedirs(PROFILE_ROOT)
-if not os.path.exists(DOCS_ROOT):
-    os.makedirs(DOCS_ROOT)
+if not os.path.exists(os.path.join(DATA_ROOT, PROFILE_DIR)):
+    os.makedirs(os.path.join(DATA_ROOT, PROFILE_DIR))
+if not os.path.exists(os.path.join(DATA_ROOT, DOCS_DIR)):
+    os.makedirs(os.path.join(DATA_ROOT, DOCS_DIR))
 
 
-def is_valid_geolocation(lat, long):
-    return len(lat) <= 16 and len(long) <= 16 and 90 > float(lat) > -90 and 180 > float(long) > -180
+def is_valid_geolocation(lat, lng):
+    # Validates geographic coordinates.
+    return len(lat) <= 16 and len(lng) <= 16 and 90 > float(lat) > -90 and 180 > float(lng) > -180
 
 
 def is_valid_username(username):
@@ -70,7 +71,7 @@ def is_valid_password(password):
 
 def save_image(data, filename):
     # Saves a base64-encoded image.
-    with open(filename, 'wb') as f:
+    with open(os.path.join(DATA_ROOT, filename), 'wb') as f:
         f.write(b64decode(data.encode('ascii')))
 
 
@@ -99,8 +100,8 @@ def UserListAdd():
         # Save profile picture
         profile_picture_path = None
         if profile_picture:
-            profile_picture_path = username + '.jpg'
-            save_image(profile_picture, os.path.join(PROFILE_ROOT, profile_picture_path))
+            profile_picture_path = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
+            save_image(profile_picture, profile_picture_path)
 
         # Hash password
         pwd_hash = generate_password_hash(password)
@@ -146,8 +147,8 @@ def User(username):
             if 'surname' in request.form:
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
-                user.profile_picture = username + '.jpg'
-                save_image(request.form['profile_picture'], os.path.join(PROFILE_ROOT, user.profile_picture))
+                user.profile_picture = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
+                save_image(request.form['profile_picture'], user.profile_picture)
             db_session.commit()
         return {'status': 'success'}
     elif request.method == 'GET':
@@ -214,7 +215,7 @@ def UserVerify(username):
         vehicle = request.form['vehicle']
 
         # Save images
-        user_dir = os.path.join(DOCS_ROOT, username)
+        user_dir = os.path.join(DOCS_DIR, username)
         if not os.path.exists(user_dir):
             os.mkdir(user_dir)
 
@@ -931,7 +932,7 @@ def EditUserProfile(username):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
                 updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
-                session['profile_picture'] = username + '.jpg'
+                session['profile_picture'] = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
 
             # If a new first name is sent, update the one in the database
             if (request.form['first_name'] != user['first_name']) and (request.form['first_name'] != ''):
@@ -1114,7 +1115,7 @@ def SearchEvents():
 @app.route('/data/profile/<filename>')
 def ProfilePicture(filename):
     filename = secure_filename(filename)
-    return send_from_directory(PROFILE_ROOT, filename)
+    return send_from_directory(os.path.join(DATA_ROOT, PROFILE_DIR), filename)
 
 
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
