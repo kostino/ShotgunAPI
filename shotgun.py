@@ -470,7 +470,26 @@ def Ride(ride_id):
         return
     elif request.method == 'GET':
         # return a ride's data
-        return
+        try:
+            rideQuery = db_session.query(RideTable).filter(RideTable.ride_id == ride_id).one()
+            rideDict = {
+                'ride_id': rideQuery.ride_id,
+                'start_datetime': rideQuery.start_datetime,
+                'return_datetime': rideQuery.return_datetime,
+                'cost': rideQuery.cost,
+                'description': rideQuery.description,
+                'seats': rideQuery.seats,
+                'available_seats': rideQuery.available_seats,
+                'longitude': rideQuery.longitude,
+                'latitude': rideQuery.latitude,
+                'location_name': rideQuery.location_name,
+                'driver_username': rideQuery.driver_username
+                }
+            return rideDict
+        except NoResultFound:
+            return {'error': "Ride {} doesn't exist in the database".format(ride_id)}
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'DELETE':
         # remove a ride from db
         return
