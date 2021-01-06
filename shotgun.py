@@ -295,9 +295,30 @@ def EditUserPaymentInfo(username, payment_id):
 @app.route('/api/user/<string:username>/rides', methods=['GET'])
 def UserRides(username):
     if request.method == 'GET':
-        # get ride data that user participates in for a preview list
+        # get ride data for a preview list
         # return json
-        return
+        try:
+            userRideQuery = db_session.query(RideTable).filter(RideTable.driver_username == username).all()
+            # return all data except from event_id (redundant)
+            rideDict = {'rides':
+                            [{'ride_id': r.ride_id,
+                              'start_datetime': r.start_datetime,
+                              'return_datetime': r.return_datetime,
+                              'cost': r.cost,
+                              'description': r.description,
+                              'seats': r.seats,
+                              'available_seats': r.available_seats,
+                              'longitude': r.longitude,
+                              'latitude': r.latitude,
+                              'location_name': r.location_name,
+                              'driver_username': r.driver_username
+                              } for r in userRideQuery]
+                        }
+            return rideDict
+        except NoResultFound:
+            return {'error': 'No rides by user {} in the database'.format(username), 'rides': []}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/api/event', methods=['POST', 'GET'])
