@@ -168,7 +168,6 @@ def User(username):
                         'profile_picture': userQuery.user.profile_picture,
                         'avg_user_rating': str(userQuery.average_user_rating)[:3],
                         'avg_driver_rating': str(userQuery.average_driver_rating)[:3]}
-            print(userDict)
             return userDict
         except NoResultFound:
             return {'error': 'User with provided credentials does not exist in the database'}
