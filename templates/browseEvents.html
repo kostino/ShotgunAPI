@@ -61,12 +61,15 @@
                             <br>
                             {{ event['location_name'] }}
                         </p>
-                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}">
-                            <button type="button" class="btn btn-primary">Find Rides</button>
+                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary me-2">
+                            Find Rides
                         </a>
+
                         <!-- If user is a driver, place a 'Create Ride' button -->
                         {% if driverFlag and event['event_id'] not in userEventsWithRide %}
-                        <button type="button" class="btn btn-outline-success">Create Ride</button>
+                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary">
+                            Create Ride
+                        </a>
                         {% endif %}
                     </div>
                 </div>
