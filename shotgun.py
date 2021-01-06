@@ -36,6 +36,8 @@ PayPalTable = Base.classes.paypalaccount
 UserRatingTable = Base.classes.userrating
 DriverRatingTable = Base.classes.driverrating
 FutureEventView = Table("future_events", metadata, autoload=True, autoload_with=engine)
+AvgDriverRatingView = Table("avg_driver_rating", metadata, autoload=True, autoload_with=engine)
+AvgUserRatingView = Table("avg_user_rating", metadata, autoload=True, autoload_with=engine)
 
 # Start
 db_session = Session(engine)
@@ -112,13 +114,17 @@ def UserListAdd():
         # return a user list, maybe a json. This endpoint probably handles like an api
         # Maybe do a /api/sth for endpoints not returning html
         try:
-            userQuery = db_session.query(UserTable).all()
+            userQuery = db_session.query(UserTable, AvgDriverRatingView, AvgUserRatingView).join(
+                AvgDriverRatingView, AvgDriverRatingView.columns.ratee == UserTable.username, isouter=True).join(
+                AvgUserRatingView, AvgUserRatingView.columns.ratee == UserTable.username, isouter=True).all()
             # return all data except from passwords
             userDict = {'users': [{
-                'username': u.username,
-                'first_name': u.first_name,
-                'surname': u.surname,
-                'profile_picture': u.profile_picture
+                'username': u.user.username,
+                'first_name': u.user.first_name,
+                'surname': u.user.surname,
+                'profile_picture': u.user.profile_picture,
+                'avg_user_rating': str(u.average_user_rating)[:3],
+                'avg_driver_rating': str(u.average_driver_rating)[:3]
             } for u in userQuery]
             }
             return userDict
@@ -150,13 +156,19 @@ def User(username):
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
         try:
-            userQuery = db_session.query(UserTable).filter(UserTable.username == username).one()
+            userQuery = db_session.query(UserTable, AvgDriverRatingView, AvgUserRatingView).join(
+                AvgDriverRatingView, AvgDriverRatingView.columns.ratee == UserTable.username, isouter=True).join(
+                AvgUserRatingView, AvgUserRatingView.columns.ratee == UserTable.username, isouter=True).filter(
+                UserTable.username == username).one()
             # return all data except from passwords
-            userDict = {'username': userQuery.username,
-                        'password': userQuery.password,
-                        'first_name': userQuery.first_name,
-                        'surname': userQuery.surname,
-                        'profile_picture': userQuery.profile_picture}
+            userDict = {'username': userQuery.user.username,
+                        'password': userQuery.user.password,
+                        'first_name': userQuery.user.first_name,
+                        'surname': userQuery.user.surname,
+                        'profile_picture': userQuery.user.profile_picture,
+                        'avg_user_rating': str(userQuery.average_user_rating)[:3],
+                        'avg_driver_rating': str(userQuery.average_driver_rating)[:3]}
+            print(userDict)
             return userDict
         except NoResultFound:
             return {'error': 'User with provided credentials does not exist in the database'}

@@ -54,7 +54,7 @@
             <div class="col-md">
                 <div class="row my-4">
                     <h3>Average Passenger Rating</h3>
-                    <h4>⭐ Placeholder</h4>
+                    <h4>⭐ {{ userData['avg_user_rating'] }}</h4>
                 </div>
                 {% if session['username'] == userData['username'] %}
                 <div class="row my-4">
@@ -88,7 +88,7 @@
             <div class="col-md">
                 <div class="row my-4">
                     <h3>Average Driver Rating</h3>
-                    <h4>⭐ Placeholder</h4>
+                    <h4>⭐ {{ userData['avg_driver_rating'] }}</h4>
                 </div>
             </div>
         </div>
