@@ -111,13 +111,12 @@ def UserListAdd():
         db_session.commit()
         return {'status': 'success'}, 200
     elif request.method == 'GET':
-        # return a user list, maybe a json. This endpoint probably handles like an api
-        # Maybe do a /api/sth for endpoints not returning html
         try:
             userQuery = db_session.query(UserTable, AvgDriverRatingView, AvgUserRatingView).join(
                 AvgDriverRatingView, AvgDriverRatingView.columns.ratee == UserTable.username, isouter=True).join(
                 AvgUserRatingView, AvgUserRatingView.columns.ratee == UserTable.username, isouter=True).all()
-            # return all data except from passwords
+
+            # Return all data except from passwords
             userDict = {'users': [{
                 'username': u.user.username,
                 'first_name': u.user.first_name,
@@ -149,7 +148,7 @@ def User(username):
                 user.profile_picture = username + '.jpg'
                 save_image(request.form['profile_picture'], os.path.join(PROFILE_ROOT, user.profile_picture))
             db_session.commit()
-        return
+        return {'status': 'success'}
     elif request.method == 'GET':
         # return a user data
         # Maybe do a /api/sth for data as json and a /sth for frontend
@@ -173,13 +172,13 @@ def User(username):
             return {'error': 'User with provided credentials does not exist in the database'}
         except Exception as e:
             return {'error': str(e)}
-
     elif request.method == 'DELETE':
-        # return a user data
-        # Maybe do a /api/sth for data as json and a /sth for frontend
-        # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
-        # multiple api endpoints like /api/rating/ or /api/driver/
-        return
+        num_rows = db_session.query(UserTable).filter_by(username=username).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'User does not exist'}
 
 
 @app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
