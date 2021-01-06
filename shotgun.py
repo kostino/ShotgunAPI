@@ -591,19 +591,13 @@ def UserApplicationList(username):
         return
 
 
-@app.route('/api/ride/<int:ride_id>/application', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/ride/<int:ride_id>/application', methods=['GET', 'POST'])
 def RideApplication(ride_id):
     if request.method == 'GET':
         # get list of ride applications
         return
     elif request.method == 'POST':
         # post new application for ride and user
-        return
-    elif request.method == 'PUT':
-        # edit application for ride and user
-        return
-    elif request.method == 'DELETE':
-        # delete application for ride and user
         return
 
 
