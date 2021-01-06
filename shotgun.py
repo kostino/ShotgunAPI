@@ -558,8 +558,16 @@ def Ride(ride_id):
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'DELETE':
-        # remove a ride from db
-        return
+        # Delete ride data
+        db_session.query(ApplicationTable).filter_by(ride_id=ride_id).delete()
+
+        # Delete ride
+        num_rows = db_session.query(RideTable).filter_by(ride_id=ride_id).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Ride does not exist'}
 
 
 @app.route('/api/ride/<int:ride_id>/users', methods=['GET'])
