@@ -299,7 +299,6 @@ def UserRides(username):
         # return json
         try:
             userRideQuery = db_session.query(RideTable).filter(RideTable.driver_username == username).all()
-            # return all data except from event_id (redundant)
             rideDict = {'rides':
                             [{'ride_id': r.ride_id,
                               'start_datetime': r.start_datetime,
@@ -311,7 +310,8 @@ def UserRides(username):
                               'longitude': r.longitude,
                               'latitude': r.latitude,
                               'location_name': r.location_name,
-                              'driver_username': r.driver_username
+                              'driver_username': r.driver_username,
+                              'event_id': r.event_id
                               } for r in userRideQuery]
                         }
             return rideDict
@@ -979,9 +979,12 @@ def BrowseEvents():
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
+            userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+            userRides = userRidesResponse.json()['rides']
+            userEventsWithRide = [r['event_id'] for r in userRides]
 
         # Render template
-        return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag)
+        return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
 
 
 @app.route('/events/new', methods=['GET','POST'])
@@ -1033,9 +1036,12 @@ def SearchEvents():
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
+            userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+            userRides = userRidesResponse.json()['rides']
+            userEventsWithRide = [r['event_id'] for r in userRides]
 
         # Render template
-        return render_template("browseEvents.html", events=events, title="Search Results for {}".format(searchQuery), driverFlag=driverFlag)
+        return render_template("browseEvents.html", events=events, title="Search Results for {}".format(searchQuery), driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
 
 
 @app.route('/data/profile/<filename>')
