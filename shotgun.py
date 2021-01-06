@@ -577,7 +577,22 @@ def Ride(ride_id):
 def RideUsers(ride_id):
     if request.method == 'GET':
         # return a ride's list of users
-        return
+        try:
+            rideUsersQuery = db_session.query(ApplicationTable, UserTable, AvgUserRatingView).join(
+                UserTable, UserTable.username == ApplicationTable.username, isouter=True).join(
+                AvgUserRatingView, AvgUserRatingView.columns.ratee == ApplicationTable.username, isouter=True).filter(
+                ApplicationTable.ride_id == ride_id, ApplicationTable.status == 'accepted').all()
+            rideUsersDict = {'users': [{
+                    'username': u.user.username,
+                    'first_name': u.user.first_name,
+                    'surname': u.user.surname,
+                    'avg_user_rating': str(u.average_user_rating)[:3]
+                } for u in rideUsersQuery]}
+            return rideUsersDict
+        except NoResultFound:
+            return {'error': "Ride {} has no accepted passengers".format(ride_id)}
+        except Exception as e:
+            return {'error': str(e)}
 
 
 @app.route('/estimate_cost', methods=['GET'])
