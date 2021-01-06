@@ -185,14 +185,16 @@ def User(username):
         apps.delete(synchronize_session=False)
         rides.delete()
 
+        # Delete driver data
+        db_session.query(DriverRatingTable).filter(
+                (DriverRatingTable.rater == username) | (DriverRatingTable.ratee == username)).delete()
+        db_session.query(DriverCertificationTable).filter_by(username=username).delete()
+        db_session.query(DriverTable).filter_by(username=username).delete()
+
         # Delete user data
         db_session.query(UserRatingTable).filter(
                 (UserRatingTable.rater == username) | (UserRatingTable.ratee == username)).delete()
-        db_session.query(DriverRatingTable).filter(
-                (DriverRatingTable.rater == username) | (DriverRatingTable.ratee == username)).delete()
         db_session.query(ApplicationTable).filter_by(username=username).delete()
-        db_session.query(DriverCertificationTable).filter_by(username=username).delete()
-        db_session.query(DriverTable).filter_by(username=username).delete()
         db_session.query(PayPalTable).filter_by(username=username).delete()
         db_session.query(CreditCardTable).filter_by(username=username).delete()
         db_session.query(PaymentMethodTable).filter_by(username=username).delete()
@@ -676,8 +678,24 @@ def Driver(username):
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'DELETE':
-        # delete a driver's data
-        return
+        # Delete driver rides
+        rides = db_session.query(RideTable.ride_id).filter_by(driver_username=username)
+        apps = db_session.query(ApplicationTable).filter(ApplicationTable.ride_id.in_(rides.subquery()))
+        apps.delete(synchronize_session=False)
+        rides.delete()
+
+        # Delete driver data
+        db_session.query(DriverRatingTable).filter(
+                (DriverRatingTable.rater == username) | (DriverRatingTable.ratee == username)).delete()
+        db_session.query(DriverCertificationTable).filter_by(username=username).delete()
+
+        # Delete driver
+        num_rows = db_session.query(DriverTable).filter_by(username=username).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Driver does not exist'}
 
 
 ''' 
