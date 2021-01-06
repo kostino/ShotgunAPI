@@ -1017,6 +1017,7 @@ def BrowseEvents():
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
+        userEventsWithRide = []
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
@@ -1095,13 +1096,20 @@ def ProfilePicture(filename):
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
 def EventRides(event_id):
     if request.method == 'GET':
-        logged_in = 'username' in session
         response = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
         rides = response.json()['rides']
         response = requests.get(url_for('Event', event_id=event_id, _external=True))
         event = response.json()
+
+        # Check if user logged in and is a driver
+        driverFlag = False
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+
         # Render template
-        return render_template("eventRides.html", rides=rides, title="Rides for {}".format(event['title']), event=event)
+        return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides, driverFlag=driverFlag)
 
 
 @app.route('/events/<int:event_id>/rides', methods=['GET', 'POST'])
