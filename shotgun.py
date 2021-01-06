@@ -421,7 +421,7 @@ def Event(event_id):
 
 
 @app.route('/api/event/<int:event_id>/rides', methods=['GET'])
-def EventRides(event_id):
+def EventRidesAPI(event_id):
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
@@ -1002,3 +1002,20 @@ def SearchEvents():
 def ProfilePicture(filename):
     filename = secure_filename(filename)
     return send_from_directory(PROFILE_ROOT, filename)
+
+
+@app.route('/events/<int:event_id>/rides', methods=['GET'])
+def EventRides(event_id):
+    if request.method == 'GET':
+        logged_in = 'username' in session
+        response = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
+        rides = response.json()['rides']
+        response = requests.get(url_for('Event', event_id=event_id, _external=True))
+        event = response.json()
+        # Render template
+        return render_template("eventRides.html", rides=rides, title="Rides for {}".format(event['title']), event=event)
+
+
+@app.route('/events/<int:event_id>/rides', methods=['POST'])
+def CreateRide():
+    return
