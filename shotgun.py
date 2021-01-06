@@ -35,6 +35,7 @@ CreditCardTable = Base.classes.creditcard
 PayPalTable = Base.classes.paypalaccount
 UserRatingTable = Base.classes.userrating
 DriverRatingTable = Base.classes.driverrating
+ApplicationTable = Base.classes.application
 FutureEventView = Table("future_events", metadata, autoload=True, autoload_with=engine)
 AvgDriverRatingView = Table("avg_driver_rating", metadata, autoload=True, autoload_with=engine)
 AvgUserRatingView = Table("avg_user_rating", metadata, autoload=True, autoload_with=engine)
@@ -447,8 +448,21 @@ def Event(event_id):
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'DELETE':
-        # remove an event from db
-        return
+        # Delete event applications
+        rides = db_session.query(RideTable.ride_id).filter_by(event_id=event_id)
+        apps = db_session.query(ApplicationTable).filter(ApplicationTable.ride_id.in_(rides.subquery()))
+        apps.delete(synchronize_session=False)
+
+        # Delete event rides
+        rides.delete()
+
+        # Delete event
+        num_rows = db_session.query(EventTable).filter_by(event_id=event_id).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Event does not exist'}
 
 
 @app.route('/api/event/<int:event_id>/rides', methods=['GET'])
