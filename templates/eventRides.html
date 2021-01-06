@@ -39,15 +39,18 @@
                     </a>
                     <div class="card-body px-auto">
                         <a href="#" style="text-decoration: none; color:black">
-                            <h4 class="card-title">{{ ride['driver_username'] }}</h4>
+                            <h4 class="card-title">&#128663; {{ ride['driver_username'] }}</h4>
                         </a>
                         <p class="card-text">
-                            &euro;{{ ride['cost'] }}
+                            &#128176; {{ ride['cost'] }} &euro;
                             <br>
-                            {{ ride['location_name'] }}
+                            &#128205; {{ ride['location_name'] }}
                             <br>
-                            {{ ride['start_datetime'][:22] }}
+                            &#128197; {{ ride['start_datetime'][:22] }}
                         </p>
+                        <a href="{{ url_for('RideView', ride_id=ride['ride_id']) }}">
+                            <button type="button" class="btn btn-primary">View Ride</button>
+                        </a>
                     </div>
                 </div>
             </div>

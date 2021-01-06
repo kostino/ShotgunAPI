@@ -1062,6 +1062,11 @@ def EventRides(event_id):
         return render_template("eventRides.html", rides=rides, title="Rides for {}".format(event['title']), event=event)
 
 
-@app.route('/events/<int:event_id>/rides', methods=['POST'])
+@app.route('/events/<int:event_id>/rides', methods=['GET', 'POST'])
 def CreateRide():
+    return
+
+
+@app.route('/ride/<int:ride_id>', methods=['GET'])
+def RideView(ride_id):
     return
