@@ -56,7 +56,10 @@ if not os.path.exists(os.path.join(DATA_ROOT, DOCS_DIR)):
 
 def is_valid_geolocation(lat, lng):
     # Validates geographic coordinates.
-    return len(lat) <= 16 and len(lng) <= 16 and 90 > float(lat) > -90 and 180 > float(lng) > -180
+    try:
+        return len(lat) <= 16 and len(lng) <= 16 and 90 > float(lat) > -90 and 180 > float(lng) > -180
+    except ValueError:
+        return False
 
 
 def is_valid_username(username):
