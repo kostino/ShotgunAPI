@@ -606,14 +606,44 @@ def EstimateCost():
 def UserApplicationList(username):
     if request.method == 'GET':
         # get list of user applications
-        return
+        try:
+            userApplicationsQuery = db_session.query(ApplicationTable, RideTable, EventTable).join(
+                RideTable, ApplicationTable.ride_id == RideTable.ride_id, isouter=True).join(
+                EventTable, EventTable.event_id == RideTable.event_id, isouter=True).filter(
+                ApplicationTable.username == username).all()
+            userApplicationsDict = {'applications': [{
+                    'username': a.application.username,
+                    'ride_id': a.application.ride_id,
+                    'status': a.application.status,
+                    'ride_driver': a.ride.driver_username,
+                    'event_id': a.event.event_id,
+                    'event_title': a.event.title
+                } for a in userApplicationsQuery]}
+            return userApplicationsDict
+        except NoResultFound:
+            return {'error': "No applications for user {}".format(username), 'applications': []}
+        except Exception as e:
+            return {'error': str(e), 'applications': []}
 
 
 @app.route('/api/ride/<int:ride_id>/application', methods=['GET', 'POST'])
 def RideApplication(ride_id):
     if request.method == 'GET':
         # get list of ride applications
-        return
+        try:
+            rideApplicationsQuery = db_session.query(ApplicationTable).filter(
+                ApplicationTable.ride_id == ride_id).all()
+            rideApplicationsDict = {'applications': [{
+                    'username': a.username,
+                    'ride_id': a.ride_id,
+                    'status': a.status,
+                    'message': a.message
+                } for a in rideApplicationsQuery]}
+            return rideApplicationsDict
+        except NoResultFound:
+            return {'error': "No applications for ride {}".format(ride_id), 'applications': []}
+        except Exception as e:
+            return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
         # post new application for ride and user
         return
