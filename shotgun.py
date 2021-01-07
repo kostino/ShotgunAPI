@@ -138,8 +138,7 @@ def UserListAdd():
 @app.route('/api/user/<string:username>', methods=['PUT', 'GET', 'DELETE'])
 def User(username):
     if request.method == 'PUT':
-        # edit user data
-        # add user to base
+        # Update user data
         if request.form:
             user = db_session.query(UserTable).filter(UserTable.username == username).one()
             if 'first_name' in request.form:
@@ -650,8 +649,40 @@ def RideApplication(ride_id):
 
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>', methods=['PUT', 'DELETE', 'GET'])
-def Application():
-    return
+def Application(ride_id, username):
+    if request.method == 'GET':
+        # Get application data
+        try:
+            query = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).one()
+            data = {
+                'ride_id': query.ride_id,
+                'username': query.username,
+                'message': query.message,
+                'status': query.status
+            }
+            return data
+        except NoResultFound:
+            return {'error': 'Application does not exist'}
+        except Exception as e:
+            return {'error': str(e)}
+    elif request.method == 'PUT':
+        # Update application data
+        if request.form:
+            app = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).one()
+            if 'message' in request.form:
+                app.message = request.form['message']
+            if 'status' in request.form:
+                app.status = request.form['status']
+            db_session.commit()
+        return {'status': 'success'}
+    elif request.method == 'DELETE':
+        # Delete application
+        num_rows = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Application does not exist'}
 
 
 @app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
