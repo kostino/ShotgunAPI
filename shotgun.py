@@ -649,6 +649,11 @@ def RideApplication(ride_id):
         return
 
 
+@app.route('/api/ride/<int:ride_id>/application/<string:username>', methods=['PUT', 'DELETE', 'GET'])
+def Application():
+    return
+
+
 @app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
 def UserRating(username):
     if request.method == 'GET':
