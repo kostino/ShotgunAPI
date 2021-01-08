@@ -593,7 +593,8 @@ def Ride(ride_id):
                 'longitude': rideQuery.longitude,
                 'latitude': rideQuery.latitude,
                 'location_name': rideQuery.location_name,
-                'driver_username': rideQuery.driver_username
+                'driver_username': rideQuery.driver_username,
+                'event_id': rideQuery.event_id
                 }
             return rideDict
         except NoResultFound:
@@ -629,8 +630,6 @@ def RideUsers(ride_id):
                     'avg_user_rating': str(u.average_user_rating)[:3]
                 } for u in rideUsersQuery]}
             return rideUsersDict
-        except NoResultFound:
-            return {'error': "Ride {} has no accepted passengers".format(ride_id)}
         except Exception as e:
             return {'error': str(e)}
 
