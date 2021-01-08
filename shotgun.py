@@ -63,6 +63,13 @@ def is_valid_geolocation(lat, lng):
         return False
 
 
+def is_valid_rating(stars):
+    try:
+        return 1 <= int(stars) <= 5
+    except ValueError:
+        return
+
+
 def is_valid_username(username):
     # Validates a username.
     return re.match(r'^[A-Za-z0-9_-]+$', username) and 3 <= len(username) <= 16
@@ -742,7 +749,24 @@ def UserRating(username):
             return {'error': str(e)}
     elif request.method == 'POST':
         # post new user rating for user
-        return
+        required_data = ['rater', 'ratee', 'stars', 'comment']
+        if not (all(field in request.form.keys() for field in required_data)
+                and all(len(request.form[field]) > 0 for field in request.form.keys())):
+            return {'error': 'missing data'}, 400
+        # Get request data
+        rater = request.form['rater']
+        ratee = request.form['ratee']
+        stars = request.form['stars']
+        comment = request.form['comment']
+
+        # Validate data
+        if not is_valid_rating(stars):
+            return {'error': 'invalid star rating'}, 400
+        # Insert event into database
+        newUserRating = UserRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
+        db_session.add(newUserRating)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'DELETE':
         # delete user rating for user
         return
@@ -769,7 +793,24 @@ def DriverRating(username):
             return {'error': "User {} is not a driver".format(username)}
     elif request.method == 'POST':
         # post new driver rating for user
-        return
+        required_data = ['rater', 'ratee', 'stars', 'comment']
+        if not (all(field in request.form.keys() for field in required_data)
+                and all(len(request.form[field]) > 0 for field in request.form.keys())):
+            return {'error': 'missing data'}, 400
+        # Get request data
+        rater = request.form['rater']
+        ratee = request.form['ratee']
+        stars = request.form['stars']
+        comment = request.form['comment']
+
+        # Validate data
+        if not is_valid_rating(stars):
+            return {'error': 'invalid star rating'}, 400
+        # Insert event into database
+        newDriverRating = DriverRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
+        db_session.add(newDriverRating)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'DELETE':
         # delete driver rating for user
         return
