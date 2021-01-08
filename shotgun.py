@@ -9,10 +9,11 @@ from flask import Flask, render_template, request, session, send_from_directory,
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from base64 import b64encode, b64decode
 import re
 import requests
 import os
-from base64 import b64encode, b64decode
+from uuid import uuid4
 
 DATA_ROOT = './data'
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
@@ -103,7 +104,7 @@ def UserListAdd():
         # Save profile picture
         profile_picture_path = None
         if profile_picture:
-            profile_picture_path = '{}.jpg'.format(username)
+            profile_picture_path = '{}.jpg'.format(uuid4())
             save_image(profile_picture, os.path.join(PROFILE_DIR, profile_picture_path))
 
         # Hash password
@@ -149,7 +150,7 @@ def User(username):
             if 'surname' in request.form:
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
-                user.profile_picture = '{}.jpg'.format(username)
+                user.profile_picture = '{}.jpg'.format(uuid4())
                 save_image(request.form['profile_picture'], os.path.join(PROFILE_DIR, user.profile_picture))
             db_session.commit()
         return {'status': 'success'}
@@ -217,15 +218,13 @@ def UserVerify(username):
         vehicle = request.form['vehicle']
 
         # Save images
-        user_dir = os.path.join(DOCS_DIR, username)
-        if not os.path.exists(user_dir):
-            os.mkdir(user_dir)
+        rid = str(uuid4())
+        driver_license_path = os.path.join(rid, 'license.jpg')
+        registration_path = os.path.join(rid, 'registration.jpg')
+        vehicle_image_path = os.path.join(rid, 'vehicle.jpg')
+        identity_path = os.path.join(rid, 'identity.jpg')
 
-        driver_license_path = os.path.join(username, 'license.jpg')
-        registration_path = os.path.join(username, 'registration.jpg')
-        vehicle_image_path = os.path.join(username, 'vehicle.jpg')
-        identity_path = os.path.join(username, 'identity.jpg')
-
+        os.makedirs(os.path.join(DOCS_DIR, rid))
         save_image(request.form['driver_license'], os.path.join(DOCS_DIR, driver_license_path))
         save_image(request.form['registration'], os.path.join(DOCS_DIR, registration_path))
         save_image(request.form['vehicle_image'], os.path.join(DOCS_DIR, vehicle_image_path))
@@ -855,7 +854,7 @@ def Login():
             response = requests.get(url_for('Driver', username=session['username'], _external=True))
             session['driver'] = 'error' not in response.json()
 
-            # Load profile picture directory to session
+            # Load profile picture filename to session
             session['profile_picture'] = user['profile_picture']
 
             # Redirect to user profile route (yet to be implemented) and render profile page
@@ -1055,7 +1054,6 @@ def EditUserProfile(username):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
                 updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
-                session['profile_picture'] = '{}.jpg'.format(username)
 
             # If a new first name is sent, update the one in the database
             if (request.form['first_name'] != user['first_name']) and (request.form['first_name'] != ''):
@@ -1065,10 +1063,17 @@ def EditUserProfile(username):
             if (request.form['surname'] != user['surname']) and (request.form['surname'] != ''):
                 updatedData['surname'] = request.form['surname']
 
-            # PUT the updated data to /api/user/<username>
             if updatedData:
+                # PUT the updated data to /api/user/<username>
                 putResponse = requests.put(url_for('User', username=session['username'], _external=True),
                                            data=updatedData)
+
+                # GET the updated resource
+                response = requests.get(url_for('User', username=session['username'], _external=True))
+                user = response.json()
+                if 'error' not in user:
+                    # Load profile picture filename to session
+                    session['profile_picture'] = user['profile_picture']
 
             return redirect(url_for('UserProfile', username=session['username']))
 
