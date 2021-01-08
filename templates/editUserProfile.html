@@ -34,7 +34,7 @@
                 <!-- Profile picture and driver tick mark -->
                 <div class="col-md">
                     <div class="container d-flex justify-content-center" style="position: relative">
-                        <img class="" src="/data/{{ userData['profile_picture'] }}"
+                        <img class="" src="{{ url_for('ProfilePicture', filename=userData['profile_picture']) }}"
                              style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 75%" alt="User icon">
                             {% if driverFlag %}
                             <img class="position-absolute" src="{{ url_for('static', filename='verify.png') }}" alt="Verify Logo"

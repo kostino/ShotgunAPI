@@ -15,8 +15,8 @@ import os
 from base64 import b64encode, b64decode
 
 DATA_ROOT = './data'
-PROFILE_DIR = 'profile'
-DOCS_DIR = 'docs'
+PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
+DOCS_DIR = os.path.join(DATA_ROOT, 'docs')
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
@@ -48,10 +48,10 @@ app = Flask(__name__)
 app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 
 # Create data directories
-if not os.path.exists(os.path.join(DATA_ROOT, PROFILE_DIR)):
-    os.makedirs(os.path.join(DATA_ROOT, PROFILE_DIR))
-if not os.path.exists(os.path.join(DATA_ROOT, DOCS_DIR)):
-    os.makedirs(os.path.join(DATA_ROOT, DOCS_DIR))
+if not os.path.exists(PROFILE_DIR):
+    os.makedirs(PROFILE_DIR)
+if not os.path.exists(DOCS_DIR):
+    os.makedirs(DOCS_DIR)
 
 
 def is_valid_geolocation(lat, lng):
@@ -74,7 +74,7 @@ def is_valid_password(password):
 
 def save_image(data, filename):
     # Saves a base64-encoded image.
-    with open(os.path.join(DATA_ROOT, filename), 'wb') as f:
+    with open(filename, 'wb') as f:
         f.write(b64decode(data.encode('ascii')))
 
 
@@ -103,8 +103,8 @@ def UserListAdd():
         # Save profile picture
         profile_picture_path = None
         if profile_picture:
-            profile_picture_path = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
-            save_image(profile_picture, profile_picture_path)
+            profile_picture_path = '{}.jpg'.format(username)
+            save_image(profile_picture, os.path.join(PROFILE_DIR, profile_picture_path))
 
         # Hash password
         pwd_hash = generate_password_hash(password)
@@ -149,8 +149,8 @@ def User(username):
             if 'surname' in request.form:
                 user.surname = request.form['surname']
             if 'profile_picture' in request.form:
-                user.profile_picture = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
-                save_image(request.form['profile_picture'], user.profile_picture)
+                user.profile_picture = '{}.jpg'.format(username)
+                save_image(request.form['profile_picture'], os.path.join(PROFILE_DIR, user.profile_picture))
             db_session.commit()
         return {'status': 'success'}
     elif request.method == 'GET':
@@ -221,15 +221,15 @@ def UserVerify(username):
         if not os.path.exists(user_dir):
             os.mkdir(user_dir)
 
-        driver_license_path = os.path.join(user_dir, 'license.jpg')
-        registration_path = os.path.join(user_dir, 'registration.jpg')
-        vehicle_image_path = os.path.join(user_dir, 'vehicle.jpg')
-        identity_path = os.path.join(user_dir, 'identity.jpg')
+        driver_license_path = os.path.join(username, 'license.jpg')
+        registration_path = os.path.join(username, 'registration.jpg')
+        vehicle_image_path = os.path.join(username, 'vehicle.jpg')
+        identity_path = os.path.join(username, 'identity.jpg')
 
-        save_image(request.form['driver_license'], driver_license_path)
-        save_image(request.form['registration'], registration_path)
-        save_image(request.form['vehicle_image'], vehicle_image_path)
-        save_image(request.form['identity'], identity_path)
+        save_image(request.form['driver_license'], os.path.join(DOCS_DIR, driver_license_path))
+        save_image(request.form['registration'], os.path.join(DOCS_DIR, registration_path))
+        save_image(request.form['vehicle_image'], os.path.join(DOCS_DIR, vehicle_image_path))
+        save_image(request.form['identity'], os.path.join(DOCS_DIR, identity_path))
 
         # Add to database
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
@@ -1055,7 +1055,7 @@ def EditUserProfile(username):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
                                            message='The profile picture must be a JPEG image.')
                 updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
-                session['profile_picture'] = os.path.join(PROFILE_DIR, '{}.jpg'.format(username))
+                session['profile_picture'] = '{}.jpg'.format(username)
 
             # If a new first name is sent, update the one in the database
             if (request.form['first_name'] != user['first_name']) and (request.form['first_name'] != ''):
@@ -1238,7 +1238,7 @@ def SearchEvents():
 @app.route('/data/profile/<filename>')
 def ProfilePicture(filename):
     filename = secure_filename(filename)
-    return send_from_directory(os.path.join(DATA_ROOT, PROFILE_DIR), filename)
+    return send_from_directory(PROFILE_DIR, filename)
 
 
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
