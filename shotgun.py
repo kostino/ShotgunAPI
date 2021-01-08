@@ -1193,7 +1193,8 @@ def CreateEvent():
         if 'username' not in session:
             return redirect(url_for('Login'))
         required_fields = ['title', 'location_name', 'latitude', 'longitude', 'date', 'time']
-        missing_fields = not all(field in request.form.keys() for field in required_fields)
+        missing_fields = not (all(field in request.form.keys() for field in required_fields)
+                              and all(len(request.form[field]) > 0 for field in request.form.keys()))
         if missing_fields:
             return render_template("systemMessage.html", messageTitle="Missing Fields",
                                    message="Please fill all the required fields.")
