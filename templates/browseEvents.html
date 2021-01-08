@@ -67,7 +67,7 @@
 
                         <!-- If user is a driver, place a 'Create Ride' button -->
                         {% if driverFlag and event['event_id'] not in userEventsWithRide %}
-                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary">
+                        <a href="{{ url_for('CreateRide', event_id=event['event_id']) }}" role="button" class="btn btn-primary">
                             Create Ride
                         </a>
                         {% endif %}
