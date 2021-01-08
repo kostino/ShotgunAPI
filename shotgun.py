@@ -1107,10 +1107,17 @@ def EventRides(event_id):
 
         # Check if user logged in and is a driver
         driverFlag = False
+        createRideFlag = False
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
+                # Check if driver already has a ride for this event
+                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+                userRides = userRidesResponse.json()['rides']
+                userEventsWithRide = [r['event_id'] for r in userRides]
+                createRideFlag = False if event_id in userEventsWithRide else True
+
 
         # Render template
         return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides, driverFlag=driverFlag)
