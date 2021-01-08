@@ -1212,18 +1212,78 @@ def EventRides(event_id):
 
         # Check if user logged in and is a driver
         driverFlag = False
+        createRideFlag = False
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+                # Check if driver already has a ride for this event
+                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+                userRides = userRidesResponse.json()['rides']
+                userEventsWithRide = [r['event_id'] for r in userRides]
+                createRideFlag = False if event_id in userEventsWithRide else True
+
+
+        # Render template
+        return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides,
+                               driverFlag=driverFlag, createRideFlag=createRideFlag)
+
+
+@app.route('/events/<int:event_id>/createride', methods=['GET', 'POST'])
+def CreateRide(event_id):
+
+    if request.method == 'GET':
+        # Check if user logged in and is a driver
+        driverFlag = False
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
 
-        # Render template
-        return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides, driverFlag=driverFlag)
+                # Check if driver already has a ride for this event
+                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+                userRides = userRidesResponse.json()['rides']
+                userEventsWithRide = [r['event_id'] for r in userRides]
+                if event_id in userEventsWithRide:
+                    return render_template("systemMessage.html", messageTitle="Ride already created",
+                                           message="You have already created a ride for this event.")
+            else:
+                # Render error page
+                return render_template("systemMessage.html", messageTitle="You are not a certified driver",
+                                       message="To create rides you need to be a certified driver. Apply from the top right menu")
+        else:
+            # Render error page
+            return redirect(url_for("Login", _external=True))
 
+        # Get event details
+        response = requests.get(url_for('Event', event_id=event_id, _external=True))
+        event = response.json()
 
-@app.route('/events/<int:event_id>/rides', methods=['GET', 'POST'])
-def CreateRide():
-    return
+        return render_template("createRide.html", event=event)
+
+    elif request.method == 'POST':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Check for missing fields
+        required_fields = ['description', 'seats', 'cost', 'start_date', 'start_time', 'location_name', 'latitude', 'longitude']
+        if ('return_date' in request.form) and ('return_date' in request.form): required_fields.append(['return_date', 'return_date'])
+        missing_fields = not all(field in request.form.keys() for field in required_fields)
+        if missing_fields:
+            return render_template("systemMessage.html", messageTitle="Missing Fields",
+                                   message="Please fill all the required fields.")
+
+        requestData = {field: request.form[field] for field in required_fields}
+        requestData['driver_username'] = session['username']
+        requestData['event_id'] = event_id
+        response = requests.post(url_for('RideAdd', _external=True),
+                                 data=requestData)
+        if 'error' in response:
+            return render_template('systemMessage.html', messageTitle='Error Submitting Ride',
+                                   message='An error occured while submitting your ride, please try again later.')
+        return render_template('systemMessage.html', messageTitle='Ride Submitted Successfully',
+                               message='Your ride has been submitted! Make sure to check back soon to approve passenger applications.')
 
 
 @app.route('/ride/<int:ride_id>', methods=['GET'])

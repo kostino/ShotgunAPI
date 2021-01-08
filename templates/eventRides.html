@@ -13,7 +13,7 @@
                     {{ title }}
                 </h3>
             </div>
-            {% if driverFlag %}
+            {% if createRideFlag %}
             <div class="col-md d-flex justify-content-end">
                 <a href="{{ url_for('CreateRide', event_id = event['event_id']) }}">
                     <button type="button" class="btn btn-outline-info">Create a Ride</button>
