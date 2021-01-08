@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}{{ rideInfo['driver_username'] }}'s Ride{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
+
+        <!-- Title and actions row -->
+        <div class="row pb-1">
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    {{ rideInfo['driver_username'] }}'s Ride for {{ eventInfo['title'] }}
+                </h3>
+            </div>
+        </div>
+
+        <!-- Ride details row -->
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <img src="https://cdn.wallpapersafari.com/82/45/CwxrRY.jpg"
+                     alt="{{ rideInfo['driver_username'] }}'s ride image"
+                     style="border-radius: 5px; width: 100%; height:100%; object-fit: cover" class="my-2">
+            </div>
+            <div class="col-md-7">
+                <div>
+                    <h4>Description</h4>
+                    <p>
+                        {{ rideInfo['description'] }}
+                    </p>
+                    <h4>Departure Date and Time</h4>
+                    <p>{{ rideInfo['start_datetime'][:18] }}</p>
+
+                    {% if rideInfo['return_datetime'] %}
+                    <h4>Return Date and Time</h4>
+                    <p>{{ rideInfo['return_datetime'][:18] }}</p>
+                    {% endif %}
+
+                    <h4>Departure Location</h4>
+                    <p>{{ rideInfo['location_name'] }}</p>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- If user is logged in and is not a driver with a ride in this event show application form-->
+        {% if (not driverWithRideFlag) and ('username' in session) %}
+            <form action="{{ url_for('DriverCertification') }}" method="post">
+                <div class="row mb-2">
+                    <div class="col-md">
+                        <h3 class="mx-auto">
+                            Message to driver
+                        </h3>
+                    </div>
+                    <div class="col-md d-flex justify-content-end">
+                        <a href="{{ url_for('RideView', ride_id=rideInfo['ride_id']) }}">
+                            <button type="button" class="btn btn-outline-info">Apply to Ride</button>
+                        </a>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-9">
+                        <div class="container">
+                            <div class="my-3 mx-auto">
+                                <textarea class="form-control" id="message" rows="2" name="message"
+                                          aria-label="message" aria-describedby="message-label"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        <!-- Else print an error message -->
+        {% else %}
+            <div class="alert alert-primary" role="alert" style="text-align: center">
+                You need to login to apply to this ride
+            </div>
+        {% endif %}
+
+    </div>
+
+
+{% endblock %}
