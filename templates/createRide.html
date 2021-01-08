@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Create Event{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+
+    <div class="container-md py-5 my-5 text-center">
+        <div class="row">
+            <div class="col-md-3"></div>
+
+            <div class="col-md-6 container"  style="background-color: white; border-radius: 15px">
+                <h2 class="my-3">Create a ride for {{ event['title'] }}</h2>
+                <hr>
+                <form action="{{ url_for('CreateRide', event_id=event['event_id']) }}" method="post">
+
+                    <div class="input-group my-3">
+                        <span class="input-group-text" id="description-label">Ride Description</span>
+                        <textarea class="form-control" id="description" rows="2" name="description"
+                                  aria-label="description" aria-describedby="description-label"></textarea>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="seats-label">Passenger Seats</span>
+                        <input type="number" class="form-control" placeholder="1" aria-label="seats"
+                               aria-describedby="seats-label" id="seats" name="seats" min="1" max="10">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="cost-label">Cost €</span>
+                        <input type="number" class="form-control" placeholder="5" aria-label="cost"
+                               aria-describedby="cost-label" id="cost" name="cost" min="0" max="100" step="0.5">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="start-date-label">Departure Date</span>
+                        <input type="date" class="form-control" placeholder="Departure Date" aria-label="Departure Date"
+                               aria-describedby="start-date-label" name="start_date" id="departure-date">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="start-time-label">Departure Time</span>
+                        <input type="time" class="form-control" placeholder="Departure Time" aria-label="Departure Time"
+                               aria-describedby="start-time-label" name="start_time" id="departure-time">
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" onclick="toggleReturn()">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Round-trip Ride</label>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="return-date-label">Return Date</span>
+                        <input type="date" class="form-control" placeholder="Return Date" aria-label="Return Date"
+                               aria-describedby="return-date-label" name="return_date" id="return-date" disabled>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="return-time-label">Return Time</span>
+                        <input type="time" class="form-control" placeholder="Return Time" aria-label="Return Time"
+                               aria-describedby="return-time-label" name="return_time" id="return-time" disabled>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Starting Point Name</span>
+                        <input type="text" class="form-control" placeholder="Location Name" aria-label="Location Name"
+                               aria-describedby="basic-addon1" name="location_name" id="location-name">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Starting Point Coordinates</span>
+                        <input type="text" class="form-control" placeholder="Latitude" aria-label="Latitude" aria-describedby="basic-addon1" name="latitude">
+                        <input type="text" class="form-control" placeholder="Longitude" aria-label="Longitude" aria-describedby="basic-addon1" name="longitude">
+                    </div>
+                    <button type="submit" class="btn btn-success mb-3">Create</button>
+                </form>
+            </div>
+
+            <div class="col-md-3"></div>
+        </div>
+
+    </div>
+
+    <script>
+        var flag = 1;
+        function toggleReturn(){
+            if(!flag) {
+                document.getElementById('return-date').setAttribute("disabled", "true");
+                document.getElementById('return-time').setAttribute("disabled", "true");
+                document.getElementById('location-name').focus();
+            } else {
+                document.getElementById('return-date').removeAttribute("disabled");
+                document.getElementById('return-time').removeAttribute("disabled");
+            }
+            flag = !flag;
+        }
+
+    </script>
+
+
+{% endblock %}
