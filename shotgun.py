@@ -529,9 +529,48 @@ def EventRidesAPI(event_id):
 @app.route('/api/ride', methods=['POST'])
 def RideAdd():
     if request.method == 'POST':
-        # get ride data from request.json
-        # add ride to base
-        return
+        required_data = ['event_id', 'start_date', 'start_time', 'driver_username',
+                         'location_name', 'cost','description', 'seats']
+        if not (all(field in request.form.keys() for field in required_data)
+                and all(len(request.form[field]) > 0 for field in request.form.keys())):
+            return {'error': 'missing data'}, 400
+        # Get request data
+        event_id = request.form['event_id']
+        start_date = request.form['start_date']
+        start_time = request.form['start_time']
+        driver_username = request.form['driver_username']
+        longitude = request.form['longitude'] if 'longitude' in request.form.keys() and len(
+            request.form['longitude']) > 0 else '-1000'
+        latitude = request.form['latitude'] if 'latitude' in request.form.keys() and len(
+            request.form['latitude']) > 0 else '-1000'
+        location_name = request.form['location_name'] if 'location_name' in request.form.keys() else ''
+        cost = request.form['cost']
+        description = request.form['description']
+        seats = request.form['seats']
+        available_seats = request.form['seats']
+        return_date = request.form['return_date'] if 'return_date' in request.form.keys() else None
+        return_time = request.form['return_time'] if 'return_time' in request.form.keys() else None
+        ride_id = db_session.query(func.max(RideTable.ride_id)).scalar() + 1
+
+        start_datetime = DT.datetime.combine(DT.datetime.strptime(start_date, '%Y-%m-%d').date(),
+                                       DT.datetime.strptime(start_time, '%H:%M').time())
+        if return_date and return_time:
+            return_datetime = DT.datetime.combine(DT.datetime.strptime(return_date, '%Y-%m-%d').date(),
+                                                 DT.datetime.strptime(return_time, '%H:%M').time())
+        else:
+            return_datetime = None
+
+        # Validate data
+        if not is_valid_geolocation(latitude, longitude):
+            return {'error': 'invalid geolocation'}, 400
+        # Insert event into database
+        newRide = RideTable(ride_id=ride_id, event_id=event_id, start_datetime=start_datetime,
+                            return_datetime=return_datetime, cost=cost, driver_username=driver_username,
+                            latitude=latitude, longitude=longitude, location_name=location_name,
+                            description=description, seats=seats, available_seats=available_seats)
+        db_session.add(newRide)
+        db_session.commit()
+        return {'status': 'success'}, 200
 
 
 @app.route('/api/ride/<int:ride_id>', methods=['PUT', 'GET', 'DELETE'])
@@ -1268,8 +1307,10 @@ def CreateRide(event_id):
 
         # Check for missing fields
         required_fields = ['description', 'seats', 'cost', 'start_date', 'start_time', 'location_name', 'latitude', 'longitude']
-        if ('return_date' in request.form) and ('return_date' in request.form): required_fields.append(['return_date', 'return_date'])
-        missing_fields = not all(field in request.form.keys() for field in required_fields)
+        if ('return_date' in request.form) and ('return_time' in request.form):
+            required_fields.append(['return_date', 'return_time'])
+        missing_fields = not (all(field in request.form.keys() for field in required_fields)
+                              and all(len(request.form[field]) > 0 for field in request.form.keys()))
         if missing_fields:
             return render_template("systemMessage.html", messageTitle="Missing Fields",
                                    message="Please fill all the required fields.")
