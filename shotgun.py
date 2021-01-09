@@ -17,6 +17,7 @@ from uuid import uuid4
 
 DATA_ROOT = './data'
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
+VEHICLE_DIR = os.path.join(DATA_ROOT, 'vehicle')
 DOCS_DIR = os.path.join(DATA_ROOT, 'docs')
 
 # Initialize SQL Alchemy
@@ -51,6 +52,8 @@ app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 # Create data directories
 if not os.path.exists(PROFILE_DIR):
     os.makedirs(PROFILE_DIR)
+if not os.path.exists(VEHICLE_DIR):
+    os.makedirs(VEHICLE_DIR)
 if not os.path.exists(DOCS_DIR):
     os.makedirs(DOCS_DIR)
 
@@ -1286,6 +1289,12 @@ def SearchEvents():
 def ProfilePicture(filename):
     filename = secure_filename(filename)
     return send_from_directory(PROFILE_DIR, filename)
+
+
+@app.route('/data/vehicle/<filename>')
+def VehicleImage(filename):
+    filename = secure_filename(filename)
+    return send_from_directory(VEHICLE_DIR, filename)
 
 
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
