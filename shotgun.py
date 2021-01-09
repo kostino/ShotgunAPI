@@ -1318,6 +1318,10 @@ def EventRides(event_id):
                 userEventsWithRide = [r['event_id'] for r in userRides]
                 createRideFlag = False if event_id in userEventsWithRide else True
 
+        # Load driver data
+        for ride in rides:
+            driver = requests.get(url_for('Driver', username=ride['driver_username'], _external=True)).json()
+            ride['vehicle_image'] = driver['vehicle_image']
 
         # Render template
         return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides,
