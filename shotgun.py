@@ -919,7 +919,7 @@ def Login():
 def Logout():
     if 'username' in session:
         session.pop('username', None)
-    return redirect(url_for('Login'))
+    return redirect(url_for('Index'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
