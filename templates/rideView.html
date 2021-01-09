@@ -18,7 +18,7 @@
         <!-- Ride details row -->
         <div class="row">
             <div class="col-md-4 mb-4">
-                <img src="https://cdn.wallpapersafari.com/82/45/CwxrRY.jpg"
+                <img src="{{ url_for('VehicleImage', filename=driverInfo['vehicle_image']) }}"
                      alt="{{ rideInfo['driver_username'] }}'s ride image"
                      style="border-radius: 5px; width: 100%; height:100%; object-fit: cover" class="my-2">
             </div>

@@ -1319,8 +1319,12 @@ def EventRides(event_id):
 
         # Load driver data
         for ride in rides:
-            driver = requests.get(url_for('Driver', username=ride['driver_username'], _external=True)).json()
-            ride['vehicle_image'] = driver['vehicle_image']
+            response = requests.get(url_for('Driver', username=ride['driver_username'], _external=True))
+            driverInfo = response.json()
+            if 'error' in driverInfo:
+                return render_template('systemMessage.html', messageTitle='Error Getting Driver Info',
+                                       message='An error occurred while getting driver information, please try again later.')
+            ride['vehicle_image'] = driverInfo['vehicle_image']
 
         # Render template
         return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides,
@@ -1392,25 +1396,33 @@ def RideView(ride_id):
 
         # Get ride info
         response = requests.get(url_for("Ride", ride_id=ride_id, _external=True))
-        if 'error' in response.json():
+        rideInfo = response.json()
+        if 'error' in rideInfo:
             return render_template('systemMessage.html', messageTitle='Error Getting Ride',
                                    message='An error occurred while getting ride information, please try again later.')
-        rideInfo = response.json()
         event_id = rideInfo['event_id']
 
         # Get users on ride info
         response = requests.get(url_for("RideUsers", ride_id=ride_id, _external=True))
+        rideUsers = response.json()
         if 'error' in response.json():
             return render_template('systemMessage.html', messageTitle='Error Getting Ride Users',
                                    message='An error occurred while getting passenger information, please try again later.')
-        passengers = response.json()['users']
+        passengers = rideUsers['users']
 
         # Get event info
         response = requests.get(url_for("Event", event_id=event_id, _external=True))
-        if 'error' in response.json():
+        eventInfo = response.json()
+        if 'error' in eventInfo:
             return render_template('systemMessage.html', messageTitle='Error Getting Ride Event Info',
                                    message='An error occurred while getting event information, please try again later.')
-        eventInfo = response.json()
+
+        # Get driver info
+        response = requests.get(url_for('Driver', username=rideInfo['driver_username'], _external=True))
+        driverInfo = response.json()
+        if 'error' in driverInfo:
+            return render_template('systemMessage.html', messageTitle='Error Getting Driver Info',
+                                   message='An error occurred while getting driver information, please try again later.')
 
         # Check if user logged in, is a driver and already has a ride for the current event
         driverFlag = False
@@ -1428,4 +1440,4 @@ def RideView(ride_id):
                     driverWithRideFlag = True
 
         return render_template("rideView.html", rideInfo=rideInfo, passengers=passengers, eventInfo=eventInfo,
-                               driverWithRideFlag=driverWithRideFlag)
+                               driverInfo=driverInfo, driverWithRideFlag=driverWithRideFlag)
