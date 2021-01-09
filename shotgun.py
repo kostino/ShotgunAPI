@@ -1349,7 +1349,7 @@ def RideView(ride_id):
         if 'error' in response.json():
             return render_template('systemMessage.html', messageTitle='Error Getting Ride Users',
                                    message='An error occurred while getting passenger information, please try again later.')
-        passengers = response.json()
+        passengers = response.json()['users']
 
         # Get event info
         response = requests.get(url_for("Event", event_id=event_id, _external=True))

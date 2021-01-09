@@ -22,22 +22,40 @@
                      alt="{{ rideInfo['driver_username'] }}'s ride image"
                      style="border-radius: 5px; width: 100%; height:100%; object-fit: cover" class="my-2">
             </div>
-            <div class="col-md-7">
+            <div class="col-md-4">
                 <div>
                     <h4>Description</h4>
-                    <p>
-                        {{ rideInfo['description'] }}
-                    </p>
+                    <p>{{ rideInfo['description'] }}</p>
+
                     <h4>Departure Date and Time</h4>
                     <p>{{ rideInfo['start_datetime'][:18] }}</p>
 
-                    {% if rideInfo['return_datetime'] %}
-                    <h4>Return Date and Time</h4>
-                    <p>{{ rideInfo['return_datetime'][:18] }}</p>
-                    {% endif %}
-
                     <h4>Departure Location</h4>
                     <p>{{ rideInfo['location_name'] }}</p>
+
+                    {% if rideInfo['return_datetime'] %}
+                        <h4>Return Date and Time</h4>
+                        <p>{{ rideInfo['return_datetime'][:18] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div>
+                    <h4>Available Seats</h4>
+                    <p>{{ rideInfo['available_seats'] }}/{{ rideInfo['seats'] }}</p>
+
+                    <h4>Passengers</h4>
+                    <ul class="list-group">
+                    {% for passenger in passengers %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('UserProfile', username=passenger['username'], _external=True) }}"
+                               style="text-decoration: none;">
+                                {{ passenger['username'] }}
+                            </a>
+                            <span class="badge bg-primary rounded-pill">{{ passenger['avg_user_rating'] }}⭐</span>
+                        </li>
+                    {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
@@ -47,26 +65,24 @@
         <!-- If user is logged in and is not a driver with a ride in this event show application form-->
         {% if (not driverWithRideFlag) and ('username' in session) %}
             <form action="{{ url_for('DriverCertification') }}" method="post">
-                <div class="row mb-2">
-                    <div class="col-md">
+                <div class="row mb-2 justify-content-center">
+                    <div class="col-md-4">
                         <h3 class="mx-auto">
                             Message to driver
                         </h3>
                     </div>
-                    <div class="col-md d-flex justify-content-end">
+                    <div class="col-md-4 d-flex justify-content-end">
                         <a href="{{ url_for('RideView', ride_id=rideInfo['ride_id']) }}">
-                            <button type="button" class="btn btn-outline-info">Apply to Ride</button>
+                            <button type="button" class="btn btn-primary">Apply to Ride</button>
                         </a>
                     </div>
                 </div>
                 <div class="row justify-content-center">
-                    <div class="col-md-9">
-                        <div class="container">
+                    <div class="col-md-8">
                             <div class="my-3 mx-auto">
                                 <textarea class="form-control" id="message" rows="2" name="message"
                                           aria-label="message" aria-describedby="message-label"></textarea>
                             </div>
-                        </div>
                     </div>
                 </div>
             </form>
