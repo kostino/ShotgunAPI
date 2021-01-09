@@ -1427,6 +1427,9 @@ def RideView(ride_id):
         # Check if user logged in, is a driver and already has a ride for the current event
         driverFlag = False
         driverWithRideFlag = False
+        alreadyAppliedFlag = False
+        alreadyAcceptedFlag = False
+        passengerInOtherRideFlag = False
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
@@ -1438,6 +1441,17 @@ def RideView(ride_id):
                 userEventsWithRide = [r['event_id'] for r in userRides]
                 if event_id in userEventsWithRide:
                     driverWithRideFlag = True
+            userApplicationResponse = requests.get(url_for('UserApplicationList', username=session['username'], _external=True))
+            userApplications = userApplicationResponse.json()['applications']
+            userRidesAsPassenger = [a['ride_id'] for a in userApplications if a['status'] == 'accepted']
+            eventRidesResponse = requests.get(
+                url_for('EventRidesAPI', event_id=rideInfo['event_id'], _external=True))
+            eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
+            alreadyAcceptedFlag = ride_id in userRidesAsPassenger
+            alreadyAppliedFlag = ride_id in [a['ride_id'] for a in userApplications if a['status'] == 'pending']
+            passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
 
         return render_template("rideView.html", rideInfo=rideInfo, passengers=passengers, eventInfo=eventInfo,
-                               driverInfo=driverInfo, driverWithRideFlag=driverWithRideFlag)
+                               driverInfo=driverInfo, driverWithRideFlag=driverWithRideFlag,
+                               alreadyAcceptedFlag=alreadyAcceptedFlag, alreadyAppliedFlag=alreadyAppliedFlag,
+                               passengerInOtherRideFlag=passengerInOtherRideFlag)

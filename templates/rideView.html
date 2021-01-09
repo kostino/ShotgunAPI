@@ -63,29 +63,47 @@
         <hr>
 
         <!-- If user is logged in and is not a driver with a ride in this event show application form-->
-        {% if (not driverWithRideFlag) and ('username' in session) %}
-            <form action="{{ url_for('DriverCertification') }}" method="post">
-                <div class="row mb-2 justify-content-center">
-                    <div class="col-md-4">
-                        <h3 class="mx-auto">
-                            Message to driver
-                        </h3>
-                    </div>
-                    <div class="col-md-4 d-flex justify-content-end">
-                        <a href="{{ url_for('RideView', ride_id=rideInfo['ride_id']) }}">
-                            <button type="button" class="btn btn-primary">Apply to Ride</button>
-                        </a>
-                    </div>
+        {% if 'username' in session %}
+            {% if driverWithRideFlag %}
+                <div class="alert alert-primary" role="alert" style="text-align: center">
+                    You are driving another ride for this event!
                 </div>
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                            <div class="my-3 mx-auto">
-                                <textarea class="form-control" id="message" rows="2" name="message"
-                                          aria-label="message" aria-describedby="message-label"></textarea>
-                            </div>
-                    </div>
+            {% elif alreadyAppliedFlag %}
+                <div class="alert alert-primary" role="alert" style="text-align: center">
+                    You have already applied for this ride!
                 </div>
-            </form>
+            {% elif alreadyAcceptedFlag %}
+                <div class="alert alert-primary" role="alert" style="text-align: center">
+                    You are a passenger in this ride!
+                </div>
+            {% elif passengerInOtherRideFlag %}
+                <div class="alert alert-primary" role="alert" style="text-align: center">
+                    You are a passenger in another ride for this event!
+                </div>
+            {% else %}
+                <form action="{{ url_for('DriverCertification') }}" method="post">
+                    <div class="row mb-2 justify-content-center">
+                        <div class="col-md-4">
+                            <h3 class="mx-auto">
+                                Message to driver
+                            </h3>
+                        </div>
+                        <div class="col-md-4 d-flex justify-content-end">
+                            <a href="{{ url_for('RideView', ride_id=rideInfo['ride_id']) }}">
+                                <button type="button" class="btn btn-primary">Apply to Ride</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                                <div class="my-3 mx-auto">
+                                    <textarea class="form-control" id="message" rows="2" name="message"
+                                              aria-label="message" aria-describedby="message-label"></textarea>
+                                </div>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
         <!-- Else print an error message -->
         {% else %}
             <div class="alert alert-primary" role="alert" style="text-align: center">
