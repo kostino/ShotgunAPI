@@ -137,7 +137,7 @@ CREATE TABLE `driver` (
 
 LOCK TABLES `driver` WRITE;
 /*!40000 ALTER TABLE `driver` DISABLE KEYS */;
-INSERT INTO `driver` VALUES ('Mazda RX-8','as78fdsag.jpg','doumani'),('Tesla Model X','rX832F13.jpg','goulaaas'),('Millennium Falcon','sdf8sf7as.jpg','han.yolo'),('Mazda MX-5','Lf29mBR.jpg','kostino'),('Audi A8','Sd2385H.jpg','TheIronMan');
+INSERT INTO `driver` VALUES ('Mazda RX-8','doumani.jpg','doumani'),('Tesla Model X','goulaaas.jpg','goulaaas'),('Millennium Falcon','han.yolo.jpg','han.yolo'),('Mazda MX-5','kostino.jpg','kostino'),('Audi A8','TheIronMan.jpg','TheIronMan');
 /*!40000 ALTER TABLE `driver` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -17,6 +17,7 @@ from uuid import uuid4
 
 DATA_ROOT = './data'
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
+VEHICLE_DIR = os.path.join(DATA_ROOT, 'vehicle')
 DOCS_DIR = os.path.join(DATA_ROOT, 'docs')
 
 # Initialize SQL Alchemy
@@ -51,6 +52,8 @@ app.secret_key = b'_5rt2L"F4xFz\n\xec]/'
 # Create data directories
 if not os.path.exists(PROFILE_DIR):
     os.makedirs(PROFILE_DIR)
+if not os.path.exists(VEHICLE_DIR):
+    os.makedirs(VEHICLE_DIR)
 if not os.path.exists(DOCS_DIR):
     os.makedirs(DOCS_DIR)
 
@@ -61,6 +64,13 @@ def is_valid_geolocation(lat, lng):
         return len(lat) <= 16 and len(lng) <= 16 and 90 > float(lat) > -90 and 180 > float(lng) > -180
     except ValueError:
         return False
+
+
+def is_valid_rating(stars):
+    try:
+        return 1 <= int(stars) <= 5
+    except ValueError:
+        return
 
 
 def is_valid_username(username):
@@ -593,7 +603,8 @@ def Ride(ride_id):
                 'longitude': rideQuery.longitude,
                 'latitude': rideQuery.latitude,
                 'location_name': rideQuery.location_name,
-                'driver_username': rideQuery.driver_username
+                'driver_username': rideQuery.driver_username,
+                'event_id': rideQuery.event_id
                 }
             return rideDict
         except NoResultFound:
@@ -629,8 +640,6 @@ def RideUsers(ride_id):
                     'avg_user_rating': str(u.average_user_rating)[:3]
                 } for u in rideUsersQuery]}
             return rideUsersDict
-        except NoResultFound:
-            return {'error': "Ride {} has no accepted passengers".format(ride_id)}
         except Exception as e:
             return {'error': str(e)}
 
@@ -742,7 +751,24 @@ def UserRating(username):
             return {'error': str(e)}
     elif request.method == 'POST':
         # post new user rating for user
-        return
+        required_data = ['rater', 'ratee', 'stars', 'comment']
+        if not (all(field in request.form.keys() for field in required_data)
+                and all(len(request.form[field]) > 0 for field in request.form.keys())):
+            return {'error': 'missing data'}, 400
+        # Get request data
+        rater = request.form['rater']
+        ratee = request.form['ratee']
+        stars = request.form['stars']
+        comment = request.form['comment']
+
+        # Validate data
+        if not is_valid_rating(stars):
+            return {'error': 'invalid star rating'}, 400
+        # Insert event into database
+        newUserRating = UserRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
+        db_session.add(newUserRating)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'DELETE':
         # delete user rating for user
         return
@@ -769,7 +795,24 @@ def DriverRating(username):
             return {'error': "User {} is not a driver".format(username)}
     elif request.method == 'POST':
         # post new driver rating for user
-        return
+        required_data = ['rater', 'ratee', 'stars', 'comment']
+        if not (all(field in request.form.keys() for field in required_data)
+                and all(len(request.form[field]) > 0 for field in request.form.keys())):
+            return {'error': 'missing data'}, 400
+        # Get request data
+        rater = request.form['rater']
+        ratee = request.form['ratee']
+        stars = request.form['stars']
+        comment = request.form['comment']
+
+        # Validate data
+        if not is_valid_rating(stars):
+            return {'error': 'invalid star rating'}, 400
+        # Insert event into database
+        newDriverRating = DriverRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
+        db_session.add(newDriverRating)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'DELETE':
         # delete driver rating for user
         return
@@ -1183,7 +1226,7 @@ def BrowseEvents():
         return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
 
 
-@app.route('/events/new', methods=['GET','POST'])
+@app.route('/events/new', methods=['GET', 'POST'])
 def CreateEvent():
     if request.method == 'GET':
 
@@ -1247,6 +1290,12 @@ def ProfilePicture(filename):
     return send_from_directory(PROFILE_DIR, filename)
 
 
+@app.route('/data/vehicle/<filename>')
+def VehicleImage(filename):
+    filename = secure_filename(filename)
+    return send_from_directory(VEHICLE_DIR, filename)
+
+
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
 def EventRides(event_id):
     if request.method == 'GET':
@@ -1268,6 +1317,10 @@ def EventRides(event_id):
                 userEventsWithRide = [r['event_id'] for r in userRides]
                 createRideFlag = False if event_id in userEventsWithRide else True
 
+        # Load driver data
+        for ride in rides:
+            driver = requests.get(url_for('Driver', username=ride['driver_username'], _external=True)).json()
+            ride['vehicle_image'] = driver['vehicle_image']
 
         # Render template
         return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides,
@@ -1278,7 +1331,7 @@ def EventRides(event_id):
 def CreateRide(event_id):
 
     if request.method == 'GET':
-        # Check if user logged in and is a driver
+        # Check if user logged in, is a driver and already has a ride for the current event
         driverFlag = False
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
@@ -1335,4 +1388,44 @@ def CreateRide(event_id):
 
 @app.route('/ride/<int:ride_id>', methods=['GET'])
 def RideView(ride_id):
-    return
+    if request.method == 'GET':
+
+        # Get ride info
+        response = requests.get(url_for("Ride", ride_id=ride_id, _external=True))
+        if 'error' in response.json():
+            return render_template('systemMessage.html', messageTitle='Error Getting Ride',
+                                   message='An error occurred while getting ride information, please try again later.')
+        rideInfo = response.json()
+        event_id = rideInfo['event_id']
+
+        # Get users on ride info
+        response = requests.get(url_for("RideUsers", ride_id=ride_id, _external=True))
+        if 'error' in response.json():
+            return render_template('systemMessage.html', messageTitle='Error Getting Ride Users',
+                                   message='An error occurred while getting passenger information, please try again later.')
+        passengers = response.json()['users']
+
+        # Get event info
+        response = requests.get(url_for("Event", event_id=event_id, _external=True))
+        if 'error' in response.json():
+            return render_template('systemMessage.html', messageTitle='Error Getting Ride Event Info',
+                                   message='An error occurred while getting event information, please try again later.')
+        eventInfo = response.json()
+
+        # Check if user logged in, is a driver and already has a ride for the current event
+        driverFlag = False
+        driverWithRideFlag = False
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            if 'error' not in driverCheck.json():
+                driverFlag = True
+
+                # Check if driver already has a ride for this event
+                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
+                userRides = userRidesResponse.json()['rides']
+                userEventsWithRide = [r['event_id'] for r in userRides]
+                if event_id in userEventsWithRide:
+                    driverWithRideFlag = True
+
+        return render_template("rideView.html", rideInfo=rideInfo, passengers=passengers, eventInfo=eventInfo,
+                               driverWithRideFlag=driverWithRideFlag)
