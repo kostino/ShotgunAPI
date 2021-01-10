@@ -1543,7 +1543,7 @@ def RateRides(username):
             to_rate_by_ride.append(rate_data)
 
         # TODO: Here render_template and provide to_rate_by_ride as context
-        return {'rides': to_rate_by_ride}
+        return render_template('ratePastRides.html', ride_rating_data=to_rate_by_ride)
     if request.method == 'POST':
         # Create POST
         return
@@ -1567,4 +1567,4 @@ def ManageMyRides(username):
         ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
         rides.append(r)
     # TODO: render template
-    return {'rides': rides}
+    return render_template('manageRides.html', rides=rides)
