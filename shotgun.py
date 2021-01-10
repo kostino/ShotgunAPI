@@ -1544,3 +1544,6 @@ def RateRides(username):
 
         # TODO: Here render_template and provide to_rate_by_ride as context
         return {'rides': to_rate_by_ride}
+    if request.method == 'POST':
+        # Create POST
+        return
