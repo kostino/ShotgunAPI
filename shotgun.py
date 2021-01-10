@@ -1637,7 +1637,7 @@ def RideView(ride_id):
 
 
 @app.route('/rate_rides', methods=['GET', 'POST'])
-def RateRides(username):
+def RateRides():
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('Login'))
@@ -1666,7 +1666,7 @@ def RateRides(username):
 
 
 @app.route('/manage_rides', methods=['GET'])
-def ManageMyRides(username):
+def ManageMyRides():
     if 'username' not in session:
         return redirect(url_for('Login'))
 
