@@ -116,6 +116,11 @@ def UserListAdd():
         if not is_valid_password(password):
             return {'error': 'A password must be at least 6 characters long.'}
 
+        # Check if username is already taken
+        exists = db_session.query(UserTable).filter_by(username=username).first()
+        if exists:
+            return {'error': 'Username is already taken.'}
+
         # Save profile picture
         profile_picture_path = None
         if profile_picture:
@@ -230,7 +235,10 @@ def User(username):
 @app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
 def UserVerify(username):
     if request.method == 'POST':
-        vehicle = request.form['vehicle']
+        # Check if the user has already applied
+        exists = db_session.query(DriverCertificationTable).filter_by(username=username).first()
+        if exists:
+            return {'error': 'User has already applied'}
 
         # Save images
         rid = str(uuid4())
@@ -246,6 +254,7 @@ def UserVerify(username):
         save_image(request.form['identity'], os.path.join(DOCS_DIR, identity_path))
 
         # Add to database
+        vehicle = request.form['vehicle']
         newApplication = DriverCertificationTable(username=username, license=driver_license_path,
                                                   registration=registration_path,
                                                   vehicle=vehicle, vehicle_image=vehicle_image_path,
@@ -999,29 +1008,24 @@ def Register():
         response = requests.get(url_for('User', username=username, _external=True))
         user = response.json()
 
-        if 'username' in user:
-            # User already exists
-            return render_template("systemMessage.html", messageTitle="User already exists",
-                                   message="A user with this username already exists. If this is your username you can login.")
-        else:
-            # Encode profile picture
-            profile_picture = None
-            f = request.files['profile_picture']
-            if f.filename != '':
-                if not check_image_ext(f.filename):
-                    return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                           message='The profile picture must be a JPEG image.')
-                profile_picture = b64encode(f.read()).decode('ascii')
+        # Encode profile picture
+        profile_picture = None
+        f = request.files['profile_picture']
+        if f.filename != '':
+            if not check_image_ext(f.filename):
+                return render_template('systemMessage.html', messageTitle='Invalid image format',
+                                       message='The profile picture must be a JPEG image.')
+            profile_picture = b64encode(f.read()).decode('ascii')
 
-            # Insert user into database by posting on /api/user
-            requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                           'profile_picture': profile_picture}
-            response = requests.post(url_for('UserListAdd', _external=True), data=requestData).json()
-            if 'error' not in response:
-                return render_template('systemMessage.html', messageTitle='Success',
-                                       message='Registration completed successfully!')
-            else:
-                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        # Insert user into database by posting on /api/user
+        requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
+                       'profile_picture': profile_picture}
+        response = requests.post(url_for('UserListAdd', _external=True), data=requestData).json()
+        if 'error' not in response:
+            return render_template('systemMessage.html', messageTitle='Success',
+                                   message='Registration completed successfully!')
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
 
 @app.route('/driverCertification', methods=['GET', 'POST'])
@@ -1060,10 +1064,12 @@ def DriverCertification():
 
         # Pass request to the API endpoint
         response = requests.post(url_for('UserVerify', username=session['username'], _external=True),
-                                 data=requestData)
-
-        return render_template('systemMessage.html', messageTitle='Application Submitted Successfully',
-                               message='Your application to be a driver has been submitted, please wait until we review your application.')
+                                 data=requestData).json()
+        if 'error' not in response:
+            return render_template('systemMessage.html', messageTitle='Application Submitted Successfully',
+                                   message='Your application to be a driver has been submitted, please wait until we review your application.')
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
 
 @app.route('/user/<string:username>', methods=['GET'])
