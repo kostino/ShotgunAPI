@@ -108,7 +108,7 @@ def UserListAdd():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-        profile_picture = request.form.get('profile_picture')
+        profile_picture_data = request.form.get('profile_picture')
 
         # Validate data
         if not is_valid_username(username):
@@ -122,17 +122,18 @@ def UserListAdd():
             return {'error': 'Username is already taken.'}
 
         # Save profile picture
-        profile_picture_path = None
-        if profile_picture:
-            profile_picture_path = '{}.jpg'.format(uuid4())
-            save_image(profile_picture, os.path.join(PROFILE_DIR, profile_picture_path))
+        if profile_picture_data:
+            profile_picture = '{}.jpg'.format(uuid4())
+            save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
+        else:
+            profile_picture = 'default.jpg'
 
         # Hash password
         pwd_hash = generate_password_hash(password)
 
         # Insert user into database
         newUser = UserTable(username=username, password=pwd_hash,
-                            first_name=first_name, surname=surname, profile_picture=profile_picture_path)
+                            first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -412,7 +413,7 @@ def EventAddList():
         db_session.add(newEvent)
         db_session.commit()
         return {'status': 'success'}, 200
-    if request.method == 'GET':
+    elif request.method == 'GET':
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
         try:
@@ -820,7 +821,7 @@ def Application(ride_id, username):
             return {'error': 'Application does not exist'}
 
 
-@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
 def UserRating(username):
     if request.method == 'GET':
         # get list of user ratings for user
@@ -854,9 +855,6 @@ def UserRating(username):
         db_session.add(newUserRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete user rating for user
-        return
 
 
 @app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
@@ -886,7 +884,7 @@ def PeopleToRate(username, ride_id):
         return {'driver': driver_to_rate, 'users': users_to_rate}
 
 
-@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
 def DriverRating(username):
     if request.method == 'GET':
         # get list of driver ratings for user
@@ -925,9 +923,6 @@ def DriverRating(username):
         db_session.add(newDriverRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete driver rating for user
-        return
 
 
 @app.route('/api/driver', methods=['POST'])
