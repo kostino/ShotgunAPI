@@ -1644,7 +1644,7 @@ def ManageMyRides(username):
         return redirect(url_for('Login'))
     elif session['username'] != username:
         return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                               message='Please try navigating to your own manage rides page.')
+                               message='Please try navigating to your own rides management page.')
 
     response = requests.get(url_for('UserRides', username=username, _external=True))
     rides = response.json()['rides']
