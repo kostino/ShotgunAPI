@@ -1568,3 +1568,16 @@ def ManageMyRides(username):
         rides.append(r)
     # TODO: render template
     return render_template('manageRides.html', rides=rides)
+
+
+@app.route('/user/<string:username>/my_applications', methods=['GET'])
+def MyRideApplications(username):
+    if 'username' not in session:
+        return redirect(url_for('Login'))
+    elif session['username'] != username:
+        return render_template('systemMessage.html', messageTitle='Access not allowed!',
+                               message='Please try navigating to your own applications page.')
+
+    response = requests.get(url_for('UserApplicationList', username=username, _external=True))
+    applications = response['applications']
+    return render_template('myRideApplications.html', applications=applications)
