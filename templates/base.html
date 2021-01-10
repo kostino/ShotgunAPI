@@ -87,12 +87,12 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('UserProfile', username=session['username']) }}">Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('PaymentMethods', username=session['username']) }}">Payment Methods</a></li>
-                                <li><a class="dropdown-item" href="#">My Ride Applications</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('RateRides', username=session['username']) }}">Rate Previous Rides</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('MyRideApplications') }}">My Ride Applications</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('RateRides') }}">Rate Previous Rides</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <!-- Driver only options -->
                                 {% if session['driver'] == true %}
-                                <li><a class="dropdown-item" href="{{ url_for('ManageMyRides', username=session['username']) }}">Manage My Rides</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('ManageMyRides') }}">Manage My Rides</a></li>
                                 {% else %}
                                 <!-- Non driver only options -->
                                 <li><a class="dropdown-item" href="{{ url_for('DriverCertification') }}">Become a driver</a></li>
