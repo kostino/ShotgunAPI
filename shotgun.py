@@ -737,8 +737,50 @@ def RideApplication(ride_id):
         except Exception as e:
             return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
-        # post new application for ride and user
-        return
+        username = request.form['username']
+        event_id = requests.get(url_for('Ride', ride_id=ride_id, _external=True))
+        driverCheck = requests.get(url_for('Driver', username=username, _external=True))
+        if 'error' not in driverCheck.json():
+            # Check if driver already has a ride for this event
+            userRidesResponse = requests.get(url_for('UserRides', username=username, _external=True))
+            userRides = userRidesResponse.json()['rides']
+            userEventsWithRide = [r['event_id'] for r in userRides]
+            if event_id in userEventsWithRide:
+                driverWithRideFlag = True
+
+        # Check if user has already applied for this ride
+        userApplicationResponse = requests.get(
+            url_for('UserApplicationList', username=username, _external=True))
+        userApplications = userApplicationResponse.json()['applications']
+        alreadyAppliedFlag = ride_id in [a['ride_id'] for a in userApplications if a['status'] == 'pending']
+
+        # Check if user has already been accepted for this ride
+        userRidesAsPassenger = [a['ride_id'] for a in userApplications if a['status'] == 'accepted']
+        alreadyAcceptedFlag = ride_id in userRidesAsPassenger
+
+        # Check if user has already been accepted on a ride for this event
+        eventRidesResponse = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
+        eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
+        passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
+
+        if driverWithRideFlag:
+            return {'error': 'You are a driver with a ride for this event.'}, 400
+        if alreadyAppliedFlag:
+            return {'error': 'You have already applied for this ride.'}, 400
+        if alreadyAcceptedFlag:
+            return {'error': 'You have already been accepted on board this ride.'}, 400
+        if passengerInOtherRideFlag:
+            return {'error': 'You are a passenger on another ride for this event.'}, 400
+
+        # Get request data
+        message = request.form['message']
+        status = request.form['status']
+
+        # Insert event into database
+        newApplication = ApplicationTable(ride_id=ride_id, username=username, message=message, status=status)
+        db_session.add(newApplication)
+        db_session.commit()
+        return {'status': 'success'}, 200
 
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>', methods=['PUT', 'DELETE', 'GET'])
