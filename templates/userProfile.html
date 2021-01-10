@@ -61,7 +61,7 @@
                 {% if session['username'] == userData['username'] %}
                 <div class="row my-4">
                     <h3>Payment Methods</h3>
-                    <a href="{{ url_for('PaymentMethods', username=session['username']) }}">
+                    <a href="{{ url_for('PaymentMethods') }}">
                         <button type="button" class="btn btn-primary" style="max-width: 50%">Manage</button>
                     </a>
                 </div>
