@@ -58,6 +58,11 @@ if not os.path.exists(DOCS_DIR):
     os.makedirs(DOCS_DIR)
 
 
+def is_past_date(date_string):
+    date = DT.datetime.strptime(date_string, '%a, %d %b %Y').date()
+    return date < DT.datetime.now().date()
+
+
 def is_valid_geolocation(lat, lng):
     # Validates geographic coordinates.
     try:
@@ -535,6 +540,35 @@ def EventRidesAPI(event_id):
             return {'error': str(e)}
 
 
+@app.route('/api/ride', methods=['GET'])
+def AllRidesAPI():
+    if request.method == 'GET':
+        # get ride data for a preview list
+        # return json
+        try:
+            rideQuery = db_session.query(RideTable).all()
+            # return all data except from event_id (redundant)
+            rideDict = {'rides':
+                               [{'ride_id': r.ride_id,
+                                 'start_datetime': r.start_datetime,
+                                 'return_datetime': r.return_datetime,
+                                 'cost': r.cost,
+                                 'description': r.description,
+                                 'seats': r.seats,
+                                 'available_seats': r.available_seats,
+                                 'longitude': r.longitude,
+                                 'latitude': r.latitude,
+                                 'location_name': r.location_name,
+                                 'driver_username': r.driver_username
+                                 } for r in rideQuery]
+                           }
+            return rideDict
+        except NoResultFound:
+            return {'error': 'No rides in the database', 'rides': []}
+        except Exception as e:
+            return {'error': str(e)}
+
+
 @app.route('/api/ride', methods=['POST'])
 def RideAdd():
     if request.method == 'POST':
@@ -772,6 +806,34 @@ def UserRating(username):
     elif request.method == 'DELETE':
         # delete user rating for user
         return
+
+
+@app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
+def PeopleToRate(username, ride_id):
+    if request.method == 'GET':
+        # get list of user ratings for user
+        passengersQuery = db_session.query(ApplicationTable).filter(
+            ApplicationTable.ride_id == ride_id, ApplicationTable.username != username,
+            ApplicationTable.status == 'accepted').all()
+        # GET passengers of ride except for myself
+        passengers = [p.username for p in passengersQuery]
+        alreadyRatedQuery = db_session.query(ApplicationTable).join(
+            UserRatingTable, ApplicationTable.username == UserRatingTable.ratee, isouter=True).filter(
+            ApplicationTable.ride_id == ride_id, UserRatingTable.rater == username).all()
+        # GET people i have already rated
+        alreadyRated = [p.username for p in alreadyRatedQuery]
+        # GET passengers of this ride i can rate
+        users_to_rate = [p for p in passengers if p not in alreadyRated]
+
+        # GET if i need to rate driver
+        driverQuery = db_session.query(RideTable).join(
+            DriverRatingTable, RideTable.driver_username == DriverRatingTable.ratee, isouter=True).filter(
+            RideTable.ride_id == ride_id, DriverRatingTable.rater == username).count()
+        if driverQuery > 0:
+            driver_to_rate = None
+        else:
+            driver_to_rate = db_session.query(RideTable).filter(RideTable.ride_id == ride_id).one().driver_username
+        return {'driver': driver_to_rate, 'users': users_to_rate}
 
 
 @app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST', 'DELETE'])
@@ -1455,3 +1517,30 @@ def RideView(ride_id):
                                driverInfo=driverInfo, driverWithRideFlag=driverWithRideFlag,
                                alreadyAcceptedFlag=alreadyAcceptedFlag, alreadyAppliedFlag=alreadyAppliedFlag,
                                passengerInOtherRideFlag=passengerInOtherRideFlag)
+
+
+@app.route('/user/<string:username>/rate_rides', methods=['GET', 'POST'])
+def RateRides(username):
+    if request.method == 'GET':
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+        elif session['username'] != username:
+            return render_template('systemMessage.html', messageTitle='Access not allowed!',
+                                   message='Please try navigating to your own rate rides page.')
+
+        response = requests.get(url_for('UserApplicationList', username=username, _external=True))
+        my_rides = [a['ride_id'] for a in response.json()['applications'] if a['status'] == 'accepted']
+        response = requests.get(url_for('AllRidesAPI', username=username, _external=True))
+        all_rides = response.json()['rides']
+        past_rides = [r['ride_id'] for r in all_rides if is_past_date(r['start_datetime'][:16])]
+
+        # converting a large list to a set speeds up the program tremendously
+        my_past_rides = [ride for ride in my_rides if ride in set(past_rides)]
+        to_rate_by_ride = []
+        for r in my_past_rides:
+            rate_data = requests.get(url_for('PeopleToRate', username=username, ride_id=r, _external=True)).json()
+            rate_data['event_id'] = requests.get(url_for('Ride', ride_id=r, _external=True)).json()['event_id']
+            rate_data['event_title'] = requests.get(url_for('Event', event_id=rate_data['event_id'], _external=True)).json()['title']
+            to_rate_by_ride.append(rate_data)
+
+        return {'rides': to_rate_by_ride}
