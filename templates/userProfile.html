@@ -29,19 +29,21 @@
         <!-- User row -->
         <div class="row">
             <!-- Profile picture and driver tick mark -->
-            <div class="col-md" style="">
+            <div class="col-md-4" style="">
                 <div class="container d-flex justify-content-center" style="position: relative">
-                  <img class="" src="{{ url_for('ProfilePicture', filename=userData['profile_picture']) }}"
-                         style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 75%" alt="User icon">
+                    <div style="padding-bottom:100%; overflow:hidden; position:relative; width: 100%;">
+                        <img src="{{ url_for('ProfilePicture', filename=userData['profile_picture']) }}" id="profPic"
+                             style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff;
+                             position: absolute; height:90%; width:90%; top:50%; left:50%;
+                            transform: translateX(-50%) translateY(-50%);" alt="User icon">
+                    </div>
                     {% if driverFlag %}
-{#                        <div class="position-absolute top-50 start-50">#}
-                            <img class="position-absolute" src="{{ url_for('static', filename='verify.png') }}" alt="Verify Logo"
-                                 style="max-width: 15%; left:65%">
-{#                        </div>#}
+                        <img class="position-absolute" src="{{ url_for('static', filename='verify.png') }}"
+                             alt="Verify Logo" style="max-width: 15%; left:65%">
                     {% endif %}
                 </div>
             </div>
-            <div class="col-md">
+            <div class="col-md-4">
                 <div class="row my-4">
                     <h3>First Name</h3>
                     <h4>{{ userData['first_name'] }}</h4>
@@ -51,7 +53,7 @@
                     <h4>{{ userData['surname'] }}</h4>
                 </div>
             </div>
-            <div class="col-md">
+            <div class="col-md-4">
                 <div class="row my-4">
                     <h3>Average Passenger Rating</h3>
                     <h4>⭐ {{ userData['avg_user_rating'] if userRatings['ratings'] else 'No ratings' }}</h4>
@@ -75,8 +77,14 @@
             <!-- Profile picture and driver tick mark -->
             <div class="col-md" style="">
                 <div class="container d-flex justify-content-center">
-                    <img class="" src="{{ url_for('VehicleImage', filename=driverData['vehicle_image']) }}"
-                         style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff; max-width: 50%" alt="Driver icon">
+                    <div class="container d-flex justify-content-center" style="position: relative">
+                        <div style="padding-bottom:65%; overflow:hidden; position:relative; width: 65%;">
+                            <img src="{{ url_for('VehicleImage', filename=driverData['vehicle_image']) }}" id="profPic"
+                                 style="border-radius: 50%; border-width: thick; border-style: solid; border-color: #62a6ff;
+                             position: absolute; height:100%; width:100%; top:50%; left:50%;
+                            transform: translateX(-50%) translateY(-50%);" alt="Driver icon">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md">
