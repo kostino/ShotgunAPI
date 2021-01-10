@@ -1276,23 +1276,14 @@ def UserSetPrimary(username):
                                    message="You tried to alter another user's payment methods.")
 
 
-@app.route('/user/<string:username>/addpaymentmethod', methods=['GET', 'POST'])
-def AddPaymentMethod(username):
+@app.route('/user/addpaymentmethod', methods=['GET', 'POST'])
+def AddPaymentMethod():
     if request.method == 'GET':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user
-        if session['username'] == username:
-
-            # Render page
-            return render_template("addPaymentMethod.html")
-
-        else:
-            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
-                                   message="You tried to access another user's payment methods.")
+        return render_template("addPaymentMethod.html")
 
 
 @app.route('/events', methods=['GET', 'POST'])
