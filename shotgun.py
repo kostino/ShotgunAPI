@@ -1542,4 +1542,5 @@ def RateRides(username):
             rate_data['event_title'] = requests.get(url_for('Event', event_id=rate_data['event_id'], _external=True)).json()['title']
             to_rate_by_ride.append(rate_data)
 
+        # TODO: Here render_template and provide to_rate_by_ride as context
         return {'rides': to_rate_by_ride}
