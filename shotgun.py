@@ -412,7 +412,7 @@ def EventAddList():
         db_session.add(newEvent)
         db_session.commit()
         return {'status': 'success'}, 200
-    if request.method == 'GET':
+    elif request.method == 'GET':
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
         try:
@@ -778,7 +778,7 @@ def Application(ride_id, username):
             return {'error': 'Application does not exist'}
 
 
-@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
 def UserRating(username):
     if request.method == 'GET':
         # get list of user ratings for user
@@ -812,9 +812,6 @@ def UserRating(username):
         db_session.add(newUserRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete user rating for user
-        return
 
 
 @app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
@@ -844,7 +841,7 @@ def PeopleToRate(username, ride_id):
         return {'driver': driver_to_rate, 'users': users_to_rate}
 
 
-@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
 def DriverRating(username):
     if request.method == 'GET':
         # get list of driver ratings for user
@@ -883,9 +880,6 @@ def DriverRating(username):
         db_session.add(newDriverRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete driver rating for user
-        return
 
 
 @app.route('/api/driver', methods=['POST'])
