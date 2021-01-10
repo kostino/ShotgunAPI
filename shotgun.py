@@ -1667,14 +1667,12 @@ def RateRides(username):
         return
 
 
-@app.route('/user/<string:username>/manage_rides', methods=['GET'])
+@app.route('/manage_rides', methods=['GET'])
 def ManageMyRides(username):
     if 'username' not in session:
         return redirect(url_for('Login'))
-    elif session['username'] != username:
-        return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                               message='Please try navigating to your own manage rides page.')
 
+    username = session['username']
     response = requests.get(url_for('UserRides', username=username, _external=True))
     rides = response.json()['rides']
     not_expired_rides = [r for r in rides if not is_past_date(r['start_datetime'][:16])]
