@@ -108,7 +108,7 @@ def UserListAdd():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-        profile_picture = request.form.get('profile_picture')
+        profile_picture_data = request.form.get('profile_picture')
 
         # Validate data
         if not is_valid_username(username):
@@ -122,17 +122,18 @@ def UserListAdd():
             return {'error': 'Username is already taken.'}
 
         # Save profile picture
-        profile_picture_path = None
-        if profile_picture:
-            profile_picture_path = '{}.jpg'.format(uuid4())
-            save_image(profile_picture, os.path.join(PROFILE_DIR, profile_picture_path))
+        if profile_picture_data:
+            profile_picture = '{}.jpg'.format(uuid4())
+            save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
+        else:
+            profile_picture = 'default.jpg'
 
         # Hash password
         pwd_hash = generate_password_hash(password)
 
         # Insert user into database
         newUser = UserTable(username=username, password=pwd_hash,
-                            first_name=first_name, surname=surname, profile_picture=profile_picture_path)
+                            first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
         return {'status': 'success'}, 200
