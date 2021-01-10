@@ -1000,10 +1000,6 @@ def Login():
         if ('error' not in user) and check_password_hash(user['password'], password):
             session['username'] = str(username)
 
-            # If user is a driver add driver variable to session and set it to true, else set to false
-            response = requests.get(url_for('Driver', username=session['username'], _external=True))
-            session['driver'] = 'error' not in response.json()
-
             # Load profile picture filename to session
             session['profile_picture'] = user['profile_picture']
 
