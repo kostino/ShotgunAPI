@@ -1041,10 +1041,6 @@ def Register():
         first_name = request.form['first_name']
         surname = request.form['surname']
 
-        # Request user info via API call to check if user already exists
-        response = requests.get(url_for('User', username=username, _external=True))
-        user = response.json()
-
         # Encode profile picture
         profile_picture = None
         f = request.files['profile_picture']
