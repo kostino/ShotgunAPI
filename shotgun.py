@@ -1636,15 +1636,13 @@ def RideView(ride_id):
             return redirect(url_for("Login", _external=True))
 
 
-@app.route('/user/<string:username>/rate_rides', methods=['GET', 'POST'])
+@app.route('/rate_rides', methods=['GET', 'POST'])
 def RateRides(username):
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('Login'))
-        elif session['username'] != username:
-            return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                                   message='Please try navigating to your own rate rides page.')
 
+        username = session['username']
         response = requests.get(url_for('UserApplicationList', username=username, _external=True))
         my_rides = [a['ride_id'] for a in response.json()['applications'] if a['status'] == 'accepted']
         response = requests.get(url_for('AllRidesAPI', username=username, _external=True))
