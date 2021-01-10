@@ -811,7 +811,6 @@ def UserRating(username):
 @app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
 def PeopleToRate(username, ride_id):
     if request.method == 'GET':
-        # get list of user ratings for user
         passengersQuery = db_session.query(ApplicationTable).filter(
             ApplicationTable.ride_id == ride_id, ApplicationTable.username != username,
             ApplicationTable.status == 'accepted').all()
@@ -820,12 +819,12 @@ def PeopleToRate(username, ride_id):
         alreadyRatedQuery = db_session.query(ApplicationTable).join(
             UserRatingTable, ApplicationTable.username == UserRatingTable.ratee, isouter=True).filter(
             ApplicationTable.ride_id == ride_id, UserRatingTable.rater == username).all()
-        # GET people i have already rated
+        # GET people user has already rated
         alreadyRated = [p.username for p in alreadyRatedQuery]
-        # GET passengers of this ride i can rate
+        # GET passengers of this ride user can rate
         users_to_rate = [p for p in passengers if p not in alreadyRated]
 
-        # GET if i need to rate driver
+        # GET if user can rate driver
         driverQuery = db_session.query(RideTable).join(
             DriverRatingTable, RideTable.driver_username == DriverRatingTable.ratee, isouter=True).filter(
             RideTable.ride_id == ride_id, DriverRatingTable.rater == username).count()
