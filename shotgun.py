@@ -1667,12 +1667,13 @@ def RateRides():
         return
 
 
-@app.route('/user/manage_rides', methods=['GET', 'POST'])
-def ManageMyRides(username):
+@app.route('/my_rides', methods=['GET', 'POST'])
+def ManageMyRides():
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('Login'))
 
+        username = session['username']
         response = requests.get(url_for('UserRides', username=username, _external=True))
         rides = response.json()['rides']
         not_expired_rides = [r for r in rides if not is_past_date(r['start_datetime'][:16])]
@@ -1703,7 +1704,7 @@ def ManageMyRides(username):
             return render_template("systemMessage.html", messageTitle="An error occurred",
                                    message="An error occurred while processing application. Please try again later.")
 
-        return redirect(url_for("ManageMyRides", username=session['username'], _external=True))
+        return redirect(url_for('ManageMyRides'))
 
 
 @app.route('/my_applications', methods=['GET'])

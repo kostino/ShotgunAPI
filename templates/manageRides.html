@@ -79,7 +79,7 @@
                         </div>
                         <div class="col">
                             <div class="container my-2" style="text-align: center">
-                                <form action="{{ url_for("ManageMyRides", username=session['username'], _external=True) }}"
+                                <form action="{{ url_for('ManageMyRides') }}"
                                       method="post">
                                     <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
                                     <input type="hidden" name="username" value="{{ application['username'] }}">
@@ -89,7 +89,7 @@
                                     </a>
                                 </form>
 
-                                <form action="{{ url_for("ManageMyRides", username=session['username'], _external=True) }}"
+                                <form action="{{ url_for('ManageMyRides') }}"
                                       method="post">
                                     <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
                                     <input type="hidden" name="username" value="{{ application['username'] }}">
