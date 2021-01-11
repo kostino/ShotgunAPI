@@ -347,7 +347,8 @@ def UserPaymentInfo(username):
                            }
             return paymentDict
         except NoResultFound:
-            return {'error': 'User has no payment info in the database'}
+            return {'error': 'User has no payment info in the database',
+                    'credit_cards': [], 'paypal_accounts': []}
         except Exception as e:
             return {'error': str(e)}
 
@@ -1244,7 +1245,7 @@ def EditUserProfile(username):
                                    message="User does not exist or unauthorized edit was attempted.")
 
 
-@app.route('/user/paymentmethods', methods=['GET', 'POST'])
+@app.route('/paymentmethods', methods=['GET'])
 def PaymentMethods():
     if request.method == 'GET':
         # Check if user logged in
@@ -1253,17 +1254,12 @@ def PaymentMethods():
 
         # Get payment methods
         username = session['username']
-        response = requests.get(url_for('UserPaymentInfo', username=username, _external=True))
-        paymentMethods = response.json()
+        response = requests.get(url_for('UserPaymentInfo', username=username, _external=True)).json()
+        if 'credit_cards' not in response or 'paypal_accounts' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
-        # Check for errors
-        # TODO: Possibly handle this more gracefully in the future
-        if ('error' in paymentMethods) and (paymentMethods['error'] != 'User has no payment info in the database'):
-            return render_template("systemMessage.html", messageTitle="An error occurred",
-                                   message=paymentMethods['error'])
-
-        creditCards = paymentMethods['credit_cards']
-        paypalAccounts = paymentMethods['paypal_accounts']
+        creditCards = response['credit_cards']
+        paypalAccounts = response['paypal_accounts']
 
         # Censor Credit Card Numbers
         for card in creditCards:
