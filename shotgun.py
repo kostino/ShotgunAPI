@@ -163,9 +163,12 @@ def UserListAdd():
 @app.route('/api/user/<string:username>', methods=['PUT', 'GET', 'DELETE'])
 def User(username):
     if request.method == 'PUT':
+        user = db_session.query(UserTable).filter_by(username=username).first()
+        if not user:
+            return {'error': 'User does not exist'}, 404
+
         # Update user data
         if request.form:
-            user = db_session.query(UserTable).filter(UserTable.username == username).one()
             if 'first_name' in request.form:
                 user.first_name = request.form['first_name']
             if 'surname' in request.form:
@@ -174,7 +177,7 @@ def User(username):
                 user.profile_picture = '{}.jpg'.format(uuid4())
                 save_image(request.form['profile_picture'], os.path.join(PROFILE_DIR, user.profile_picture))
             db_session.commit()
-        return {'status': 'success'}
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # return a user data
         # Maybe do a /api/sth for data as json and a /sth for frontend
@@ -534,9 +537,28 @@ def EventSearchAPI():
 @app.route('/api/event/<int:event_id>', methods=['PUT', 'GET', 'DELETE'])
 def Event(event_id):
     if request.method == 'PUT':
-        # edit event data
-        # add event to base
-        return
+        event = db_session.query(EventTable).filter_by(event_id=event_id).first()
+        if not event:
+            return {'error': 'Event does not exist'}, 404
+
+        # Update event data
+        if request.form:
+            if 'title' in request.form:
+                event.title = request.form['title']
+            if 'type' in request.form:
+                event.type = request.form['type']
+            if 'status' in request.form:
+                event.status = request.form['status']
+            if 'latitude' in request.form:
+                event.latitude = request.form['latitude']
+            if 'longitude' in request.form:
+                event.longitude = request.form['longitude']
+            if 'location_name' in request.form:
+                event.location_name = request.form['location_name']
+            if 'datetime' in request.form:
+                event.datetime = request.form['datetime']
+            db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # return an event's data
         try:
