@@ -983,10 +983,32 @@ def DriverRating(username):
 
 
 @app.route('/api/driver', methods=['POST'])
-def DriverAdd():
+def DriverList():
     if request.method == 'POST':
-        # add driver data for user to table in base
-        return
+        # Get request data
+        username = request.form['username']
+        vehicle = request.form['vehicle']
+        vehicle_image_data = request.form['vehicle_image']
+
+        # Check if user exists
+        query = db_session.query(UserTable).filter_by(username=username).first()
+        if not query:
+            return {'error': 'User does not exist'}, 400
+
+        # Check if user is already a driver
+        query = db_session.query(DriverTable).filter_by(username=username).first()
+        if query:
+            return {'error': 'User is already a driver'}
+
+        # Save vehicle image
+        vehicle_image = '{}.jpg'.format(uuid4())
+        save_image(vehicle_image_data, os.path.join(VEHICLE_DIR, vehicle_image))
+
+        # Insert driver data into database
+        data = DriverTable(username=username, vehicle=vehicle, vehicle_image=vehicle_image)
+        db_session.add(data)
+        db_session.commit()
+        return {'status': 'success'}, 200
 
 
 @app.route('/api/driver/<string:username>', methods=['PUT', 'GET', 'DELETE'])
