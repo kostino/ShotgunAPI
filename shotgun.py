@@ -1441,7 +1441,6 @@ def EventRides(event_id):
 
 @app.route('/events/<int:event_id>/createride', methods=['GET', 'POST'])
 def CreateRide(event_id):
-
     if request.method == 'GET':
         # Check if user logged in, is a driver and already has a ride for the current event
         driverFlag = False
@@ -1451,8 +1450,10 @@ def CreateRide(event_id):
                 driverFlag = True
 
                 # Check if driver already has a ride for this event
-                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-                userRides = userRidesResponse.json()['rides']
+                response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
+                if 'rides' not in response:
+                    return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+                userRides = response['rides']
                 userEventsWithRide = [r['event_id'] for r in userRides]
                 if event_id in userEventsWithRide:
                     return render_template("systemMessage.html", messageTitle="Ride already created",
@@ -1466,10 +1467,11 @@ def CreateRide(event_id):
             return redirect(url_for("Login", _external=True))
 
         # Get event details
-        response = requests.get(url_for('Event', event_id=event_id, _external=True))
-        event = response.json()
+        eventData = requests.get(url_for('Event', event_id=event_id, _external=True)).json()
+        if 'error' in eventData:
+            return render_template('systemMessage.html', messageTitle='Error', message=eventData['error'])
 
-        return render_template("createRide.html", event=event)
+        return render_template("createRide.html", event=eventData)
 
     elif request.method == 'POST':
         # Check if user logged in
