@@ -1400,10 +1400,16 @@ def VehicleImage(filename):
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
 def EventRides(event_id):
     if request.method == 'GET':
-        response = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
-        rides = response.json()['rides']
-        response = requests.get(url_for('Event', event_id=event_id, _external=True))
-        event = response.json()
+        # Get event rides
+        response = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True)).json()
+        if 'rides' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        rides = response['rides']
+
+        # Get event data
+        event = requests.get(url_for('Event', event_id=event_id, _external=True)).json()
+        if 'error' in event:
+            return render_template('systemMessage.html', messageTitle='Error', message=event['error'])
 
         # Check if user logged in and is a driver
         driverFlag = False
@@ -1412,19 +1418,20 @@ def EventRides(event_id):
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
+
                 # Check if driver already has a ride for this event
-                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-                userRides = userRidesResponse.json()['rides']
+                response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
+                if 'rides' not in response:
+                    return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+                userRides = response['rides']
                 userEventsWithRide = [r['event_id'] for r in userRides]
                 createRideFlag = False if event_id in userEventsWithRide else True
 
         # Load driver data
         for ride in rides:
-            response = requests.get(url_for('Driver', username=ride['driver_username'], _external=True))
-            driverInfo = response.json()
+            driverInfo = requests.get(url_for('Driver', username=ride['driver_username'], _external=True)).json()
             if 'error' in driverInfo:
-                return render_template('systemMessage.html', messageTitle='Error Getting Driver Info',
-                                       message='An error occurred while getting driver information, please try again later.')
+                return render_template('systemMessage.html', messageTitle='Error', message=driverInfo['error'])
             ride['vehicle_image'] = driverInfo['vehicle_image']
 
         # Render template
