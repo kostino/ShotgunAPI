@@ -1237,7 +1237,7 @@ def PaymentMethods():
         # TODO: Possibly handle this more gracefully in the future
         if ('error' in paymentMethods) and (paymentMethods['error'] != 'User has no payment info in the database'):
             return render_template("systemMessage.html", messageTitle="An error occurred",
-                                   message=paymentMethods.json()['error'])
+                                   message=paymentMethods['error'])
 
         creditCards = paymentMethods['credit_cards']
         paypalAccounts = paymentMethods['paypal_accounts']
