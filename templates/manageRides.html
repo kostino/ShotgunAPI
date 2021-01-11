@@ -84,9 +84,9 @@
                                     <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
                                     <input type="hidden" name="username" value="{{ application['username'] }}">
                                     <input type="hidden" name="status" value="accepted">
-                                    <a type="submit" role="button" class="btn btn-success mb-2">
+                                    <button type="submit" class="btn btn-success mb-2">
                                         Accept Application
-                                    </a>
+                                    </button>
                                 </form>
 
                                 <form action="{{ url_for('ManageMyRides') }}"
@@ -94,9 +94,9 @@
                                     <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
                                     <input type="hidden" name="username" value="{{ application['username'] }}">
                                     <input type="hidden" name="status" value="rejected">
-                                    <a href="" role="button" class="btn btn-danger">
+                                    <button type="submit" class="btn btn-danger">
                                         Reject Application
-                                    </a>
+                                    </button>
                                 </form>
 
                             </div>
