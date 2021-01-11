@@ -91,7 +91,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('RateRides') }}">Rate Previous Rides</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <!-- Driver only options -->
-                                {% if session['driver'] == true %}
+                                {% if session['driver'] == True %}
                                 <li><a class="dropdown-item" href="{{ url_for('ManageMyRides') }}">Manage My Rides</a></li>
                                 {% else %}
                                 <!-- Non driver only options -->
