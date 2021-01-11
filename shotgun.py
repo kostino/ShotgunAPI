@@ -1812,8 +1812,10 @@ def MyRideApplications():
     username = session['username']
 
     # Get applications
-    response = requests.get(url_for('UserApplicationList', username=username, _external=True))
-    applications = response.json()['applications']
+    response = requests.get(url_for('UserApplicationList', username=username, _external=True)).json()
+    if 'applications' not in response:
+        return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+    applications = response['applications']
 
     # Form events -> ride-application structure
     events = {application['event_id']:
@@ -1828,10 +1830,14 @@ def MyRideApplications():
         for application in applications
     }
     for application in applications:
-        response = requests.get(url_for("User", username=application['ride_driver'], _external=True)).json()
-        driverPictures[application['ride_driver']]['profile_picture'] = response['profile_picture']
-        driverPictures[application['ride_driver']]['first_name'] = response['first_name']
-        driverPictures[application['ride_driver']]['surname'] = response['surname']
+        app_driver = application['ride_driver']
+        userInfo = requests.get(url_for("User", username=app_driver, _external=True)).json()
+        if 'error' in userInfo:
+            return render_template('systemMessage.html', messageTitle='Error', message=userInfo['error'])
+
+        driverPictures[app_driver]['profile_picture'] = userInfo['profile_picture']
+        driverPictures[app_driver]['first_name'] = userInfo['first_name']
+        driverPictures[app_driver]['surname'] = userInfo['surname']
 
     # Complete events -> ride-application structure
     for application in applications:
