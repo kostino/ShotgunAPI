@@ -1667,23 +1667,43 @@ def RateRides():
         return
 
 
-@app.route('/manage_rides', methods=['GET'])
-def ManageMyRides():
-    if 'username' not in session:
-        return redirect(url_for('Login'))
+@app.route('/user/manage_rides', methods=['GET', 'POST'])
+def ManageMyRides(username):
+    if request.method == 'GET':
+        if 'username' not in session:
+            return redirect(url_for('Login'))
 
-    username = session['username']
-    response = requests.get(url_for('UserRides', username=username, _external=True))
-    rides = response.json()['rides']
-    not_expired_rides = [r for r in rides if not is_past_date(r['start_datetime'][:16])]
-    rides = []
-    for r in not_expired_rides:
-        ride = r
-        ride['event_title'] = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()['title']
-        ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
-        rides.append(r)
-    # TODO: render template
-    return render_template('manageRides.html', rides=rides)
+        response = requests.get(url_for('UserRides', username=username, _external=True))
+        rides = response.json()['rides']
+        not_expired_rides = [r for r in rides if not is_past_date(r['start_datetime'][:16])]
+        rides = []
+        users = {}
+        for r in not_expired_rides:
+            ride = r
+            ride['event_title'] = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()['title']
+            ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
+            for application in ride['applications']:
+                users[application['username']] = requests.get(url_for("User", username=application['username'], _external=True)).json()
+            rides.append(r)
+        return render_template('manageRides.html', rides=rides, users=users)
+
+    elif request.method == 'POST':
+
+        # TODO: Add extra validation (e.g can this driver do this...) to POST requests possibly in the API route
+        # POST to RideApplication endpoint according to response (Accept/Reject)
+        putData = {
+            'driver': session['username'],
+            'username': request.form['username'],
+            'status': request.form['status']
+        }
+        response = requests.put(url_for("RideApplication", ride_id=request.form['ride_id'], putData=putData,
+                                        _external=True))
+        if 'error' in response.json():
+            # Render error page
+            return render_template("systemMessage.html", messageTitle="An error occurred",
+                                   message="An error occurred while processing application. Please try again later.")
+
+        return redirect(url_for("ManageMyRides", username=session['username'], _external=True))
 
 
 @app.route('/my_applications', methods=['GET'])

@@ -1,8 +1,118 @@
 {% extends 'base.html' %}
-{% block title %}Manage Rides{% endblock %}
+{% block title %}My Driver Rides{% endblock %}
 
 {% block style %}{% endblock %}
 
 {% block content %}
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
+
+        <!-- For future alert support -->
+{#        {% if alert %}#}
+{#        <div class="alert alert-primary alert-dismissible fade show" role="alert">#}
+{#            A simple primary alert—check it out!#}
+{#        </div>#}
+{#        {% endif %}#}
+
+        <!-- Title row -->
+        <div class="row pb-1">
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    My Rides as a Driver
+                </h3>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Events/Rides Accordion -->
+        <div class="accordion" id="accordion">
+
+            {% for ride in rides %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="flush-heading{{ ride['ride_id'] }}">
+                    <button class="accordion-button {% if loop.index0 != 0 %}collapsed{% endif %}"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ ride['ride_id'] }}"
+                            aria-expanded="false" aria-controls="flush-collapseOne">
+                            <h4>{{ ride['event_title'] }}</h4>
+                            <a href="{{ url_for("EventRides", event_id=ride['event_id'], _external=True) }}"
+                               style="text-decoration: none" >
+                                <span class="align-text-top mx-2">- View Event</span>
+                            </a>
+                    </button>
+
+
+                </h2>
+
+                <div id="flush-collapse{{ ride['ride_id'] }}"
+                     class="accordion-collapse collapse {% if loop.index0 == 0 %}show{% endif %}"
+                     aria-labelledby="flush-heading{{ ride['ride_id'] }}" data-bs-parent="#accordion">
+
+                    {% for application in ride['applications'] %}
+
+                    <!-- Application -->
+                    <div class="row align-items-center my-3 mx-1"
+                         style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
+                        <div class="col-md-4 px-0">
+                            <a href="{{ url_for("UserProfile", username=application['username'], _external=True) }}">
+                                <img src="{{ url_for('ProfilePicture', filename=users[application['username']]['profile_picture']) }}"
+                                     alt="{{ application['username'] }}'s profile picture"
+                                     style="width: 100%; height:100%; max-height: 200px; object-fit: cover; border-radius: 15px;">
+                            </a>
+                        </div>
+                        <div class="col-md-6 ms-4">
+                            <div class="row">
+                                <div class="container my-2">
+                                    <a href="{{ url_for("UserProfile", username=application['username'], _external=True) }}"
+                                    style="text-decoration: none">
+                                        <h3>{{ users[application['username']]['first_name'] }}
+                                            {{ users[application['username']]['surname'] }}</h3>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="container">
+                                    <h4>Message</h4>
+                                    <p>{{ application['message'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="container my-2" style="text-align: center">
+                                <form action="{{ url_for("ManageMyRides", username=session['username'], _external=True) }}"
+                                      method="post">
+                                    <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
+                                    <input type="hidden" name="username" value="{{ application['username'] }}">
+                                    <input type="hidden" name="status" value="accepted">
+                                    <a type="submit" role="button" class="btn btn-success mb-2">
+                                        Accept Application
+                                    </a>
+                                </form>
+
+                                <form action="{{ url_for("ManageMyRides", username=session['username'], _external=True) }}"
+                                      method="post">
+                                    <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
+                                    <input type="hidden" name="username" value="{{ application['username'] }}">
+                                    <input type="hidden" name="status" value="rejected">
+                                    <a href="" role="button" class="btn btn-danger">
+                                        Reject Application
+                                    </a>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+
+
+    </div>
+
 
 {% endblock %}
