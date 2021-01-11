@@ -1171,9 +1171,6 @@ def UserProfile(username):
 @app.route('/user/<string:username>/edit', methods=['GET', 'POST'])
 def EditUserProfile(username):
     if request.method == 'GET':
-        driverFlag = False
-        driverData = {}
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
@@ -1181,14 +1178,13 @@ def EditUserProfile(username):
         # Check if the provided username belongs to the currently logged in user
         if session['username'] == username:
             # Get user data
-            response = requests.get(url_for('User', username=username, _external=True))
-            userData = response.json()
+            userData = requests.get(url_for('User', username=username, _external=True)).json()
+            if 'error' in userData:
+                return render_template('systemMessage.html', messageTitle='Error', message=userData['error'])
 
             # Check if user is a driver and get data
-            response = requests.get(url_for('Driver', username=username, _external=True))
-            driverData = response.json()
-            if 'error' not in driverData:
-                driverFlag = True
+            driverData = requests.get(url_for('Driver', username=username, _external=True)).json()
+            driverFlag = 'error' not in driverData
 
             return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag,
                                    driverData=driverData)
@@ -1207,8 +1203,9 @@ def EditUserProfile(username):
             updatedData = {}
 
             # Request user info via API call
-            response = requests.get(url_for('User', username=username, _external=True))
-            user = response.json()
+            user = requests.get(url_for('User', username=username, _external=True)).json()
+            if 'error' in user:
+                return render_template('systemMessage.html', messageTitle='Error', message=user['error'])
 
             # If a new profile picture is added, update the existing one
             f = request.files['profile_picture']
@@ -1232,11 +1229,10 @@ def EditUserProfile(username):
                                            data=updatedData)
 
                 # GET the updated resource
-                response = requests.get(url_for('User', username=session['username'], _external=True))
-                user = response.json()
-                if 'error' not in user:
+                userData = requests.get(url_for('User', username=session['username'], _external=True)).json()
+                if 'error' not in userData:
                     # Load profile picture filename to session
-                    session['profile_picture'] = user['profile_picture']
+                    session['profile_picture'] = userData['profile_picture']
 
             return redirect(url_for('UserProfile', username=session['username']))
 
@@ -1304,10 +1300,11 @@ def AddPaymentMethod():
 @app.route('/events', methods=['GET', 'POST'])
 def BrowseEvents():
     if request.method == 'GET':
-
         # Get future events and then their info via API call
-        futureEventsRequest = requests.get(url_for('EventAddList', _external=True))
-        events = futureEventsRequest.json()['events']
+        response = requests.get(url_for('EventAddList', _external=True)).json()
+        if 'error' in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        events = response['events']
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
@@ -1316,8 +1313,12 @@ def BrowseEvents():
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
-            userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-            userRides = userRidesResponse.json()['rides']
+
+            # Get user rides
+            response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            userRides = response['rides']
             userEventsWithRide = [r['event_id'] for r in userRides]
 
         # Render template
@@ -1327,7 +1328,6 @@ def BrowseEvents():
 @app.route('/events/new', methods=['GET', 'POST'])
 def CreateEvent():
     if request.method == 'GET':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
