@@ -1678,5 +1678,5 @@ def MyRideApplications():
 
     username = session['username']
     response = requests.get(url_for('UserApplicationList', username=username, _external=True))
-    applications = response['applications']
+    applications = response.json()['applications']
     return render_template('myRideApplications.html', applications=applications)
