@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
+
+        <!-- Title and actions row -->
+        <div class="row pb-1">
+            <h3 class="mx-auto">
+                    {{ title }}
+            </h3>
+        </div>
+
+        <hr>
+
+        <div class="row mb-2">
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    Certify Drivers !!
+                </h3>
+            </div>
+        </div>
+
+        <!-- If there are no rides print message -->
+        {% if not applications %}
+            <h4 class="mx-auto" style="text-align: center">No applications</h4>
+        {% endif %}
+
+        {% for application in applications %}
+        <!-- Applications container row -->
+        <div class="row align-items-center my-3 mx-1"
+             style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
+            <div class="col-md-6">
+                <div class="container my-2">
+                    <div class="row justify-content-left align-items-end">
+                        <div class="col-md-6">
+                            <h4>username</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ application['username'] }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>First Name</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ application['first_name'] }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Surname</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ application['surname'] }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Vehicle</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ application['vehicle'] }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+
+{% endblock %}

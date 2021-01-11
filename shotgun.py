@@ -108,7 +108,7 @@ def UserListAdd():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-        profile_picture = request.form.get('profile_picture')
+        profile_picture_data = request.form.get('profile_picture')
 
         # Validate data
         if not is_valid_username(username):
@@ -122,17 +122,18 @@ def UserListAdd():
             return {'error': 'Username is already taken.'}
 
         # Save profile picture
-        profile_picture_path = None
-        if profile_picture:
-            profile_picture_path = '{}.jpg'.format(uuid4())
-            save_image(profile_picture, os.path.join(PROFILE_DIR, profile_picture_path))
+        if profile_picture_data:
+            profile_picture = '{}.jpg'.format(uuid4())
+            save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
+        else:
+            profile_picture = 'default.jpg'
 
         # Hash password
         pwd_hash = generate_password_hash(password)
 
         # Insert user into database
         newUser = UserTable(username=username, password=pwd_hash,
-                            first_name=first_name, surname=surname, profile_picture=profile_picture_path)
+                            first_name=first_name, surname=surname, profile_picture=profile_picture)
         db_session.add(newUser)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -279,6 +280,32 @@ def UserVerify(username):
             return {'error': str(e)}
 
 
+@app.route('/mod/api/verification_applications', methods=['GET'])
+def VerificationApplicationList():
+    if request.method == 'GET':
+        try:
+            # all pending applications
+            driverQuery = db_session.query(DriverTable.username)
+            applicationQuery = db_session.query(DriverCertificationTable).filter(
+                ~DriverCertificationTable.username.in_(driverQuery)).join(
+                UserTable, UserTable.username == DriverCertificationTable.username).all()
+            driverApplicationDict = {'applications': [
+                                    {'username': a.username,
+                                     'license': a.license,
+                                     'registration': a.registration,
+                                     'vehicle': a.vehicle,
+                                     'vehicle_image': a.vehicle_image,
+                                     'identity': a.identification_document,
+                                     'first_name': a.user.first_name,
+                                     'surname': a.user.surname
+                                     } for a in applicationQuery]}
+            return driverApplicationDict
+        except NoResultFound:
+            return {'error': 'No pending driver certification applications in the database.', 'applications': []}
+        except Exception as e:
+            return {'error': str(e), 'applications': []}
+
+
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
 def UserPaymentInfo(username):
     if request.method == 'POST':
@@ -412,7 +439,7 @@ def EventAddList():
         db_session.add(newEvent)
         db_session.commit()
         return {'status': 'success'}, 200
-    if request.method == 'GET':
+    elif request.method == 'GET':
         # get list of future events
         # here maybe also use query params for search like type etc and general filters
         try:
@@ -737,8 +764,52 @@ def RideApplication(ride_id):
         except Exception as e:
             return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
-        # post new application for ride and user
-        return
+        # Check if user exists
+        username = request.form['username']
+        query = db_session.query(UserTable).filter_by(username=username).first()
+        if not query:
+            return {'error': 'User does not exist'}, 400
+
+        # Check if ride exists
+        query = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
+        if not query:
+            return {'error': 'Ride does not exist'}, 404
+        event_id = query.event_id
+
+        # Check if user is a driver and has created a ride for this event
+        query = db_session.query(RideTable).filter_by(driver_username=username, event_id=event_id).first()
+        if query:
+            return {'error': 'You are a driver with a ride for this event.'}, 400
+
+        # Check if user has already applied for this ride
+        query = db_session.query(ApplicationTable).filter_by(
+                ride_id=ride_id, username=username, status='pending').first()
+        if query:
+            return {'error': 'You have already applied for this ride.'}, 400
+
+        # Check if user has already been accepted for this ride
+        query = db_session.query(ApplicationTable).filter_by(
+                ride_id=ride_id, username=username, status='accepted').first()
+        if query:
+            return {'error': 'You have already been accepted on board this ride.'}, 400
+
+        # Check if user has already been accepted on a ride for this event
+        query = db_session.query(ApplicationTable).join(
+                RideTable, ApplicationTable.ride_id == RideTable.ride_id).filter(
+                        ApplicationTable.username == username, ApplicationTable.status == 'accepted',
+                        RideTable.event_id == event_id).first()
+        if query:
+            return {'error': 'You are a passenger on another ride for this event.'}, 400
+
+        # Get request data
+        message = request.form['message']
+        status = request.form['status']
+
+        # Insert event into database
+        newApplication = ApplicationTable(ride_id=ride_id, username=username, message=message, status=status)
+        db_session.add(newApplication)
+        db_session.commit()
+        return {'status': 'success'}, 200
 
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>', methods=['PUT', 'DELETE', 'GET'])
@@ -778,7 +849,7 @@ def Application(ride_id, username):
             return {'error': 'Application does not exist'}
 
 
-@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
 def UserRating(username):
     if request.method == 'GET':
         # get list of user ratings for user
@@ -812,9 +883,6 @@ def UserRating(username):
         db_session.add(newUserRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete user rating for user
-        return
 
 
 @app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
@@ -844,7 +912,7 @@ def PeopleToRate(username, ride_id):
         return {'driver': driver_to_rate, 'users': users_to_rate}
 
 
-@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
 def DriverRating(username):
     if request.method == 'GET':
         # get list of driver ratings for user
@@ -883,9 +951,6 @@ def DriverRating(username):
         db_session.add(newDriverRating)
         db_session.commit()
         return {'status': 'success'}, 200
-    elif request.method == 'DELETE':
-        # delete driver rating for user
-        return
 
 
 @app.route('/api/driver', methods=['POST'])
@@ -963,10 +1028,6 @@ def Login():
         if ('error' not in user) and check_password_hash(user['password'], password):
             session['username'] = str(username)
 
-            # If user is a driver add driver variable to session and set it to true, else set to false
-            response = requests.get(url_for('Driver', username=session['username'], _external=True))
-            session['driver'] = 'error' not in response.json()
-
             # Load profile picture filename to session
             session['profile_picture'] = user['profile_picture']
 
@@ -1003,10 +1064,6 @@ def Register():
         password = request.form['password']
         first_name = request.form['first_name']
         surname = request.form['surname']
-
-        # Request user info via API call to check if user already exists
-        response = requests.get(url_for('User', username=username, _external=True))
-        user = response.json()
 
         # Encode profile picture
         profile_picture = None
@@ -1087,11 +1144,10 @@ def UserProfile(username):
 
         # Check if user:username exists
         responseUser = requests.get(url_for('User', username=username, _external=True))
-        if 'error' in responseUser.json():
+        userData = responseUser.json()
+        if 'error' in userData:
             return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
                                    message="This user doesn't exist.")
-        else:
-            userData = responseUser.json()
 
         # Get user ratings
         responseUserRatings = requests.get(url_for('UserRating', username=username, _external=True))
@@ -1099,9 +1155,9 @@ def UserProfile(username):
 
         # Check if user:username is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
-        if 'error' not in response.json():
+        driverData = response.json()
+        if 'error' not in driverData:
             driverFlag = True
-            driverData = response.json()
 
             # Get driver ratings
             responseDriverRatings = requests.get(url_for('DriverRating', username=username, _external=True))
@@ -1124,16 +1180,15 @@ def EditUserProfile(username):
 
         # Check if the provided username belongs to the currently logged in user
         if session['username'] == username:
-
             # Get user data
             response = requests.get(url_for('User', username=username, _external=True))
             userData = response.json()
 
             # Check if user is a driver and get data
-            driverCheck = requests.get(url_for('Driver', username=username, _external=True))
-            if 'error' not in driverCheck.json():
+            response = requests.get(url_for('Driver', username=username, _external=True))
+            driverData = response.json()
+            if 'error' not in driverData:
                 driverFlag = True
-                driverData = driverCheck.json()
 
             return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag,
                                    driverData=driverData)
@@ -1142,14 +1197,12 @@ def EditUserProfile(username):
                                    message="User does not exist or unauthorized edit was attempted.")
 
     elif request.method == 'POST':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
         if session['username'] == username:
-
             # Data to be PUT to /api/user/<username>
             updatedData = {}
 
@@ -1192,82 +1245,60 @@ def EditUserProfile(username):
                                    message="User does not exist or unauthorized edit was attempted.")
 
 
-@app.route('/user/<string:username>/paymentmethods', methods=['GET', 'POST'])
-def PaymentMethods(username):
+@app.route('/user/paymentmethods', methods=['GET', 'POST'])
+def PaymentMethods():
     if request.method == 'GET':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user
-        if session['username'] == username:
+        # Get payment methods
+        username = session['username']
+        response = requests.get(url_for('UserPaymentInfo', username=username, _external=True))
+        paymentMethods = response.json()
 
-            # Get payment methods
-            paymentMethods = requests.get(url_for('UserPaymentInfo', username=username, _external=True))
-            # Check for errors
-            # TODO: Possibly handle this more gracefully in the future
-            if ('error' in paymentMethods.json()) and (paymentMethods.json()['error'] != 'User has no payment info in the database'):
-                return render_template("systemMessage.html", messageTitle="An error occurred",
-                                       message=paymentMethods.json()['error'])
+        # Check for errors
+        # TODO: Possibly handle this more gracefully in the future
+        if ('error' in paymentMethods) and (paymentMethods['error'] != 'User has no payment info in the database'):
+            return render_template("systemMessage.html", messageTitle="An error occurred",
+                                   message=paymentMethods['error'])
 
-            creditCards = paymentMethods.json()['credit_cards']
+        creditCards = paymentMethods['credit_cards']
+        paypalAccounts = paymentMethods['paypal_accounts']
 
-            # Censor Credit Card Numbers
-            for card in creditCards:
-                card['number'] = 3 * '**** ' + card['number'][-4:]
+        # Censor Credit Card Numbers
+        for card in creditCards:
+            card['number'] = 3 * '**** ' + card['number'][-4:]
 
-            # Render page
-            return render_template("paymentMethods.html", creditCards=creditCards,
-                                   paypalAccounts=paymentMethods.json()['paypal_accounts'])
-        else:
-            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
-                                   message="You tried to access another user's payment methods.")
+        # Render page
+        return render_template('paymentMethods.html', creditCards=creditCards, paypalAccounts=paypalAccounts)
 
 
-@app.route('/user/<string:username>/set_primary_pm', methods=['POST'])
-def UserSetPrimary(username):
+@app.route('/user/set_primary_pm', methods=['POST'])
+def UserSetPrimary():
     if request.method == 'POST':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user
-        if session['username'] == username:
+        # API call to set
+        response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
+                                params={'payment_id': request.form['payment_id']})
+        if 'error' in response.json():
+            return render_template("systemMessage.html", messageTitle="Error",
+                                   message="An error occurred while setting the primary payment method.")
 
-            # API call to set
-            response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
-                                    params={'payment_id': request.form['payment_id']})
-
-            if 'error' in response.json():
-                return render_template("systemMessage.html", messageTitle="Error",
-                                       message="An error occurred while setting the primary payment method.")
-
-            return redirect(url_for('PaymentMethods', username=session['username']))
-
-        else:
-            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
-                                   message="You tried to alter another user's payment methods.")
+        return redirect(url_for('PaymentMethods'))
 
 
-@app.route('/user/<string:username>/addpaymentmethod', methods=['GET', 'POST'])
-def AddPaymentMethod(username):
+@app.route('/user/addpaymentmethod', methods=['GET', 'POST'])
+def AddPaymentMethod():
     if request.method == 'GET':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user
-        if session['username'] == username:
-
-            # Render page
-            return render_template("addPaymentMethod.html")
-
-        else:
-            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
-                                   message="You tried to access another user's payment methods.")
+        return render_template("addPaymentMethod.html")
 
 
 @app.route('/events', methods=['GET', 'POST'])
@@ -1607,15 +1638,13 @@ def RideView(ride_id):
             return redirect(url_for("Login", _external=True))
 
 
-@app.route('/user/<string:username>/rate_rides', methods=['GET', 'POST'])
-def RateRides(username):
+@app.route('/rate_rides', methods=['GET', 'POST'])
+def RateRides():
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('Login'))
-        elif session['username'] != username:
-            return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                                   message='Please try navigating to your own rate rides page.')
 
+        username = session['username']
         response = requests.get(url_for('UserApplicationList', username=username, _external=True))
         my_rides = [a['ride_id'] for a in response.json()['applications'] if a['status'] == 'accepted']
         response = requests.get(url_for('AllRidesAPI', username=username, _external=True))
@@ -1638,14 +1667,11 @@ def RateRides(username):
         return
 
 
-@app.route('/user/<string:username>/manage_rides', methods=['GET', 'POST'])
+@app.route('/user/manage_rides', methods=['GET', 'POST'])
 def ManageMyRides(username):
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('Login'))
-        elif session['username'] != username:
-            return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                                   message='Please try navigating to your own rides management page.')
 
         response = requests.get(url_for('UserRides', username=username, _external=True))
         rides = response.json()['rides']
@@ -1680,14 +1706,25 @@ def ManageMyRides(username):
         return redirect(url_for("ManageMyRides", username=session['username'], _external=True))
 
 
-@app.route('/user/<string:username>/my_applications', methods=['GET'])
-def MyRideApplications(username):
+@app.route('/my_applications', methods=['GET'])
+def MyRideApplications():
     if 'username' not in session:
         return redirect(url_for('Login'))
-    elif session['username'] != username:
-        return render_template('systemMessage.html', messageTitle='Access not allowed!',
-                               message='Please try navigating to your own applications page.')
 
+    username = session['username']
     response = requests.get(url_for('UserApplicationList', username=username, _external=True))
-    applications = response['applications']
+    applications = response.json()['applications']
     return render_template('myRideApplications.html', applications=applications)
+
+
+@app.route('/mod/events_to_approve', methods=['GET'])
+def ModEventsToApprove():
+    events = requests.get(url_for('EventAddList', _external=True)).json()['events']
+    events_to_approve = [event for event in events if event['status'] == 'pending']
+    return render_template('modApproveEvents.html', title='Approve Events', events=events_to_approve)
+
+
+@app.route('/mod/drivers_to_approve', methods=['GET'])
+def ModDriversToApprove():
+    applications = requests.get(url_for('VerificationApplicationList', _external=True)).json()['applications']
+    return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
