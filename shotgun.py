@@ -1005,7 +1005,7 @@ def DriverRating(username):
 
 
 @app.route('/api/driver', methods=['POST'])
-def DriverList():
+def DriverAdd():
     if request.method == 'POST':
         # Get request data
         username = request.form['username']
@@ -1036,9 +1036,19 @@ def DriverList():
 @app.route('/api/driver/<string:username>', methods=['PUT', 'GET', 'DELETE'])
 def Driver(username):
     if request.method == 'PUT':
-        # edit driver data
-        # add driver to base
-        return
+        driver = db_session.query(DriverTable).filter_by(username=username).first()
+        if not driver:
+            return {'error': 'Driver does not exist'}, 404
+
+        # Update driver data
+        if request.form:
+            if 'vehicle' in request.form:
+                driver.vehicle = request.form['vehicle']
+            if 'vehicle_image' in request.form:
+                driver.vehicle_image = '{}.jpg'.format(uuid4())
+                save_image(request.form['vehicle_image'], os.path.join(VEHICLE_DIR, driver.vehicle_image))
+            db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # return a driver's data
         try:
