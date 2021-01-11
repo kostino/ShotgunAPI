@@ -915,22 +915,22 @@ def PeopleToRate(username, ride_id):
 @app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
 def DriverRating(username):
     if request.method == 'GET':
-        # get list of driver ratings for user
-        # Check if user:username is a driver
-        response = requests.get(url_for('Driver', username=username, _external=True))
-        if 'error' not in response.json():
-            try:
-                driverRatingQuery = db_session.query(DriverRatingTable).filter(DriverRatingTable.ratee == username).all()
-                driverRatingDict = {'ratings': [{
-                                'rater': u.rater,
-                                'comment': u.comment,
-                                'stars': u.stars
-                                } for u in driverRatingQuery]}
-                return driverRatingDict
-            except Exception as e:
-                return {'error': str(e)}
-        else:
+        # Check if user is a driver
+        query = db_session.query(DriverTable).filter_by(username=username).first()
+        if not query:
             return {'error': "User {} is not a driver".format(username)}
+
+        # Get driver ratings
+        try:
+            driverRatingQuery = db_session.query(DriverRatingTable).filter_by(ratee=username).all()
+            driverRatingDict = {'ratings': [{
+                            'rater': u.rater,
+                            'comment': u.comment,
+                            'stars': u.stars
+                            } for u in driverRatingQuery]}
+            return driverRatingDict
+        except Exception as e:
+            return {'error': str(e)}
     elif request.method == 'POST':
         # post new driver rating for user
         required_data = ['rater', 'ratee', 'stars', 'comment']
