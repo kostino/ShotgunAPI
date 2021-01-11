@@ -301,9 +301,9 @@ def VerificationApplicationList():
                                      } for a in applicationQuery]}
             return driverApplicationDict
         except NoResultFound:
-            return {'error': 'No pending driver certification applications in the database.'}
+            return {'error': 'No pending driver certification applications in the database.', 'applications': []}
         except Exception as e:
-            return {'error': str(e)}
+            return {'error': str(e), 'applications': []}
 
 
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
