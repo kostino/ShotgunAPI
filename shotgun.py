@@ -738,6 +738,12 @@ def RideApplication(ride_id):
         except Exception as e:
             return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
+        # Check if user exists
+        username = request.form['username']
+        query = db_session.query(UserTable).filter_by(username=username).first()
+        if not query:
+            return {'error': 'User does not exist'}, 400
+
         # Check if ride exists
         query = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
         if not query:
@@ -745,7 +751,6 @@ def RideApplication(ride_id):
         event_id = query.event_id
 
         # Check if user is a driver and has created a ride for this event
-        username = request.form['username']
         query = db_session.query(RideTable).filter_by(driver_username=username, event_id=event_id).first()
         if query:
             return {'error': 'You are a driver with a ride for this event.'}, 400
