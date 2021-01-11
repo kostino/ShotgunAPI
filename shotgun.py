@@ -1615,7 +1615,8 @@ def ManageMyRides():
         for r in not_expired_rides:
             ride = r
             ride['event_title'] = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()['title']
-            ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
+            applications = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
+            ride['applications'] = [a for a in applications if a['status'] == 'pending']
             for application in ride['applications']:
                 users[application['username']] = requests.get(url_for("User", username=application['username'], _external=True)).json()
             rides.append(r)
