@@ -1310,8 +1310,7 @@ def BrowseEvents():
         userEventsWithRide = []
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
-            if 'error' not in driverCheck.json():
-                driverFlag = True
+            driverFlag = 'error' not in driverCheck.json()
 
             # Get user rides
             response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
@@ -1354,27 +1353,32 @@ def CreateEvent():
 
 @app.route('/events/search', methods=['GET', 'POST'])
 def SearchEvents():
-
     if request.method == 'GET':
         # Render template
         return redirect(url_for('BrowseEvents', _external=True))
 
-    if request.method == 'POST':
-
-        # Query the database
+    elif request.method == 'POST':
         searchQuery = request.form['searchQuery']
         oldEventsFlag = 1 if 'oldEvents' in request.form else 0
-        response = requests.get(url_for('EventSearchAPI', _external=True), params={'tag':searchQuery, 'old': oldEventsFlag})
-        events = response.json()['events']
+
+        # Query the database
+        params = {'tag': searchQuery, 'old': oldEventsFlag}
+        response = requests.get(url_for('EventSearchAPI', _external=True), params=params).json()
+        if 'events' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        events = response['events']
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
+        userEventsWithRide = []
         if 'username' in session:
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
-            if 'error' not in driverCheck.json():
-                driverFlag = True
-            userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-            userRides = userRidesResponse.json()['rides']
+            driverFlag = 'error' not in driverCheck.json()
+
+            response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
+            if 'rides' not in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            userRides = response['rides']
             userEventsWithRide = [r['event_id'] for r in userRides]
 
         # Render template
