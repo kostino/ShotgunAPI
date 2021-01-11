@@ -875,6 +875,7 @@ def UserRating(username):
         if not (all(field in request.form.keys() for field in required_data)
                 and all(len(request.form[field]) > 0 for field in request.form.keys())):
             return {'error': 'missing data'}, 400
+
         # Get request data
         rater = request.form['rater']
         ratee = request.form['ratee']
@@ -1603,19 +1604,39 @@ def RateRides():
             return redirect(url_for('Login'))
 
         username = session['username']
-        response = requests.get(url_for('UserApplicationList', username=username, _external=True))
-        my_rides = [a['ride_id'] for a in response.json()['applications'] if a['status'] == 'accepted']
-        response = requests.get(url_for('AllRidesAPI', username=username, _external=True))
-        all_rides = response.json()['rides']
-        past_rides = [r['ride_id'] for r in all_rides if is_past_date(r['start_datetime'][:16])]
+
+        # Get user applications
+        response = requests.get(url_for('UserApplicationList', username=username, _external=True)).json()
+        if 'applications' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        my_rides = [a['ride_id'] for a in response['applications'] if a['status'] == 'accepted']
+
+        # Get past rides
+        response = requests.get(url_for('AllRidesAPI', username=username, _external=True)).json()
+        if 'rides' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        past_rides = [r['ride_id'] for r in response['rides'] if is_past_date(r['start_datetime'][:16])]
 
         # converting a large list to a set speeds up the program tremendously
         my_past_rides = [ride for ride in my_rides if ride in set(past_rides)]
         to_rate_by_ride = []
         for r in my_past_rides:
             rate_data = requests.get(url_for('PeopleToRate', username=username, ride_id=r, _external=True)).json()
-            rate_data['event_id'] = requests.get(url_for('Ride', ride_id=r, _external=True)).json()['event_id']
-            rate_data['event_title'] = requests.get(url_for('Event', event_id=rate_data['event_id'], _external=True)).json()['title']
+
+            # Get ride info
+            rideInfo = requests.get(url_for('Ride', ride_id=r, _external=True)).json()
+            if 'error' in rideInfo:
+                print("no")
+                continue
+            rate_data['event_id'] = rideInfo['event_id']
+
+            # Get event info
+            eventInfo = requests.get(url_for('Event', event_id=rate_data['event_id'], _external=True)).json()
+            if 'error' in eventInfo:
+                print("no")
+                continue
+            rate_data['event_title'] = eventInfo['title']
+
             to_rate_by_ride.append(rate_data)
 
         # TODO: Here render_template and provide to_rate_by_ride as context
