@@ -1491,7 +1491,6 @@ def CreateRide(event_id):
 @app.route('/ride/<int:ride_id>', methods=['GET', 'POST'])
 def RideView(ride_id):
     if request.method == 'GET':
-
         # Get ride info
         response = requests.get(url_for("Ride", ride_id=ride_id, _external=True))
         rideInfo = response.json()
@@ -1555,87 +1554,21 @@ def RideView(ride_id):
                                passengerInOtherRideFlag=passengerInOtherRideFlag)
 
     elif request.method == 'POST':
+        if 'username' not in session:
+            return redirect(url_for('Login'))
 
-        # Get ride info
-        response = requests.get(url_for("Ride", ride_id=ride_id, _external=True))
-        rideInfo = response.json()
-        if 'error' in rideInfo:
-            return render_template('systemMessage.html', messageTitle='Error Getting Ride',
-                                   message='An error occurred while getting ride information, please try again later.')
-        event_id = rideInfo['event_id']
-
-        # Get event info
-        response = requests.get(url_for("Event", event_id=event_id, _external=True))
-        eventInfo = response.json()
-        if 'error' in eventInfo:
-            return render_template('systemMessage.html', messageTitle='Error Getting Ride Event Info',
-                                   message='An error occurred while getting event information, please try again later.')
-
-        # Check if user logged in, is a driver and already has a ride for the current event
-        loggedInFlag = False
-        driverWithRideFlag = False
-        alreadyAppliedFlag = False
-        alreadyAcceptedFlag = False
-        passengerInOtherRideFlag = False
-        if 'username' in session:
-            loggedInFlag = True
-            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
-            if 'error' not in driverCheck.json():
-
-                # Check if driver already has a ride for this event
-                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-                userRides = userRidesResponse.json()['rides']
-                userEventsWithRide = [r['event_id'] for r in userRides]
-                if event_id in userEventsWithRide:
-                    driverWithRideFlag = True
-
-            # Check if user has already applied for this ride
-            userApplicationResponse = requests.get(url_for('UserApplicationList', username=session['username'], _external=True))
-            userApplications = userApplicationResponse.json()['applications']
-            alreadyAppliedFlag = ride_id in [a['ride_id'] for a in userApplications if a['status'] == 'pending']
-
-            # Check if user has already been accepted for this ride
-            userRidesAsPassenger = [a['ride_id'] for a in userApplications if a['status'] == 'accepted']
-            alreadyAcceptedFlag = ride_id in userRidesAsPassenger
-
-            # Check if user has already been accepted on a ride for this event
-            eventRidesResponse = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
-            eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
-            passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
-
-        # If user is logged in proceed with other checks and POST, else redirect
-        if loggedInFlag:
-            # If user is a driver with a ride for this event print message
-            if driverWithRideFlag:
-                return render_template('systemMessage.html', messageTitle='Error Applying',
-                                       message='You are a driver with a ride for this event.')
-            if alreadyAppliedFlag:
-                return render_template('systemMessage.html', messageTitle='Already Applied',
-                                       message='You have already applied for this ride.')
-
-            if alreadyAcceptedFlag:
-                return render_template('systemMessage.html', messageTitle='Already Accepted',
-                                       message='You have already been accepted on board this ride.')
-
-            if passengerInOtherRideFlag:
-                return render_template('systemMessage.html', messageTitle='Already Accepted',
-                                       message='You are a passenger on another ride for this event.')
-
-            # POST to RideApplication
-            postData = {
-                'username': session['username'],
-                'message': request.form['message'],
-                'status': 'pending'
-            }
-            response = requests.post(url_for("RideApplication", ride_id=ride_id, _external=True), data=postData)
-            if 'error' in response.json():
-                return render_template('systemMessage.html', messageTitle='Error Applying',
-                                       message='An error occurred while applying to this ride. Please try again later.')
+        # POST to RideApplication
+        postData = {
+            'username': session['username'],
+            'message': request.form['message'],
+            'status': 'pending'
+        }
+        response = requests.post(url_for('RideApplication', ride_id=ride_id, _external=True), data=postData).json()
+        if 'error' not in response:
             return render_template('systemMessage.html', messageTitle='Application Submitted Successfully',
                                    message='The driver will soon look into your application.')
-
         else:
-            return redirect(url_for("Login", _external=True))
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
 
 @app.route('/rate_rides', methods=['GET', 'POST'])
