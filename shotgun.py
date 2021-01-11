@@ -280,6 +280,32 @@ def UserVerify(username):
             return {'error': str(e)}
 
 
+@app.route('/mod/api/verification_applications', methods=['GET'])
+def VerificationApplicationList():
+    if request.method == 'GET':
+        try:
+            # all pending applications
+            driverQuery = db_session.query(DriverTable.username)
+            applicationQuery = db_session.query(DriverCertificationTable).filter(
+                ~DriverCertificationTable.username.in_(driverQuery)).join(
+                UserTable, UserTable.username == DriverCertificationTable.username).all()
+            driverApplicationDict = {'applications': [
+                                    {'username': a.username,
+                                     'license': a.license,
+                                     'registration': a.registration,
+                                     'vehicle': a.vehicle,
+                                     'vehicle_image': a.vehicle_image,
+                                     'identity': a.identification_document,
+                                     'first_name': a.user.first_name,
+                                     'surname': a.user.surname
+                                     } for a in applicationQuery]}
+            return driverApplicationDict
+        except NoResultFound:
+            return {'error': 'No pending driver certification applications in the database.'}
+        except Exception as e:
+            return {'error': str(e)}
+
+
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
 def UserPaymentInfo(username):
     if request.method == 'POST':
@@ -1676,3 +1702,9 @@ def ModEventsToApprove():
     events = requests.get(url_for('EventAddList', _external=True)).json()['events']
     events_to_approve = [event for event in events if event['status'] == 'pending']
     return render_template('modApproveEvents.html', title='Approve Events', events=events_to_approve)
+
+
+@app.route('/mod/drivers_to_approve', methods=['GET'])
+def ModDriversToApprove():
+    applications = requests.get(url_for('VerificationApplicationList', _external=True)).json()['applications']
+    return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
