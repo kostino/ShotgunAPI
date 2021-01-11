@@ -1755,23 +1755,40 @@ def ManageMyRides():
         if 'username' not in session:
             return redirect(url_for('Login'))
 
+        # Get future rides
         username = session['username']
-        response = requests.get(url_for('UserRides', username=username, _external=True))
-        rides = response.json()['rides']
-        not_expired_rides = [r for r in rides if not is_past_date(r['start_datetime'][:16])]
+        response = requests.get(url_for('UserRides', username=username, _external=True)).json()
+        if 'rides' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        not_expired_rides = [r for r in response['rides'] if not is_past_date(r['start_datetime'][:16])]
+
         rides = []
         users = {}
         for r in not_expired_rides:
-            ride = r
-            ride['event_title'] = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()['title']
-            ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
-            for application in ride['applications']:
-                users[application['username']] = requests.get(url_for("User", username=application['username'], _external=True)).json()
+            # Get event info
+            eventInfo = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()
+            if 'error' in eventInfo:
+                continue
+            r['event_title'] = eventInfo['title']
+
+            # Get ride applications
+            response = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()
+            if 'applications' not in response:
+                continue
+            r['applications'] = response['applications']
+
+            # Get users that applied
+            for application in r['applications']:
+                app_username = application['username']
+                userInfo = requests.get(url_for('User', username=app_username, _external=True)).json()
+                if 'error' in userInfo:
+                    return render_template('systemMessage.html', messageTitle='Error', message=userInfo['error'])
+                users[app_username] = userInfo
+
             rides.append(r)
         return render_template('manageRides.html', rides=rides, users=users)
 
     elif request.method == 'POST':
-
         # TODO: Add extra validation (can this driver do this, seat limitations etc) to POST requests possibly in the API route
         # POST to RideApplication endpoint according to response (Accept/Reject)
         putData = {
