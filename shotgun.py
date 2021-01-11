@@ -738,9 +738,15 @@ def RideApplication(ride_id):
         except Exception as e:
             return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
+        # Check if ride exists
+        query = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
+        if not query:
+            return {'error': 'Ride does not exist'}, 404
+        event_id = query.event_id
+
         username = request.form['username']
-        event_id = requests.get(url_for('Ride', ride_id=ride_id, _external=True)).json()['event_id']
         driverCheck = requests.get(url_for('Driver', username=username, _external=True))
+        driverWithRideFlag = False
         if 'error' not in driverCheck.json():
             # Check if driver already has a ride for this event
             userRidesResponse = requests.get(url_for('UserRides', username=username, _external=True))
