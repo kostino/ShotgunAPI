@@ -283,7 +283,7 @@ def UserVerify(username):
             return {'error': str(e)}
 
 
-@app.route('/mod/api/verification_applications', methods=['GET'])
+@app.route('/api/verification_applications', methods=['GET'])
 def VerificationApplicationList():
     if request.method == 'GET':
         try:
@@ -1855,12 +1855,21 @@ def MyRideApplications():
 
 @app.route('/mod/events_to_approve', methods=['GET'])
 def ModEventsToApprove():
-    events = requests.get(url_for('EventAddList', _external=True)).json()['events']
-    events_to_approve = [event for event in events if event['status'] == 'pending']
-    return render_template('modApproveEvents.html', title='Approve Events', events=events_to_approve)
+    # Get pending events
+    response = requests.get(url_for('EventAddList', _external=True)).json()
+    if 'events' not in response:
+        return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+    events = [event for event in response['events'] if event['status'] == 'pending']
+
+    return render_template('modApproveEvents.html', title='Approve Events', events=events)
 
 
 @app.route('/mod/drivers_to_approve', methods=['GET'])
 def ModDriversToApprove():
-    applications = requests.get(url_for('VerificationApplicationList', _external=True)).json()['applications']
+    # Get driver verification applications
+    response = requests.get(url_for('VerificationApplicationList', _external=True)).json()
+    if 'applications' not in response:
+        return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+    applications = response['applications']
+
     return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
