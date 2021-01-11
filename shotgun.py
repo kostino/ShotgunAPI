@@ -739,7 +739,7 @@ def RideApplication(ride_id):
             return {'error': str(e), 'applications': []}
     elif request.method == 'POST':
         username = request.form['username']
-        event_id = requests.get(url_for('Ride', ride_id=ride_id, _external=True))
+        event_id = requests.get(url_for('Ride', ride_id=ride_id, _external=True)).json()['event_id']
         driverCheck = requests.get(url_for('Driver', username=username, _external=True))
         if 'error' not in driverCheck.json():
             # Check if driver already has a ride for this event
