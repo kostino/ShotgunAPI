@@ -751,25 +751,23 @@ def RideApplication(ride_id):
             return {'error': 'You are a driver with a ride for this event.'}, 400
 
         # Check if user has already applied for this ride
-        userApplicationResponse = requests.get(
-            url_for('UserApplicationList', username=username, _external=True))
-        userApplications = userApplicationResponse.json()['applications']
-        alreadyAppliedFlag = ride_id in [a['ride_id'] for a in userApplications if a['status'] == 'pending']
+        query = db_session.query(ApplicationTable).filter_by(
+                ride_id=ride_id, username=username, status='pending').first()
+        if query:
+            return {'error': 'You have already applied for this ride.'}, 400
 
         # Check if user has already been accepted for this ride
-        userRidesAsPassenger = [a['ride_id'] for a in userApplications if a['status'] == 'accepted']
-        alreadyAcceptedFlag = ride_id in userRidesAsPassenger
+        query = db_session.query(ApplicationTable).filter_by(
+                ride_id=ride_id, username=username, status='accepted').first()
+        if query:
+            return {'error': 'You have already been accepted on board this ride.'}, 400
 
         # Check if user has already been accepted on a ride for this event
-        eventRidesResponse = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True))
-        eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
-        passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
-
-        if alreadyAppliedFlag:
-            return {'error': 'You have already applied for this ride.'}, 400
-        if alreadyAcceptedFlag:
-            return {'error': 'You have already been accepted on board this ride.'}, 400
-        if passengerInOtherRideFlag:
+        query = db_session.query(ApplicationTable).join(
+                RideTable, ApplicationTable.ride_id == RideTable.ride_id).filter(
+                        ApplicationTable.username == username, ApplicationTable.status == 'accepted',
+                        RideTable.event_id == event_id).first()
+        if query:
             return {'error': 'You are a passenger on another ride for this event.'}, 400
 
         # Get request data
