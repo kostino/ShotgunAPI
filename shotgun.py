@@ -746,9 +746,8 @@ def RideApplication(ride_id):
 
         # Check if user is a driver and has created a ride for this event
         username = request.form['username']
-        query = db_session.query(RideTable).filter_by(driver_username=username).all()
-        driverEvents = [r.event_id for r in query]
-        if event_id in driverEvents:
+        query = db_session.query(RideTable).filter_by(driver_username=username, event_id=event_id).first()
+        if query:
             return {'error': 'You are a driver with a ride for this event.'}, 400
 
         # Check if user has already applied for this ride
