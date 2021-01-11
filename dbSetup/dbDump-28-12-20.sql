@@ -166,7 +166,7 @@ CREATE TABLE `drivercertificationapplication` (
 
 LOCK TABLES `drivercertificationapplication` WRITE;
 /*!40000 ALTER TABLE `drivercertificationapplication` DISABLE KEYS */;
-INSERT INTO `drivercertificationapplication` VALUES ('lic_980.jpg','reg_1512653.jpg','Mazda RX-8','ffR05HlX.jpg','FLD83HlX.jpg','doumani'),('lic_88912.jpg','reg_159563.jpg','Tesla Model X','7826HASR.jpg','7826HASR.jpg','goulaaas'),('lic_81231.jpg','reg_346632.jpg','Millenium Falcon','A3d4R4F.jpg','AZC4RTF.jpg','han.yolo'),('lic_5342.jpg','reg_125831.jpg','Toyota Yaris 2002','13asAtdsta.jpg','1Ras2561.jpg','kokkinis'),('lic_4481.jpg','reg_151531.jpg','Mazda MX-5','aSd2384.jpg','RSd2FG4.jpg','kostino'),('lic_1231.jpg','reg_156571.jpg','BMW i3','16oGad61.jpg','1RFXad61.jpg','TheIronMan');
+INSERT INTO `drivercertificationapplication` VALUES ('doumani/license.jpg','doumani/registration.jpg','Mazda RX-8','doumani/vehicle.jpg','doumani/id.jpg','doumani'),('goulaaas/license.jpg','goulaaas/registration.jpg','Tesla Model X','goulaaas/vehicle.jpg','goulaaas/id.jpg','goulaaas'),('han.yolo/license.jpg','han.yolo/registration.jpg','Millenium Falcon','han.yolo/vehicle.jpg','han.yolo/id.jpg','han.yolo'),('kokkinis/license.jpg','kokkinis/registration.jpg','Toyota Yaris 2002','kokkinis/vehicle.jpg','kokkinis/id.jpg','kokkinis'),('kostino/license.jpg','kostino/registration.jpg','Mazda MX-5','kostino/vehicle.jpg','kostino/id.jpg','kostino'),('TheIronMan/license.jpg','TheIronMan/registration.jpg','BMW i3','TheIronMan/vehicle.jpg','TheIronMan/id.jpg','TheIronMan');
 /*!40000 ALTER TABLE `drivercertificationapplication` ENABLE KEYS */;
 UNLOCK TABLES;
 
