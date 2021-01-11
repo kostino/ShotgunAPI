@@ -1116,11 +1116,10 @@ def UserProfile(username):
 
         # Check if user:username exists
         responseUser = requests.get(url_for('User', username=username, _external=True))
-        if 'error' in responseUser.json():
+        userData = responseUser.json()
+        if 'error' in userData:
             return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
                                    message="This user doesn't exist.")
-        else:
-            userData = responseUser.json()
 
         # Get user ratings
         responseUserRatings = requests.get(url_for('UserRating', username=username, _external=True))
@@ -1128,9 +1127,9 @@ def UserProfile(username):
 
         # Check if user:username is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
-        if 'error' not in response.json():
+        driverData = response.json()
+        if 'error' not in driverData:
             driverFlag = True
-            driverData = response.json()
 
             # Get driver ratings
             responseDriverRatings = requests.get(url_for('DriverRating', username=username, _external=True))
@@ -1153,16 +1152,15 @@ def EditUserProfile(username):
 
         # Check if the provided username belongs to the currently logged in user
         if session['username'] == username:
-
             # Get user data
             response = requests.get(url_for('User', username=username, _external=True))
             userData = response.json()
 
             # Check if user is a driver and get data
-            driverCheck = requests.get(url_for('Driver', username=username, _external=True))
-            if 'error' not in driverCheck.json():
+            response = requests.get(url_for('Driver', username=username, _external=True))
+            driverData = response.json()
+            if 'error' not in driverData:
                 driverFlag = True
-                driverData = driverCheck.json()
 
             return render_template("editUserProfile.html", userData=userData, driverFlag=driverFlag,
                                    driverData=driverData)
@@ -1171,14 +1169,12 @@ def EditUserProfile(username):
                                    message="User does not exist or unauthorized edit was attempted.")
 
     elif request.method == 'POST':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
         # Check if the provided username belongs to the currently logged in user
         if session['username'] == username:
-
             # Data to be PUT to /api/user/<username>
             updatedData = {}
 
