@@ -1626,14 +1626,12 @@ def RateRides():
             # Get ride info
             rideInfo = requests.get(url_for('Ride', ride_id=r, _external=True)).json()
             if 'error' in rideInfo:
-                print("no")
                 continue
             rate_data['event_id'] = rideInfo['event_id']
 
             # Get event info
             eventInfo = requests.get(url_for('Event', event_id=rate_data['event_id'], _external=True)).json()
             if 'error' in eventInfo:
-                print("no")
                 continue
             rate_data['event_title'] = eventInfo['title']
 
