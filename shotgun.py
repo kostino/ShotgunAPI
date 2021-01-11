@@ -861,6 +861,8 @@ def UserRating(username):
                 'stars': u.stars
             } for u in userRatingQuery]}
             return userRatingDict
+        except NoResultFound:
+            return {'error': 'No user ratings found', 'ratings': []}
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'POST':
@@ -929,6 +931,8 @@ def DriverRating(username):
                             'stars': u.stars
                             } for u in driverRatingQuery]}
             return driverRatingDict
+        except NoResultFound:
+            return {'error': 'No diver ratings found', 'ratings': []}
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'POST':
@@ -1132,7 +1136,6 @@ def DriverCertification():
 @app.route('/user/<string:username>', methods=['GET'])
 def UserProfile(username):
     if request.method == 'GET':
-
         # Initialize empty driver variables
         driverFlag = False
         driverData = {}
@@ -1142,26 +1145,26 @@ def UserProfile(username):
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if user:username exists
-        responseUser = requests.get(url_for('User', username=username, _external=True))
-        userData = responseUser.json()
+        # Check if user exists
+        userData = requests.get(url_for('User', username=username, _external=True)).json()
         if 'error' in userData:
-            return render_template("systemMessage.html", messageTitle="OH NO, you got lost :(",
-                                   message="This user doesn't exist.")
+            return render_template('systemMessage.html', messageTitle='Error', message=userData['error'])
 
         # Get user ratings
-        responseUserRatings = requests.get(url_for('UserRating', username=username, _external=True))
-        userRatings = responseUserRatings.json()
+        userRatings = requests.get(url_for('UserRating', username=username, _external=True)).json()
+        if 'ratings' not in userRatings:
+            return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'])
 
-        # Check if user:username is a driver
+        # Check if user is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
         driverData = response.json()
         if 'error' not in driverData:
             driverFlag = True
 
             # Get driver ratings
-            responseDriverRatings = requests.get(url_for('DriverRating', username=username, _external=True))
-            driverRatings = responseDriverRatings.json()
+            driverRatings = requests.get(url_for('DriverRating', username=username, _external=True)).json()
+            if 'ratings' not in driverRatings:
+                return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'])
 
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData,
@@ -1302,7 +1305,7 @@ def BrowseEvents():
     if request.method == 'GET':
         # Get future events and then their info via API call
         response = requests.get(url_for('EventAddList', _external=True)).json()
-        if 'error' in response:
+        if 'events' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
         events = response['events']
 
@@ -1316,7 +1319,7 @@ def BrowseEvents():
 
             # Get user rides
             response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
-            if 'error' in response:
+            if 'rides' not in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             userRides = response['rides']
             userEventsWithRide = [r['event_id'] for r in userRides]
