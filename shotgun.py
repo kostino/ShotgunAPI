@@ -1680,3 +1680,10 @@ def MyRideApplications():
     response = requests.get(url_for('UserApplicationList', username=username, _external=True))
     applications = response.json()['applications']
     return render_template('myRideApplications.html', applications=applications)
+
+
+@app.route('/mod/events_to_approve', methods=['GET'])
+def ModEventsToApprove():
+    events = requests.get(url_for('EventAddList', _external=True)).json()['events']
+    events_to_approve = [event for event in events if event['status'] == 'pending']
+    return render_template('modApproveEvents.html', title='Approve Events', events=events_to_approve)
