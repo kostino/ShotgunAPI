@@ -744,16 +744,12 @@ def RideApplication(ride_id):
             return {'error': 'Ride does not exist'}, 404
         event_id = query.event_id
 
+        # Check if user is a driver and has created a ride for this event
         username = request.form['username']
-        driverCheck = requests.get(url_for('Driver', username=username, _external=True))
-        driverWithRideFlag = False
-        if 'error' not in driverCheck.json():
-            # Check if driver already has a ride for this event
-            userRidesResponse = requests.get(url_for('UserRides', username=username, _external=True))
-            userRides = userRidesResponse.json()['rides']
-            userEventsWithRide = [r['event_id'] for r in userRides]
-            if event_id in userEventsWithRide:
-                driverWithRideFlag = True
+        query = db_session.query(RideTable).filter_by(driver_username=username).all()
+        driverEvents = [r.event_id for r in query]
+        if event_id in driverEvents:
+            return {'error': 'You are a driver with a ride for this event.'}, 400
 
         # Check if user has already applied for this ride
         userApplicationResponse = requests.get(
@@ -770,8 +766,6 @@ def RideApplication(ride_id):
         eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
         passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
 
-        if driverWithRideFlag:
-            return {'error': 'You are a driver with a ride for this event.'}, 400
         if alreadyAppliedFlag:
             return {'error': 'You have already applied for this ride.'}, 400
         if alreadyAcceptedFlag:
