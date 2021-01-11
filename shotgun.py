@@ -711,6 +711,8 @@ def RideUsers(ride_id):
                     'avg_user_rating': str(u.average_user_rating)[:3]
                 } for u in rideUsersQuery]}
             return rideUsersDict
+        except NoResultFound:
+            return {'error': 'No users found', 'users': []}
         except Exception as e:
             return {'error': str(e)}
 
@@ -1316,8 +1318,7 @@ def BrowseEvents():
             response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
             if 'rides' not in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-            userRides = response['rides']
-            userEventsWithRide = [r['event_id'] for r in userRides]
+            userEventsWithRide = [r['event_id'] for r in response['rides']]
 
         # Render template
         return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
@@ -1375,11 +1376,11 @@ def SearchEvents():
             driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
             driverFlag = 'error' not in driverCheck.json()
 
+            # Get user rides
             response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
             if 'rides' not in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-            userRides = response['rides']
-            userEventsWithRide = [r['event_id'] for r in userRides]
+            userEventsWithRide = [r['event_id'] for r in response['rides']]
 
         # Render template
         return render_template("browseEvents.html", events=events, title="Search Results for {}".format(searchQuery), driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
@@ -1419,13 +1420,14 @@ def EventRides(event_id):
             if 'error' not in driverCheck.json():
                 driverFlag = True
 
-                # Check if driver already has a ride for this event
+                # Get user rides
                 response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
                 if 'rides' not in response:
                     return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-                userRides = response['rides']
-                userEventsWithRide = [r['event_id'] for r in userRides]
-                createRideFlag = False if event_id in userEventsWithRide else True
+                userEventsWithRide = [r['event_id'] for r in response['rides']]
+
+                # Check if driver already has a ride for this event
+                createRideFlag = event_id not in userEventsWithRide
 
         # Load driver data
         for ride in rides:
@@ -1449,12 +1451,13 @@ def CreateRide(event_id):
             if 'error' not in driverCheck.json():
                 driverFlag = True
 
-                # Check if driver already has a ride for this event
+                # Get user rides
                 response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
                 if 'rides' not in response:
                     return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-                userRides = response['rides']
-                userEventsWithRide = [r['event_id'] for r in userRides]
+                userEventsWithRide = [r['event_id'] for r in response['rides']]
+
+                # Check if driver already has a ride for this event
                 if event_id in userEventsWithRide:
                     return render_template("systemMessage.html", messageTitle="Ride already created",
                                            message="You have already created a ride for this event.")
@@ -1504,34 +1507,27 @@ def CreateRide(event_id):
 def RideView(ride_id):
     if request.method == 'GET':
         # Get ride info
-        response = requests.get(url_for("Ride", ride_id=ride_id, _external=True))
-        rideInfo = response.json()
+        rideInfo = requests.get(url_for('Ride', ride_id=ride_id, _external=True)).json()
         if 'error' in rideInfo:
-            return render_template('systemMessage.html', messageTitle='Error Getting Ride',
-                                   message='An error occurred while getting ride information, please try again later.')
+            return render_template('systemMessage.html', messageTitle='Error', message=rideInfo['error'])
         event_id = rideInfo['event_id']
+        driver = rideInfo['driver_username']
 
         # Get users on ride info
-        response = requests.get(url_for("RideUsers", ride_id=ride_id, _external=True))
-        rideUsers = response.json()
-        if 'error' in response.json():
-            return render_template('systemMessage.html', messageTitle='Error Getting Ride Users',
-                                   message='An error occurred while getting passenger information, please try again later.')
-        passengers = rideUsers['users']
+        response = requests.get(url_for('RideUsers', ride_id=ride_id, _external=True)).json()
+        if 'users' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        passengers = response['users']
 
         # Get event info
-        response = requests.get(url_for("Event", event_id=event_id, _external=True))
-        eventInfo = response.json()
+        eventInfo = requests.get(url_for('Event', event_id=event_id, _external=True)).json()
         if 'error' in eventInfo:
-            return render_template('systemMessage.html', messageTitle='Error Getting Ride Event Info',
-                                   message='An error occurred while getting event information, please try again later.')
+            return render_template('systemMessage.html', messageTitle='Error', message=eventInfo['error'])
 
         # Get driver info
-        response = requests.get(url_for('Driver', username=rideInfo['driver_username'], _external=True))
-        driverInfo = response.json()
+        driverInfo = requests.get(url_for('Driver', username=driver, _external=True)).json()
         if 'error' in driverInfo:
-            return render_template('systemMessage.html', messageTitle='Error Getting Driver Info',
-                                   message='An error occurred while getting driver information, please try again later.')
+            return render_template('systemMessage.html', messageTitle='Error', message=driverInfo['error'])
 
         # Check if user logged in, is a driver and already has a ride for the current event
         driverFlag = False
@@ -1540,22 +1536,35 @@ def RideView(ride_id):
         alreadyAcceptedFlag = False
         passengerInOtherRideFlag = False
         if 'username' in session:
-            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            # Check if user is a driver
+            username = session['username']
+            driverCheck = requests.get(url_for('Driver', username=username, _external=True))
             if 'error' not in driverCheck.json():
                 driverFlag = True
 
+                # Get user rides
+                response = requests.get(url_for('UserRides', username=username, _external=True)).json()
+                if 'rides' not in response:
+                    return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+                userEventsWithRide = [r['event_id'] for r in response['rides']]
+
                 # Check if driver already has a ride for this event
-                userRidesResponse = requests.get(url_for('UserRides', username=session['username'], _external=True))
-                userRides = userRidesResponse.json()['rides']
-                userEventsWithRide = [r['event_id'] for r in userRides]
                 if event_id in userEventsWithRide:
                     driverWithRideFlag = True
-            userApplicationResponse = requests.get(url_for('UserApplicationList', username=session['username'], _external=True))
-            userApplications = userApplicationResponse.json()['applications']
+
+            # Get user applications
+            response = requests.get(url_for('UserApplicationList', username=username, _external=True)).json()
+            if 'applications' not in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            userApplications = response['applications']
             userRidesAsPassenger = [a['ride_id'] for a in userApplications if a['status'] == 'accepted']
-            eventRidesResponse = requests.get(
-                url_for('EventRidesAPI', event_id=rideInfo['event_id'], _external=True))
-            eventRides = [e['ride_id'] for e in eventRidesResponse.json()['rides']]
+
+            # Get event rides
+            response = requests.get(url_for('EventRidesAPI', event_id=event_id, _external=True)).json()
+            if 'rides' not in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            eventRides = [e['ride_id'] for e in response['rides']]
+
             alreadyAcceptedFlag = ride_id in userRidesAsPassenger
             alreadyAppliedFlag = ride_id in [a['ride_id'] for a in userApplications if a['status'] == 'pending']
             passengerInOtherRideFlag = any(ride in userRidesAsPassenger for ride in eventRides)
