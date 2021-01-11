@@ -318,13 +318,16 @@ def UserPaymentInfo(username):
         method = request.form['method']
         name = request.form['name']
 
+        # Validate data
         if method != 'credit_card' and method != 'paypal':
             return {'error': 'Invalid payment method type'}, 400
 
-        # Insert PaymentMethod record
+        # Get new payment ID
         payment_id = db_session.query(
                 func.max(PaymentMethodTable.payment_id)).filter_by(username=username).scalar()
         payment_id = payment_id + 1 if payment_id else 1
+
+        # Insert PaymentMethod record
         baseData = PaymentMethodTable(payment_id=payment_id, username=username,
                                       name=name, is_primary=False)
         db_session.add(baseData)
@@ -447,14 +450,18 @@ def EventAddList():
         location_name = request.form['location_name'] if 'location_name' in request.form.keys() else ''
         date = request.form['date']
         time = request.form['time']
-        event_id = db_session.query(func.max(EventTable.event_id)).scalar() + 1
         datetime = DT.datetime.combine(DT.datetime.strptime(date, '%Y-%m-%d').date(),
                                        DT.datetime.strptime(time, '%H:%M').time())
+
         # Validate data
         if not is_valid_geolocation(latitude, longitude):
             return {'error': 'invalid geolocation'}, 400
         if len(title) == 0 or len(date) == 0 or len(time) == 0 or len(location_name) == 0:
             return {'error': 'empty data'}, 400
+
+        # Get new event ID
+        event_id = db_session.query(func.max(EventTable.event_id)).scalar()
+        event_id = event_id + 1 if event_id else 1
 
         # Insert event into database
         newEvent = EventTable(event_id=event_id, title=title, type=event_type,
@@ -634,6 +641,7 @@ def RideList():
         if not (all(field in request.form.keys() for field in required_data)
                 and all(len(request.form[field]) > 0 for field in request.form.keys())):
             return {'error': 'missing data'}, 400
+
         # Get request data
         event_id = request.form['event_id']
         start_date = request.form['start_date']
@@ -650,7 +658,6 @@ def RideList():
         available_seats = request.form['seats']
         return_date = request.form['return_date'] if 'return_date' in request.form.keys() else None
         return_time = request.form['return_time'] if 'return_time' in request.form.keys() else None
-        ride_id = db_session.query(func.max(RideTable.ride_id)).scalar() + 1
 
         start_datetime = DT.datetime.combine(DT.datetime.strptime(start_date, '%Y-%m-%d').date(),
                                        DT.datetime.strptime(start_time, '%H:%M').time())
@@ -663,6 +670,11 @@ def RideList():
         # Validate data
         if not is_valid_geolocation(latitude, longitude):
             return {'error': 'invalid geolocation'}, 400
+
+        # Get new ride ID
+        ride_id = db_session.query(func.max(RideTable.ride_id)).scalar()
+        ride_id = ride_id + 1 if ride_id else 1
+
         # Insert event into database
         newRide = RideTable(ride_id=ride_id, event_id=event_id, start_datetime=start_datetime,
                             return_datetime=return_datetime, cost=cost, driver_username=driver_username,
