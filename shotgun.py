@@ -785,10 +785,9 @@ def RideApplication(ride_id):
 
         # Get request data
         message = request.form['message']
-        status = request.form['status']
 
         # Insert event into database
-        newApplication = ApplicationTable(ride_id=ride_id, username=username, message=message, status=status)
+        newApplication = ApplicationTable(ride_id=ride_id, username=username, message=message, status='pending')
         db_session.add(newApplication)
         db_session.commit()
         return {'status': 'success'}, 200
@@ -1563,8 +1562,7 @@ def RideView(ride_id):
         # POST to RideApplication
         postData = {
             'username': session['username'],
-            'message': request.form['message'],
-            'status': 'pending'
+            'message': request.form['message']
         }
         response = requests.post(url_for('RideApplication', ride_id=ride_id, _external=True), data=postData).json()
         if 'error' not in response:
