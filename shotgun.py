@@ -569,8 +569,8 @@ def EventRidesAPI(event_id):
             return {'error': str(e)}
 
 
-@app.route('/api/ride', methods=['GET'])
-def AllRidesAPI():
+@app.route('/api/ride', methods=['GET', 'POST'])
+def RideList():
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
@@ -597,10 +597,7 @@ def AllRidesAPI():
         except Exception as e:
             return {'error': str(e)}
 
-
-@app.route('/api/ride', methods=['POST'])
-def RideAdd():
-    if request.method == 'POST':
+    elif request.method == 'POST':
         required_data = ['event_id', 'start_date', 'start_time', 'driver_username',
                          'location_name', 'cost','description', 'seats']
         if not (all(field in request.form.keys() for field in required_data)
@@ -1480,8 +1477,7 @@ def CreateRide(event_id):
         requestData = {field: request.form[field] for field in required_fields}
         requestData['driver_username'] = session['username']
         requestData['event_id'] = event_id
-        response = requests.post(url_for('RideAdd', _external=True),
-                                 data=requestData)
+        response = requests.post(url_for('RideList', _external=True), data=requestData)
         if 'error' in response:
             return render_template('systemMessage.html', messageTitle='Error Submitting Ride',
                                    message='An error occured while submitting your ride, please try again later.')
@@ -1593,7 +1589,7 @@ def RateRides():
         my_rides = [a['ride_id'] for a in response['applications'] if a['status'] == 'accepted']
 
         # Get past rides
-        response = requests.get(url_for('AllRidesAPI', username=username, _external=True)).json()
+        response = requests.get(url_for('RideList', username=username, _external=True)).json()
         if 'rides' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
         past_rides = [r['ride_id'] for r in response['rides'] if is_past_date(r['start_datetime'][:16])]
