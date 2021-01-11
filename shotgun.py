@@ -1727,9 +1727,41 @@ def MyRideApplications():
         return redirect(url_for('Login'))
 
     username = session['username']
+
+    # Get applications
     response = requests.get(url_for('UserApplicationList', username=username, _external=True))
     applications = response.json()['applications']
-    return render_template('myRideApplications.html', applications=applications)
+
+    # Form events -> ride-application structure
+    events = {application['event_id']:
+                  {
+                      'title': application['event_title'],
+                      'applications': []
+                   } for application in applications}
+
+    # Get driver profile pictures and names
+    driverPictures = {
+        application['ride_driver']: {}
+        for application in applications
+    }
+    for application in applications:
+        response = requests.get(url_for("User", username=application['ride_driver'], _external=True)).json()
+        driverPictures[application['ride_driver']]['profile_picture'] = response['profile_picture']
+        driverPictures[application['ride_driver']]['first_name'] = response['first_name']
+        driverPictures[application['ride_driver']]['surname'] = response['surname']
+
+    # Complete events -> ride-application structure
+    for application in applications:
+        events[application['event_id']]['applications'].append({
+            'ride_id': application['ride_id'],
+            'status': application['status'],
+            'ride_driver': application['ride_driver'],
+            'driver_picture': driverPictures[application['ride_driver']]['profile_picture'],
+            'driver_first_name': driverPictures[application['ride_driver']]['first_name'],
+            'driver_surname': driverPictures[application['ride_driver']]['surname']
+        })
+
+    return render_template('myRideApplications.html', events=events)
 
 
 @app.route('/mod/events_to_approve', methods=['GET'])
