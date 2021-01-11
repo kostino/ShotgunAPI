@@ -766,6 +766,7 @@ def RideApplication(ride_id):
             return {'error': "No applications for ride {}".format(ride_id), 'applications': []}
         except Exception as e:
             return {'error': str(e), 'applications': []}
+
     elif request.method == 'POST':
         # Check if user exists
         username = request.form['username']
@@ -1639,8 +1640,7 @@ def ManageMyRides():
         for r in not_expired_rides:
             ride = r
             ride['event_title'] = requests.get(url_for('Event', event_id=r['event_id'], _external=True)).json()['title']
-            applications = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
-            ride['applications'] = [a for a in applications if a['status'] == 'pending']
+            ride['applications'] = requests.get(url_for('RideApplication', ride_id=r['ride_id'], _external=True)).json()['applications']
             for application in ride['applications']:
                 users[application['username']] = requests.get(url_for("User", username=application['username'], _external=True)).json()
             rides.append(r)
@@ -1648,15 +1648,13 @@ def ManageMyRides():
 
     elif request.method == 'POST':
 
-        # TODO: Add extra validation (e.g can this driver do this...) to POST requests possibly in the API route
+        # TODO: Add extra validation (can this driver do this, seat limitations etc) to POST requests possibly in the API route
         # POST to RideApplication endpoint according to response (Accept/Reject)
         putData = {
-            'driver': session['username'],
-            'username': request.form['username'],
-            'status': request.form['status']
+            "status": request.form['status']
         }
-        response = requests.put(url_for("RideApplication", ride_id=request.form['ride_id'], putData=putData,
-                                        _external=True))
+        response = requests.put(url_for("Application", ride_id=request.form['ride_id'],
+                                        username=request.form['username'], _external=True), data=putData)
         if 'error' in response.json():
             # Render error page
             return render_template("systemMessage.html", messageTitle="An error occurred",

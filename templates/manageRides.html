@@ -24,6 +24,13 @@
 
         <hr>
 
+        <!-- No rides message -->
+        {% if not rides %}
+            <div class="container">
+                <h4>You currently have no rides. Create one by browsing the events page.</h4>
+            </div>
+        {% endif %}
+
         <!-- Events/Rides Accordion -->
         <div class="accordion" id="accordion">
 
@@ -51,7 +58,7 @@
 
                     <!-- Application -->
                     <div class="row align-items-center my-3 mx-1"
-                         style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
+                         style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray;">
                         <div class="col-md-4 px-0">
                             <a href="{{ url_for("UserProfile", username=application['username'], _external=True) }}">
                                 <img src="{{ url_for('ProfilePicture', filename=users[application['username']]['profile_picture']) }}"
@@ -79,6 +86,8 @@
                         </div>
                         <div class="col">
                             <div class="container my-2" style="text-align: center">
+                                <!-- Pending Applications -->
+                                {% if application['status'] == 'pending' %}
                                 <form action="{{ url_for('ManageMyRides') }}"
                                       method="post">
                                     <input type="hidden" name="ride_id" value="{{ ride['ride_id'] }}">
@@ -98,7 +107,12 @@
                                         Reject Application
                                     </button>
                                 </form>
+                                {% endif %}
 
+                                <!-- Accepted Applications -->
+                                {% if application['status'] == 'accepted' %}
+                                <h5 style="color: green;">Application Accepted</h5>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
