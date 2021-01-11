@@ -1246,30 +1246,21 @@ def PaymentMethods():
         return render_template('paymentMethods.html', creditCards=creditCards, paypalAccounts=paypalAccounts)
 
 
-@app.route('/user/<string:username>/set_primary_pm', methods=['POST'])
-def UserSetPrimary(username):
+@app.route('/user/set_primary_pm', methods=['POST'])
+def UserSetPrimary():
     if request.method == 'POST':
-
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        # Check if the provided username belongs to the currently logged in user
-        if session['username'] == username:
+        # API call to set
+        response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
+                                params={'payment_id': request.form['payment_id']})
+        if 'error' in response.json():
+            return render_template("systemMessage.html", messageTitle="Error",
+                                   message="An error occurred while setting the primary payment method.")
 
-            # API call to set
-            response = requests.put(url_for('SetPrimary', username=session['username'], _external=True),
-                                    params={'payment_id': request.form['payment_id']})
-
-            if 'error' in response.json():
-                return render_template("systemMessage.html", messageTitle="Error",
-                                       message="An error occurred while setting the primary payment method.")
-
-            return redirect(url_for('PaymentMethods'))
-
-        else:
-            return render_template("systemMessage.html", messageTitle="Unauthorized Access",
-                                   message="You tried to alter another user's payment methods.")
+        return redirect(url_for('PaymentMethods'))
 
 
 @app.route('/user/addpaymentmethod', methods=['GET', 'POST'])

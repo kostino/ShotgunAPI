@@ -74,7 +74,7 @@
                         {% if card['is_primary'] == 1 %}
                             <button type="button" class="btn btn-success" disabled>Primary</button>
                         {% else %}
-                            <form action="{{ url_for('UserSetPrimary', username=session['username']) }}" method="post">
+                            <form action="{{ url_for('UserSetPrimary') }}" method="post">
                                 <input type="hidden" id="payment_id" name="payment_id" value="{{ card['payment_id'] }}">
                                 <button type="submit" class="btn btn-outline-primary">Set Primary</button>
                             </form>
@@ -118,7 +118,7 @@
                             {% if account['is_primary'] == 1 %}
                                 <button type="button" class="btn btn-success" disabled>Primary</button>
                             {% else %}
-                                <form action="{{ url_for('UserSetPrimary', username=session['username']) }}" method="post">
+                                <form action="{{ url_for('UserSetPrimary') }}" method="post">
                                     <input type="hidden" id="payment_id" name="payment_id" value="{{ account['payment_id'] }}">
                                     <button type="submit" class="btn btn-outline-primary">Set Primary</button>
                                 </form>
