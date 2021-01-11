@@ -306,7 +306,7 @@ def VerificationApplicationList():
             return {'error': str(e), 'applications': []}
 
 
-@app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST'])
 def UserPaymentInfo(username):
     if request.method == 'POST':
         # add new payment info for user
@@ -373,14 +373,6 @@ def SetPrimary(username):
                 return {'error': str(e)}
         else:
             return {'error': 'Invalid request, data missing'}
-
-
-@app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['PUT'])
-def EditUserPaymentInfo(username, payment_id):
-    if request.method == 'PUT':
-        # edit user payment info
-        # add to database
-        return
 
 
 @app.route('/api/user/<string:username>/rides', methods=['GET'])
@@ -653,13 +645,9 @@ def RideAdd():
         return {'status': 'success'}, 200
 
 
-@app.route('/api/ride/<int:ride_id>', methods=['PUT', 'GET', 'DELETE'])
+@app.route('/api/ride/<int:ride_id>', methods=['GET', 'DELETE'])
 def Ride(ride_id):
-    if request.method == 'PUT':
-        # edit ride data
-        # add ride to base
-        return
-    elif request.method == 'GET':
+    if request.method == 'GET':
         # return a ride's data
         try:
             rideQuery = db_session.query(RideTable).filter(RideTable.ride_id == ride_id).one()
@@ -715,13 +703,6 @@ def RideUsers(ride_id):
             return {'error': 'No users found', 'users': []}
         except Exception as e:
             return {'error': str(e)}
-
-
-@app.route('/estimate_cost', methods=['GET'])
-def EstimateCost():
-    if request.method == 'GET':
-        # get a cost estimation for a ride based on location and vehicle etc
-        return
 
 
 @app.route('/api/user/<string:username>/application', methods=['GET'])
