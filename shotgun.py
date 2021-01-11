@@ -309,9 +309,40 @@ def VerificationApplicationList():
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST'])
 def UserPaymentInfo(username):
     if request.method == 'POST':
-        # add new payment info for user
-        # add to database
-        return
+        # Check if user exists
+        query = db_session.query(UserTable).filter_by(username=username).first()
+        if not query:
+            return {'error': 'User does not exist'}, 400
+
+        # Get request data
+        method = request.form['method']
+        name = request.form['name']
+
+        if method != 'credit_card' and method != 'paypal':
+            return {'error': 'Invalid payment method type'}, 400
+
+        # Insert PaymentMethod record
+        payment_id = db_session.query(
+                func.max(PaymentMethodTable.payment_id)).filter_by(username=username).scalar()
+        payment_id = payment_id + 1 if payment_id else 1
+        baseData = PaymentMethodTable(payment_id=payment_id, username=username,
+                                      name=name, is_primary=False)
+        db_session.add(baseData)
+
+        if method == 'credit_card':
+            number = request.form['number']
+            exp_date = request.form['exp_date']
+            cvv = request.form['cvv']
+            card_type = request.form['type']
+            data = CreditCardTable(payment_id=payment_id, username=username, number=number,
+                                   cvv=cvv, exp_date=exp_date, type=card_type)
+        elif method == 'paypal':
+            paypal_token = request.form['paypal_token']
+            data = PayPalTable(payment_id=payment_id, username=username, paypal_token=paypal_token)
+
+        db_session.add(data)
+        db_session.commit()
+        return {'status': 'success'}, 200
     elif request.method == 'GET':
         # get a list of users payment info
         # return json
@@ -1097,6 +1128,10 @@ def DriverCertification():
         return render_template("driverCertification.html")
 
     elif request.method == 'POST':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
         requestData = {'vehicle': request.form['vehicle']}
 
         # Read images
@@ -1270,14 +1305,43 @@ def UserSetPrimary():
         return redirect(url_for('PaymentMethods'))
 
 
-@app.route('/user/addpaymentmethod', methods=['GET', 'POST'])
+@app.route('/addpaymentmethod', methods=['GET', 'POST'])
 def AddPaymentMethod():
     if request.method == 'GET':
         # Check if user logged in
         if 'username' not in session:
             return redirect(url_for('Login'))
 
-        return render_template("addPaymentMethod.html")
+        return render_template('addPaymentMethod.html')
+
+    elif request.method == 'POST':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        # Get request data
+        requestData = {
+                'name': request.form['name'],
+                'method': request.form['method']
+        }
+
+        method = requestData['method']
+        if method == 'credit_card':
+            requestData['number'] = request.form['number']
+            requestData['cvv'] = request.form['cvv']
+            requestData['type'] = request.form['type']
+            requestData['exp_date'] = request.form['exp_date']
+        elif method == 'paypal':
+            requestData['paypal_token'] = request.form['paypal_token']
+
+        # Pass request to the API endpoint
+        response = requests.post(url_for('UserPaymentInfo', username=session['username'], _external=True),
+                                 data=requestData).json()
+        if 'error' not in response:
+            return redirect(url_for('PaymentMethods'))
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        return
 
 
 @app.route('/events', methods=['GET', 'POST'])

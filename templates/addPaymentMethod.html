@@ -37,7 +37,12 @@
 
                         <!-- Credit Card form -->
                         <div class="tab-pane fade show active" id="pills-cc" role="tabpanel" aria-labelledby="pills-cc-tab">
-                            <form action="/register" method="post">
+                          <form action="{{ url_for('AddPaymentMethod') }}" method="post">
+                                <input type="hidden" name="method" value="credit_card">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">Name</span>
+                                    <input type="text" class="form-control" placeholder="Name" aria-label="Number" aria-describedby="basic-addon1" name="name">
+                                </div>
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1">Number</span>
                                     <input type="text" class="form-control" placeholder="Credit Card Number" maxlength="16" aria-label="Number" aria-describedby="basic-addon1" name="number">
@@ -62,7 +67,12 @@
                         </div>
 
                         <div class="tab-pane fade" id="pills-paypal" role="tabpanel" aria-labelledby="pills-paypal-tab">
-                            <form action="/register" method="post">
+                          <form action="{{ url_for('AddPaymentMethod') }}" method="post">
+                                <input type="hidden" name="method" value="paypal">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">Name</span>
+                                    <input type="text" class="form-control" placeholder="Name" aria-label="Number" aria-describedby="basic-addon1" name="name">
+                                </div>
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1">PayPal Token</span>
                                     <input type="text" class="form-control" placeholder="PayPal Token" maxlength="16" aria-label="Number" aria-describedby="basic-addon1" name="paypal_token">
