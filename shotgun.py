@@ -935,6 +935,21 @@ def ApplicationAccept(ride_id, username):
         return {'status': 'success'}, 200
 
 
+@app.route('/api/ride/<int:ride_id>/application/<string:username>/reject', methods=['POST'])
+def ApplicationReject(ride_id, username):
+    if request.method == 'POST':
+        application = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).first()
+        if not application:
+            return {'error': 'Application does not exist'}, 404
+        if application.status != 'pending':
+            return {'error': 'Application is not pending'}, 400
+
+        # Reject application
+        application.status = 'rejected'
+        db_session.commit()
+        return {'status': 'success'}, 200
+
+
 @app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
 def UserRating(username):
     if request.method == 'GET':
@@ -1971,13 +1986,18 @@ def ManageMyRides():
         ride_id = request.form['ride_id']
         username = request.form['username']
 
-        # POST to RideApplication endpoint according to response (Accept/Reject)
-        response = requests.post(url_for(
-            'ApplicationAccept', ride_id=ride_id, username=username, _external=True)).json()
+        # Call API
+        if request.form['status'] == 'accepted':
+            response = requests.post(url_for('ApplicationAccept', ride_id=ride_id, username=username, _external=True)).json()
+        elif request.form['status'] == 'rejected':
+            response = requests.post(url_for('ApplicationReject', ride_id=ride_id, username=username, _external=True)).json()
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message='Invalid data')
+
         if 'error' in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-
-        return redirect(url_for('ManageMyRides'))
+        else:
+            return redirect(url_for('ManageMyRides'))
 
 
 @app.route('/my_applications', methods=['GET'])
