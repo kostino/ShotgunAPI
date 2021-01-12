@@ -149,10 +149,9 @@ def UserListAdd():
                 'first_name': u.user.first_name,
                 'surname': u.user.surname,
                 'profile_picture': u.user.profile_picture,
-                'avg_user_rating': str(u.average_user_rating)[:3],
-                'avg_driver_rating': str(u.average_driver_rating)[:3]
-            } for u in userQuery]
-            }
+                'avg_user_rating': str(u.average_user_rating)[:3] if u.average_user_rating else None,
+                'avg_driver_rating': str(u.average_driver_rating)[:3] if u.average_driver_rating else None
+            } for u in userQuery]}
             return userDict
         except NoResultFound:
             return {'error': 'No users exist in the database'}
@@ -184,18 +183,18 @@ def User(username):
         # Maybe /api/user/<user_id> returns json user data and /user loads a user profile and calls
         # multiple api endpoints like /api/rating/ or /api/driver/
         try:
-            userQuery = db_session.query(UserTable, AvgDriverRatingView, AvgUserRatingView).join(
+            query = db_session.query(UserTable, AvgDriverRatingView, AvgUserRatingView).join(
                 AvgDriverRatingView, AvgDriverRatingView.columns.ratee == UserTable.username, isouter=True).join(
                 AvgUserRatingView, AvgUserRatingView.columns.ratee == UserTable.username, isouter=True).filter(
                 UserTable.username == username).one()
             # return all data except from passwords
-            userDict = {'username': userQuery.user.username,
-                        'password': userQuery.user.password,
-                        'first_name': userQuery.user.first_name,
-                        'surname': userQuery.user.surname,
-                        'profile_picture': userQuery.user.profile_picture,
-                        'avg_user_rating': str(userQuery.average_user_rating)[:3],
-                        'avg_driver_rating': str(userQuery.average_driver_rating)[:3]}
+            userDict = {'username': query.user.username,
+                        'password': query.user.password,
+                        'first_name': query.user.first_name,
+                        'surname': query.user.surname,
+                        'profile_picture': query.user.profile_picture,
+                        'avg_user_rating': str(query.average_user_rating)[:3] if query.average_user_rating else None,
+                        'avg_driver_rating': str(query.average_driver_rating)[:3] if query.average_driver_rating else None}
             return userDict
         except NoResultFound:
             return {'error': 'User with provided credentials does not exist in the database'}
@@ -758,7 +757,7 @@ def RideUsers(ride_id):
                     'username': u.user.username,
                     'first_name': u.user.first_name,
                     'surname': u.user.surname,
-                    'avg_user_rating': str(u.average_user_rating)[:3]
+                    'avg_user_rating': str(u.average_user_rating)[:3] if u.average_user_rating else None
                 } for u in rideUsersQuery]}
             return rideUsersDict
         except NoResultFound:

@@ -52,7 +52,9 @@
                                style="text-decoration: none;">
                                 {{ passenger['username'] }}
                             </a>
-                            <span class="badge bg-primary rounded-pill">{{ passenger['avg_user_rating'] }}⭐</span>
+                            <span class="badge bg-primary rounded-pill">
+                              {{ passenger['avg_user_rating'] if passenger['avg_user_rating'] else 'No ratings' }} ⭐
+                            </span>
                         </li>
                     {% endfor %}
                     </ul>
