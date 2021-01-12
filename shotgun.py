@@ -1885,7 +1885,7 @@ def MyRideApplications():
 def ModEventsToApprove():
     if request.method == 'GET':
         # Get pending events
-        response = requests.get(url_for('EventAddList', _external=True)).json()
+        response = requests.get(url_for('EventSearchAPI', _external=True), params={'old': 1, 'tag':''}).json()
         if 'events' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
         events = [event for event in response['events'] if event['status'] == 'pending']
