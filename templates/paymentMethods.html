@@ -80,7 +80,12 @@
                             </form>
                         {% endif %}
                     </div>
-                    <div class="col-auto"><button type="button" class="btn btn-danger">Remove</button></div>
+                    <div class="col-auto">
+                        <form action="{{ url_for('DeletePaymentMethod') }}" method="post">
+                            <input type="hidden" id="payment_id" name="payment_id" value="{{ card['payment_id'] }}">
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                        </form>
+                    </div>
                 </div>
 
             </div>
@@ -124,7 +129,12 @@
                                 </form>
                             {% endif %}
                         </div>
-                        <div class="col-auto"><button type="button" class="btn btn-danger">Remove</button></div>
+                      <div class="col-auto">
+                          <form action="{{ url_for('DeletePaymentMethod') }}" method="post">
+                              <input type="hidden" id="payment_id" name="payment_id" value="{{ account['payment_id'] }}">
+                              <button type="submit" class="btn btn-danger">Remove</button>
+                          </form>
+                      </div>
                     </div>
 
                 </div>

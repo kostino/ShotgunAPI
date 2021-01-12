@@ -309,7 +309,7 @@ def VerificationApplicationList():
 
 
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST'])
-def UserPaymentInfo(username):
+def PaymentInfoList(username):
     if request.method == 'POST':
         # Check if user exists
         query = db_session.query(UserTable).filter_by(username=username).first()
@@ -387,6 +387,48 @@ def UserPaymentInfo(username):
                     'credit_cards': [], 'paypal_accounts': []}
         except Exception as e:
             return {'error': str(e)}
+
+
+@app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['GET', 'DELETE'])
+def PaymentInfo(username, payment_id):
+    if request.method == 'GET':
+        # Get base info
+        query = db_session.query(PaymentMethodTable).filter_by(username=username, payment_id=payment_id).first()
+        if not query:
+            return {'error': 'Payment method does not exist'}
+
+        data = {
+            'username': query.username,
+            'payment_id': query.payment_id,
+            'name': query.name,
+            'is_primary': query.is_primary
+        }
+
+        # Get credit card info
+        query = db_session.query(CreditCardTable).filter_by(username=username, payment_id=payment_id).first()
+        if query:
+            data['number'] = query.number
+            data['cvv'] = query.cvv
+            data['exp_date'] = query.exp_date
+            data['type'] = query.type
+
+        # Get PayPal info
+        query = db_session.query(PayPalTable).filter_by(username=username, payment_id=payment_id).first()
+        if query:
+            data['paypal_token'] = query.paypal_token
+
+        return data
+
+    elif request.method == 'DELETE':
+        # Delete payment info
+        db_session.query(CreditCardTable).filter_by(username=username, payment_id=payment_id).delete()
+        db_session.query(PayPalTable).filter_by(username=username, payment_id=payment_id).delete()
+        num_rows = db_session.query(PaymentMethodTable).filter_by(username=username, payment_id=payment_id).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Payment method does not exist'}
 
 
 @app.route('/api/user/<string:username>/set_primary_pm', methods=['PUT'])
@@ -1462,7 +1504,7 @@ def PaymentMethods():
 
         # Get payment methods
         username = session['username']
-        response = requests.get(url_for('UserPaymentInfo', username=username, _external=True)).json()
+        response = requests.get(url_for('PaymentInfoList', username=username, _external=True)).json()
         if 'credit_cards' not in response or 'paypal_accounts' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
                                    context={
@@ -1532,8 +1574,31 @@ def AddPaymentMethod():
             requestData['paypal_token'] = request.form['paypal_token']
 
         # Pass request to the API endpoint
-        response = requests.post(url_for('UserPaymentInfo', username=session['username'], _external=True),
+        response = requests.post(url_for('PaymentInfoList', username=session['username'], _external=True),
                                  data=requestData).json()
+        if 'error' not in response:
+            return redirect(url_for('PaymentMethods'))
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                                'button_text': 'Back to PaymentMethods',
+                                                'redirect_link': url_for('PaymentMethods', _external=True)
+                                   })
+
+
+@app.route('/deletepaymentmethod', methods=['POST'])
+def DeletePaymentMethod():
+    if request.method == 'POST':
+        # Check if user logged in
+        if 'username' not in session:
+            return redirect(url_for('Login'))
+
+        username = session['username']
+        payment_id = request.form['payment_id']
+
+        # Pass request to the API endpoint
+        response = requests.delete(
+                url_for('PaymentInfo', username=username, payment_id=payment_id, _external=True)).json()
         if 'error' not in response:
             return redirect(url_for('PaymentMethods'))
         else:
