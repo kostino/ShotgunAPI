@@ -71,6 +71,7 @@
                          aria-labelledby="flush-heading{{ ride['event_id'] }}" data-bs-parent="#accordion">
 
                             <!-- Driver -->
+                        {%  if ride['driver_flag'] %}
                         <form action="{{ url_for('RateRides', _external=True) }}" method="post">
                             <input type="hidden" id="{{ ride['driver'] }}-driver-rating" name="rating" value="1">
                             <input type="hidden" name="type" value="Driver">
@@ -132,7 +133,7 @@
                                 </div>
                             </div>
                         </form>
-
+                    {% endif %}
                             <!-- Rate passengers -->
                             {% for passenger in ride['users'] %}
                             <form action="{{ url_for('RateRides', _external=True) }}" method="post">
