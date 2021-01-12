@@ -1814,7 +1814,7 @@ def RateRides():
         my_rides = [a['ride_id'] for a in response['applications'] if a['status'] == 'accepted']
 
         # Get past rides
-        response = requests.get(url_for('RideList', username=username, _external=True)).json()
+        response = requests.get(url_for('RideList', _external=True)).json()
         if 'rides' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
         past_rides = [r['ride_id'] for r in response['rides'] if is_past_date(r['start_datetime'][:16])]
@@ -1823,7 +1823,12 @@ def RateRides():
         my_past_rides = [ride for ride in my_rides if ride in set(past_rides)]
         to_rate_by_ride = []
         for r in my_past_rides:
+
+            # Get people on ride
             rate_data = requests.get(url_for('PeopleToRate', username=username, ride_id=r, _external=True)).json()
+
+            # Add ride id
+            rate_data['ride_id'] = r
 
             # Get ride info
             rideInfo = requests.get(url_for('Ride', ride_id=r, _external=True)).json()
@@ -1839,11 +1844,60 @@ def RateRides():
 
             to_rate_by_ride.append(rate_data)
 
+        # Get users to be rated information
+        usernames = []
+        for ride in to_rate_by_ride:
+            usernames.append(ride['driver'])
+            usernames = usernames + ride['users']
+        usernames = set(usernames)
+        users = {}
+        for username in usernames:
+            response = requests.get(url_for("User", username=username, _external=True)).json()
+            users[username] = {
+                'first_name': response['first_name'],
+                'surname': response['surname'],
+                'profile_picture': response['profile_picture']
+            }
+
         # TODO: Here render_template and provide to_rate_by_ride as context
-        return render_template('ratePastRides.html', ride_rating_data=to_rate_by_ride)
+        return render_template('ratePastRides.html', rides=to_rate_by_ride, users=users)
+
     if request.method == 'POST':
-        # Create POST
-        return
+        # Submit rating POST
+
+        ratee = request.form['ratee']
+        comment = request.form['comment']
+        rating = int(request.form['rating'])
+        ratingType = request.form['type']
+
+        postData = {
+            'rater': session['username'],
+            'ratee': ratee,
+            'stars': rating,
+            'comment':comment
+        }
+
+        if ratingType == 'Passenger':
+            response = requests.post(url_for("UserRating", username=ratee, _external=True), data=postData).json()
+        elif ratingType == 'Driver':
+            response = requests.post(url_for("DriverRating", username=ratee, _external=True), data=postData).json()
+        else:
+            return render_template("systemMessage.html", messageTitle="Error Submitting ",
+                                   message="There was an error submitting your rating. Please try again later.",
+                                   context={
+                                       'button_text': 'Go Back',
+                                       'redirect_link': url_for("RateRides", _external=True)
+                                   })
+
+        if 'error' in response:
+            return render_template("systemMessage.html", messageTitle="Error Submitting ",
+                                   message="There was an error submitting your rating. Please try again later.",
+                                   context={
+                                       'button_text': 'Go Back',
+                                       'redirect_link': url_for("RateRides", _external=True)
+                                   })
+
+        return redirect(url_for("RateRides", _external=True))
 
 
 @app.route('/my_rides', methods=['GET', 'POST'])

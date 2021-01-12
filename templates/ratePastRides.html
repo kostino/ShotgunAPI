@@ -1,8 +1,220 @@
 {% extends 'base.html' %}
-{% block title %}{{ session['username'] }}'s Rating Page{% endblock %}
+{% block title %}Rate Past Rides{% endblock %}
 
-{% block style %}{% endblock %}
+{% block style %}
+    @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
+    .stars{
+    display:flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    }
+    .stars input{
+    display: none;
+    }
+    .stars label{
+    font-size: 250%;
+    color: lightgrey;
+    margin: 0 5px;
+    text-shadow: 1px 1px #bbb;
+    }
+    .stars label:before{
+    content: '★';
+    }
+{% endblock %}
 
 {% block content %}
+    <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
+
+        <!-- Title row -->
+        <div class="row pb-1">
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    My Past Rides Ratings
+                </h3>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- No past rides message -->
+        {% if not rides %}
+            <div class="container">
+                <h4>
+                    You currently have no past rides that need to be rated.
+                    Browse interesting events to go to at the events page.
+                </h4>
+            </div>
+        {% endif %}
+
+        <!-- Events/Rides Accordion -->
+        <div class="accordion" id="accordion">
+
+            {% for ride in rides %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-heading{{ ride['event_id'] }}">
+                        <button class="accordion-button {% if loop.index0 != 0 %}collapsed{% endif %}"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ ride['event_id'] }}"
+                                aria-expanded="false" aria-controls="flush-collapseOne">
+                            <h4>{{ users[ride['driver']]['first_name'] }}
+                                {{ users[ride['driver']]['surname'] }}'s Ride for
+                                {{ ride['event_title'] }}</h4>
+                            <a href="{{ url_for("RideView", ride_id=ride['ride_id'], _external=True) }}"
+                               style="text-decoration: none" >
+                                <span class="align-text-top mx-2">- View Ride</span>
+                            </a>
+                        </button>
+
+                    </h2>
+
+                    <div id="flush-collapse{{ ride['event_id'] }}"
+                         class="accordion-collapse collapse {% if loop.index0 == 0 %}show{% endif %}"
+                         aria-labelledby="flush-heading{{ ride['event_id'] }}" data-bs-parent="#accordion">
+
+                            <!-- Driver -->
+                        <form action="{{ url_for('RateRides', _external=True) }}" method="post">
+                            <input type="hidden" id="{{ ride['driver'] }}-driver-rating" name="rating" value="1">
+                            <input type="hidden" name="type" value="Driver">
+                            <input type="hidden" name="ratee" value="{{ ride['driver'] }}">
+                            <div class="row align-items-center my-3 mx-1"
+                                 style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray;">
+                                <div class="col-md-4 px-0">
+                                    <a href="{{ url_for("UserProfile", username=ride['driver'], _external=True) }}">
+                                        <img src="{{ url_for('ProfilePicture', filename=users[ride['driver']]['profile_picture'], _external=True) }}"
+                                             alt="{{ ride['driver'] }}'s profile picture"
+                                             style="width: 100%; height:100%; max-height: 300px; object-fit: cover; border-radius: 15px;">
+                                    </a>
+                                </div>
+                                <div class="col-md-6 ps-4">
+                                    <div class="row">
+                                        <div class="container my-2">
+                                            <a href="{{ url_for("User", username=ride['driver'], _external=True) }}"
+                                               style="text-decoration: none">
+                                                <h3>
+                                                    {{ users[ride['driver']]['first_name'] }}
+                                                    {{ users[ride['driver']]['surname'] }}
+                                                </h3>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="container">
+                                            <h4>Rating: ⭐ <span id="{{ ride['driver'] }}-driver-rating-label">1</span></h4>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <input type="range" class="form-range" min="1" max="5" value="1"
+                                                   id="{{ ride['driver'] }}-driver-rating-range"
+                                                   onmousemove="updateRating('{{ ride['driver'] }}-driver-rating-label',
+                                                           '{{ ride['driver'] }}-driver-rating', this)">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <h4>Comment:</h4>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md">
+                                            <textarea class="form-control" id="comment" rows="2" name="comment"
+                                                      aria-label="message" aria-describedby="message-label"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rate button-->
+                                <div class="col">
+                                    <div class="container my-2" style="text-align: center">
+                                        <a href="">
+                                            <button type="submit" class="btn btn-success mb-2">
+                                                Rate Driver
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                            <!-- Rate passengers -->
+                            {% for passenger in ride['users'] %}
+                            <form action="{{ url_for('RateRides', _external=True) }}" method="post">
+                                <input type="hidden" id="{{ passenger }}-rating" name="rating" value="1">
+                                <input type="hidden" name="type" value="Passenger">
+                                <input type="hidden" name="ratee" value="{{ passenger }}">
+                                <div class="row align-items-center my-3 mx-1"
+                                     style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray;">
+                                    <div class="col-md-4 px-0">
+                                        <a href="{{ url_for("UserProfile", username=passenger, _external=True) }}">
+                                            <img src="{{ url_for('ProfilePicture', filename=users[passenger]['profile_picture'], _external=True) }}"
+                                                 alt="{{ passenger }}'s profile picture"
+                                                 style="width: 100%; height:100%; max-height: 300px; object-fit: cover; border-radius: 15px;">
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6 ps-4">
+                                        <div class="row">
+                                            <div class="container my-2">
+                                                <a href="{{ url_for("User", username=passenger, _external=True) }}"
+                                                   style="text-decoration: none">
+                                                    <h3>
+                                                        {{ users[passenger]['first_name'] }}
+                                                        {{ users[passenger]['surname'] }}
+                                                    </h3>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="container">
+                                                <h4>Rating: ⭐ <span id="{{ passenger }}-rating-label">1</span></h4>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <input type="range" class="form-range" min="1" max="5" value="1"
+                                                       id="{{ passenger }}-rating-range"
+                                                       onmousemove="updateRating('{{ passenger }}-rating-label',
+                                                               '{{ passenger }}-rating', this)">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <h4>Comment:</h4>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md">
+                                                <textarea class="form-control" id="comment" rows="2" name="comment"
+                                                  aria-label="message" aria-describedby="message-label"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Rate button-->
+                                    <div class="col">
+                                        <div class="container my-2" style="text-align: center">
+                                            <a href="">
+                                                <button type="submit" class="btn btn-success mb-2">
+                                                    Rate Passenger
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            {% endfor %}
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+
+
+
+    </div>
+
+    <script>
+        function updateRating(label, ratingID, slider) {
+            let labelValue = document.getElementById(label);
+            let rating = document.getElementById(ratingID);
+            labelValue.innerHTML = slider.value;
+            rating.value = slider.value;
+        }
+    </script>
+
 
 {% endblock %}
