@@ -2163,6 +2163,28 @@ def ModDriversToApprove():
         applications = response['applications']
 
         return render_template('modApproveDrivers.html', applications=applications)
+    if request.method == 'POST':
+        action = request.form['action']
+        username = request.form['username']
+
+        if action == 'accept':
+            response = requests.get(url_for('UserVerify'), username=username, _external=True).json()
+            driver_data = {
+                'username': username,
+                'vehicle': response['vehicle'],
+                'vehicle_image': response['vehicle_image']
+            }
+            response = requests.post(url_for('DriverAdd', _external=True), data=driver_data).json()
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return redirect(url_for('ModDriversToApprove'))
+        elif action == 'reject':
+            response = requests.delete(url_for('UserVerify', username=username, _external=True)).json()
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return redirect(url_for('ModDriversToApprove'))
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message='Wrong action')
 
 
 @app.route('/mod/index', methods=['GET'])
