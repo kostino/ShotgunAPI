@@ -2161,7 +2161,7 @@ def ModEventsToApprove():
 
 
 
-@app.route('/mod/drivers_to_approve', methods=['GET'])
+@app.route('/mod/drivers_to_approve', methods=['GET', 'POST'])
 def ModDriversToApprove():
     if request.method == 'GET':
         # Get driver verification applications
@@ -2176,7 +2176,7 @@ def ModDriversToApprove():
         username = request.form['username']
 
         if action == 'accept':
-            response = requests.get(url_for('UserVerify'), username=username, _external=True).json()
+            response = requests.get(url_for('UserVerify', username=username, _external=True)).json()
             if 'error' in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
