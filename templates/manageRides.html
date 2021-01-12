@@ -113,6 +113,10 @@
                                 {% if application['status'] == 'accepted' %}
                                 <h5 style="color: green;">Application Accepted</h5>
                                 {% endif %}
+                                <!-- Rejected Applications -->
+                                {% if application['status'] == 'rejected' %}
+                                <h5 style="color: green;">Application Rejected</h5>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
