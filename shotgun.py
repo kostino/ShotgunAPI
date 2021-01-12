@@ -2061,14 +2061,14 @@ def ModEventsToApprove():
         action = request.form['action']
         event_id = request.form['event_id']
         if action == 'accept':
-            put_data = {'status': 'accepted'}
+            put_data = {'status': 'active'}
             response = requests.put(url_for('Event', event_id=event_id, _external=True), data=put_data)
             if 'error' in response.json():
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
-        elif action == 'reject'.json():
+        elif action == 'reject':
             response = requests.delete(url_for('Event', event_id=event_id, _external=True))
-            if 'error' in response:
+            if 'error' in response.json():
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
         else:
