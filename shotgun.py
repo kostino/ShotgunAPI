@@ -972,7 +972,7 @@ def PeopleToRate(username, ride_id):
         driverQuery = db_session.query(RideTable).join(
             DriverRatingTable, RideTable.driver_username == DriverRatingTable.ratee, isouter=True).filter(
             RideTable.ride_id == ride_id, DriverRatingTable.rater == username).count()
-        if driverQuery > 0:
+        if driverQuery != 1:
             driver_to_rate = None
         else:
             driver_to_rate = db_session.query(RideTable).filter(RideTable.ride_id == ride_id).one().driver_username
