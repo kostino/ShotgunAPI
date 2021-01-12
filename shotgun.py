@@ -235,7 +235,7 @@ def User(username):
             return {'error': 'User does not exist'}
 
 
-@app.route('/api/user/<string:username>/verify', methods=['GET', 'POST'])
+@app.route('/api/user/<string:username>/verify', methods=['GET', 'POST', 'DELETE'])
 def UserVerify(username):
     if request.method == 'POST':
         # Check if the user has already applied
@@ -280,6 +280,14 @@ def UserVerify(username):
             return {'error': 'User doesn\'t have an active driver certification application in the database.'}
         except Exception as e:
             return {'error': str(e)}
+    elif request.method == 'DELETE':
+        # Delete application
+        num_rows = db_session.query(DriverCertificationTable).filter_by(username=username).delete()
+        db_session.commit()
+        if num_rows > 0:
+            return {'status': 'success'}
+        else:
+            return {'error': 'Driver certification application does not exist'}
 
 
 @app.route('/api/verification_applications', methods=['GET'])
