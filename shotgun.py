@@ -972,11 +972,13 @@ def PeopleToRate(username, ride_id):
         driverQuery = db_session.query(RideTable).join(
             DriverRatingTable, RideTable.driver_username == DriverRatingTable.ratee, isouter=True).filter(
             RideTable.ride_id == ride_id, DriverRatingTable.rater == username).count()
-        if driverQuery != 1:
-            driver_to_rate = None
+
+        print(driverQuery)
+        if driverQuery != 0:
+            driver_to_rate = False
         else:
-            driver_to_rate = db_session.query(RideTable).filter(RideTable.ride_id == ride_id).one().driver_username
-        return {'driver': driver_to_rate, 'users': users_to_rate}
+            driver_to_rate = True
+        return {'driver_flag': driver_to_rate, 'users': users_to_rate}
 
 
 @app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
@@ -1832,6 +1834,7 @@ def RateRides():
 
             # Get ride info
             rideInfo = requests.get(url_for('Ride', ride_id=r, _external=True)).json()
+            rate_data['driver'] = rideInfo['driver_username']
             if 'error' in rideInfo:
                 continue
             rate_data['event_id'] = rideInfo['event_id']
