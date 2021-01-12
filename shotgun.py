@@ -554,7 +554,7 @@ def EventSearchAPI():
                     EventTable.title.like(sql_like_tag)).all()
             else:
                 eventQuery = db_session.query(EventTable).filter(
-                    EventTable.title.like(sql_like_tag), EventTable.status != 'pending').all()
+                    EventTable.title.like(sql_like_tag)).all()
             eventDict = {'events': [
                 {
                     'event_id': e.event_id,
@@ -1684,7 +1684,7 @@ def SearchEvents():
         response = requests.get(url_for('EventSearchAPI', _external=True), params=params).json()
         if 'events' not in response:
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-        events = response['events']
+        events = [event for event in response['events'] if event['status'] != 'pending']
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
