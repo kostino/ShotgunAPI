@@ -554,7 +554,7 @@ def EventSearchAPI():
                     EventTable.title.like(sql_like_tag)).all()
             else:
                 eventQuery = db_session.query(EventTable).filter(
-                    EventTable.title.like(sql_like_tag)).all()
+                    EventTable.title.like(sql_like_tag), EventTable.status != 'pending').all()
             eventDict = {'events': [
                 {
                     'event_id': e.event_id,
@@ -1657,10 +1657,16 @@ def CreateEvent():
         requestData = {field: request.form[field] for field in required_fields}
         requestData['type'] = request.form['type'] if 'type' in request.form.keys() else ''
         requestData['creator'] = session['username']
-        response = requests.post(url_for('EventAddList', _external=True),
-                                 data=requestData)
-        return render_template('systemMessage.html', messageTitle='Event Submitted Successfully',
-                               message='Your event has been submitted! Please wait for a mod to approve it.')
+        response = requests.post(url_for('EventAddList', _external=True), data=requestData).json()
+        if 'error' in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                       'button_text': 'Go Back',
+                                       'redirect_link': url_for('CreateEvent', _external=True)
+                                   })
+        else:
+            return render_template('systemMessage.html', messageTitle='Event Submitted Successfully',
+                                   message='Your event has been submitted! Please wait for a mod to approve it.')
 
 
 @app.route('/events/search', methods=['GET', 'POST'])
