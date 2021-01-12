@@ -1855,21 +1855,28 @@ def MyRideApplications():
 
 @app.route('/mod/events_to_approve', methods=['GET'])
 def ModEventsToApprove():
-    # Get pending events
-    response = requests.get(url_for('EventAddList', _external=True)).json()
-    if 'events' not in response:
-        return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-    events = [event for event in response['events'] if event['status'] == 'pending']
+    if request.method == 'GET':
+        # Get pending events
+        response = requests.get(url_for('EventAddList', _external=True)).json()
+        if 'events' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        events = [event for event in response['events'] if event['status'] == 'pending']
 
-    return render_template('modApproveEvents.html', title='Approve Events', events=events)
+        return render_template('modApproveEvents.html', title='Approve Events', events=events)
 
 
 @app.route('/mod/drivers_to_approve', methods=['GET'])
 def ModDriversToApprove():
-    # Get driver verification applications
-    response = requests.get(url_for('VerificationApplicationList', _external=True)).json()
-    if 'applications' not in response:
-        return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-    applications = response['applications']
+    if request.method == 'GET':
+        # Get driver verification applications
+        response = requests.get(url_for('VerificationApplicationList', _external=True)).json()
+        if 'applications' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        applications = response['applications']
 
-    return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
+        return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
+
+
+@app.route('/mod/index', methods=['GET'])
+def ModIndex():
+    return render_template('modIndex.html')
