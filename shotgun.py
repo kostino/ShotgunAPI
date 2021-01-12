@@ -1709,6 +1709,12 @@ def VehicleImage(filename):
     return send_from_directory(VEHICLE_DIR, filename)
 
 
+@app.route('/data/docs/<filename>')
+def Documents(filename):
+    filename = secure_filename(filename)
+    return send_from_directory(DOCS_DIR, filename)
+
+
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
 def EventRides(event_id):
     if request.method == 'GET':
@@ -2127,13 +2133,13 @@ def ModEventsToApprove():
         event_id = request.form['event_id']
         if action == 'accept':
             put_data = {'status': 'active'}
-            response = requests.put(url_for('Event', event_id=event_id, _external=True), data=put_data)
-            if 'error' in response.json():
+            response = requests.put(url_for('Event', event_id=event_id, _external=True), data=put_data).json()
+            if 'error' in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
         elif action == 'reject':
-            response = requests.delete(url_for('Event', event_id=event_id, _external=True))
-            if 'error' in response.json():
+            response = requests.delete(url_for('Event', event_id=event_id, _external=True)).json()
+            if 'error' in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
         else:
