@@ -745,24 +745,6 @@ def Ride(ride_id):
             return {'error': 'Ride does not exist'}
 
 
-@app.route('/api/ride/<int:ride_id>/add_passenger', methods=['PUT'])
-def RideAddPassenger(ride_id):
-    if request.method == 'PUT':
-        ride = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
-        if not ride:
-            return {'error': 'Ride does not exist'}, 404
-
-        # Update ride data
-        if ride.available_seats > 0:
-            ride.available_seats = ride.available_seats - 1
-            if ride.available_seats == 0:
-                applications = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, status='pending').all()
-                for application in applications:
-                    application.status = 'rejected'
-        db_session.commit()
-        return {'status': 'success'}, 200
-
-
 @app.route('/api/ride/<int:ride_id>/users', methods=['GET'])
 def RideUsers(ride_id):
     if request.method == 'GET':
@@ -894,13 +876,14 @@ def Application(ride_id, username):
         except Exception as e:
             return {'error': str(e)}
     elif request.method == 'PUT':
+        application = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).first()
+        if not application:
+            return {'error': 'Application does not exist'}, 404
+
         # Update application data
         if request.form:
-            app = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).one()
             if 'message' in request.form:
-                app.message = request.form['message']
-            if 'status' in request.form:
-                app.status = request.form['status']
+                application.message = request.form['message']
             db_session.commit()
         return {'status': 'success'}
     elif request.method == 'DELETE':
@@ -911,6 +894,45 @@ def Application(ride_id, username):
             return {'status': 'success'}
         else:
             return {'error': 'Application does not exist'}
+
+
+@app.route('/api/ride/<int:ride_id>/application/<string:username>/accept', methods=['POST'])
+def ApplicationAccept(ride_id, username):
+    if request.method == 'POST':
+        application = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).first()
+        if not application:
+            return {'error': 'Application does not exist'}, 404
+        if application.status != 'pending':
+            return {'error': 'Application is not pending'}, 400
+
+        # Get ride data
+        ride = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
+        if not ride:
+            return {'error': 'Ride does not exist'}, 404
+
+        # Update ride data
+        if ride.available_seats > 0:
+            ride.available_seats = ride.available_seats - 1
+            if ride.available_seats == 0:
+                # Ride full, reject remaining applications
+                query = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, status='pending').all()
+                for a in query:
+                    a.status = 'rejected'
+        else:
+            return {'error': 'Ride is full'}, 400
+
+        # Reject the pending applications to rides of the same event
+        query = db_session.query(ApplicationTable).join(
+                RideTable, ApplicationTable.ride_id == RideTable.ride_id).filter(
+                        RideTable.event_id == ride.event_id, RideTable.ride_id != ride_id,
+                        ApplicationTable.status == 'pending', ApplicationTable.username == username).all()
+        for a in query:
+            a.status = 'rejected'
+
+        # Accept application
+        application.status = 'accepted'
+        db_session.commit()
+        return {'status': 'success'}, 200
 
 
 @app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
@@ -1944,22 +1966,16 @@ def ManageMyRides():
 
     elif request.method == 'POST':
         # TODO: Add extra validation (can this driver do this, seat limitations etc) to POST requests possibly in the API route
-        # POST to RideApplication endpoint according to response (Accept/Reject)
-        putData = {
-            "status": request.form['status']
-        }
-        response = requests.put(url_for("Application", ride_id=request.form['ride_id'],
-                                        username=request.form['username'], _external=True), data=putData)
-        if 'error' in response.json():
-            # Render error page
-            return render_template("systemMessage.html", messageTitle="An error occurred",
-                                   message="An error occurred while processing application. Please try again later.")
 
-        response = requests.put(url_for("RideAddPassenger", ride_id=request.form['ride_id'], _external=True))
-        if 'error' in response.json():
-            # Render error page
-            return render_template("systemMessage.html", messageTitle="An error occurred",
-                                   message="An error occurred while processing application. Please try again later.")
+        # Get request data
+        ride_id = request.form['ride_id']
+        username = request.form['username']
+
+        # POST to RideApplication endpoint according to response (Accept/Reject)
+        response = requests.post(url_for(
+            'ApplicationAccept', ride_id=ride_id, username=username, _external=True)).json()
+        if 'error' in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
 
         return redirect(url_for('ManageMyRides'))
 
