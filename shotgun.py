@@ -2177,10 +2177,17 @@ def ModDriversToApprove():
 
         if action == 'accept':
             response = requests.get(url_for('UserVerify'), username=username, _external=True).json()
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+
+            vehicle_image_path = os.path.join(DOCS_DIR, response['vehicle_image'])
+            with open(vehicle_image_path, 'rb') as f:
+                vehicle_image_data = b64encode(f.read()).decode('ascii')
+
             driver_data = {
                 'username': username,
                 'vehicle': response['vehicle'],
-                'vehicle_image': response['vehicle_image']
+                'vehicle_image': vehicle_image_data
             }
             response = requests.post(url_for('DriverAdd', _external=True), data=driver_data).json()
             if 'error' in response:
