@@ -2047,7 +2047,7 @@ def MyRideApplications():
     return render_template('myRideApplications.html', events=events)
 
 
-@app.route('/mod/events_to_approve', methods=['GET'])
+@app.route('/mod/events_to_approve', methods=['GET', 'POST'])
 def ModEventsToApprove():
     if request.method == 'GET':
         # Get pending events
@@ -2057,6 +2057,24 @@ def ModEventsToApprove():
         events = [event for event in response['events'] if event['status'] == 'pending']
 
         return render_template('modApproveEvents.html', title='Approve Events', events=events)
+    if request.method == 'POST':
+        action = request.form['action']
+        event_id = request.form['event_id']
+        if action == 'accept':
+            put_data = {'status': 'accepted'}
+            response = requests.put(url_for('Event', event_id=event_id, _external=True),data=put_data)
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return redirect(url_for('ModEventsToApprove'))
+        elif action == 'reject':
+            put_data = {'status': 'rejected'}
+            response = requests.put(url_for('Event', event_id=event_id, _external=True),data=put_data)
+            if 'error' in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return redirect(url_for('ModEventsToApprove'))
+        else:
+            return render_template('systemMessage.html', messageTitle='Error', message='Wrong action')
+
 
 
 @app.route('/mod/drivers_to_approve', methods=['GET'])
