@@ -1140,7 +1140,11 @@ def Login():
         else:
             # Render error page
             return render_template("systemMessage.html", messageTitle="Login Failed",
-                                   message="The provided credentials don't match a user in our database")
+                                   message="The provided credentials don't match a user in our database",
+                                   context={
+                                       'button_text': 'Back to Login',
+                                       'redirect_link': url_for('Login', _external=True)
+                                   })
 
     # Browser login page
     elif request.method == 'GET':
@@ -1175,7 +1179,11 @@ def Register():
         if f.filename != '':
             if not check_image_ext(f.filename):
                 return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                       message='The profile picture must be a JPEG image.')
+                                       message='The profile picture must be a JPEG image.',
+                                       context={
+                                           'button_text': 'Back to Register',
+                                           'redirect_link': url_for('Register', _external=True)
+                                       })
             profile_picture = b64encode(f.read()).decode('ascii')
 
         # Insert user into database by posting on /api/user
@@ -1184,9 +1192,17 @@ def Register():
         response = requests.post(url_for('UserListAdd', _external=True), data=requestData).json()
         if 'error' not in response:
             return render_template('systemMessage.html', messageTitle='Success',
-                                   message='Registration completed successfully!')
+                                   message='Registration completed successfully!',
+                                   context={
+                                       'button_text': 'Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
         else:
-            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                       'button_text': 'Back to Register',
+                                       'redirect_link': url_for('Register', _external=True)
+                                   })
 
 
 @app.route('/driverCertification', methods=['GET', 'POST'])
@@ -1200,13 +1216,21 @@ def DriverCertification():
         response = requests.get(url_for('Driver', username=session['username'], _external=True))
         if 'error' not in response.json():
             return render_template("systemMessage.html", messageTitle="Already a driver",
-                                   message="You are already a driver and do not need to apply for certification.")
+                                   message="You are already a driver and do not need to apply for certification.",
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
 
         # Check if user has already applied
         response = requests.get(url_for('UserVerify', username=session['username'], _external=True))
         if 'error' not in response.json():
             return render_template("systemMessage.html", messageTitle="Already applied",
-                                   message="You have already applied to be a driver, please wait until we review your application.")
+                                   message="You have already applied to be a driver, please wait until we review your application.",
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
 
         # If none of the above hold, present the driver certification application form
         return render_template("driverCertification.html")
@@ -1224,7 +1248,11 @@ def DriverCertification():
             f = request.files[field]
             if not check_image_ext(f.filename):
                 return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                       message='The required documents must be JPEG images.')
+                                       message='The required documents must be JPEG images.',
+                                       context={
+                                            'button_text': 'Back to DriverCertification',
+                                            'redirect_link': url_for('DriverCertification', _external=True)
+                                       })
             requestData[field] = b64encode(f.read()).decode('ascii')
 
         # Pass request to the API endpoint
@@ -1232,9 +1260,17 @@ def DriverCertification():
                                  data=requestData).json()
         if 'error' not in response:
             return render_template('systemMessage.html', messageTitle='Application Submitted Successfully',
-                                   message='Your application to be a driver has been submitted, please wait until we review your application.')
+                                   message='Your application to be a driver has been submitted, please wait until we review your application.',
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
         else:
-            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                       'button_text': 'Back to DriverCertification',
+                                       'redirect_link': url_for('DriverCertification', _external=True)
+                                   })
 
 
 @app.route('/user/<string:username>', methods=['GET'])
@@ -1252,12 +1288,20 @@ def UserProfile(username):
         # Check if user exists
         userData = requests.get(url_for('User', username=username, _external=True)).json()
         if 'error' in userData:
-            return render_template('systemMessage.html', messageTitle='Error', message=userData['error'])
+            return render_template('systemMessage.html', messageTitle='Error', message=userData['error'],
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
 
         # Get user ratings
         userRatings = requests.get(url_for('UserRating', username=username, _external=True)).json()
         if 'ratings' not in userRatings:
-            return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'])
+            return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'],
+                                   context={
+                                       'button_text': 'Back to Hompage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
 
         # Check if user is a driver
         response = requests.get(url_for('Driver', username=username, _external=True))
@@ -1268,7 +1312,11 @@ def UserProfile(username):
             # Get driver ratings
             driverRatings = requests.get(url_for('DriverRating', username=username, _external=True)).json()
             if 'ratings' not in driverRatings:
-                return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'])
+                return render_template('systemMessage.html', messageTitle='Error', message=userRatings['error'],
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index', _external=True)
+                                   })
 
         # Render the user profile
         return render_template("userProfile.html", userData=userData, driverFlag=driverFlag, driverData=driverData,
