@@ -25,7 +25,7 @@
         {% for application in applications %}
             <!-- Documents Preview Modal -->
             <div class="modal fade" id="{{ application['username'] }}Modal" tabindex="-1" aria-labelledby="{{ application['username'] }}ModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="{{ application['username'] }}ModalLabel">
@@ -41,6 +41,11 @@
                                     <li data-bs-target="#carouselIndicators" data-bs-slide-to="2"></li>
                                 </ol>
                                 <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        <img src="{{ url_for('Documents', userdir=application['vehicle_image'].split('/')[0],
+                                                filename=application['vehicle_image'].split('/')[1]) }}"
+                                             class="d-block w-100" alt="{{ application['username'] }}'s License">
+                                    </div>
                                     <div class="carousel-item active">
                                         <img src="{{ url_for('Documents', userdir=application['license'].split('/')[0],
                                                 filename=application['license'].split('/')[1]) }}"
@@ -82,7 +87,7 @@
                              alt="{{ application['username'] }}'s vehicle"
                              style="width: 100%; height:100%; max-height: 200px; object-fit: cover; border-radius: 15px;">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="container my-2">
                         <div class="row justify-content-left align-items-end">
                             <div class="col-md-6">
@@ -116,7 +121,7 @@
 
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div class="container my-2">
                         <form action="{{ url_for('ModDriversToApprove', _external=True) }}" method="post">
                             <input type="hidden" name="username" value="{{ application['username'] }}">
