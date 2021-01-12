@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Manage Driver Applications{% endblock %}
 
 {% block style %}{% endblock %}
 
@@ -8,62 +8,68 @@
 
         <!-- Title and actions row -->
         <div class="row pb-1">
-            <h3 class="mx-auto">
-                    {{ title }}
-            </h3>
+            <div class="col-md">
+                <h3 class="mx-auto">
+                    Manage Driver Applications
+                </h3>
+            </div>
         </div>
 
         <hr>
 
-        <!-- If there are no rides print message -->
+        <!-- If there are no applications print message -->
         {% if not applications %}
-            <h4 class="mx-auto" style="text-align: center">No applications</h4>
+            <h4 class="mx-auto" style="text-align: center">No rides for this event</h4>
         {% endif %}
 
         {% for application in applications %}
-        <!-- Applications container row -->
-        <div class="row align-items-center my-3 mx-1"
-             style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
-            <div class="col-md-6">
-                <div class="container my-2">
-                    <div class="row justify-content-left align-items-end">
-                        <div class="col-md-6">
-                            <h4>username</h4>
+            <!-- Events container row -->
+            <div class="row align-items-center my-3 mx-1"
+                 style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
+                <div class="col-md-4 px-0">
+                        <img src="{{ url_for('Documents', filename=application['vehicle_image']) }}" class=""
+                             alt="{{ application['username'] }}'s vehicle"
+                             style="width: 100%; height:100%; max-height: 200px; object-fit: cover; border-radius: 15px;">
+                </div>
+                <div class="col-md-6">
+                    <div class="container my-2">
+                        <div class="row justify-content-left align-items-end">
+                            <div class="col-md-6">
+                                <h4>&#128663; Driver</h4>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>
+                                    <a href="{{ url_for('UserProfile', username=application['username']) }}"
+                                       style="text-decoration: none; color:black">
+                                        {{ application['username'] }}
+                                    </a>
+                                </h5>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h5>{{ application['username'] }}</h5>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h4>First Name</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>🚗 Vehicle</h4>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>{{ application['vehicle'] }}</h5>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h5>{{ application['first_name'] }}</h5>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h4>Surname</h4>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>{{ application['surname'] }}</h5>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h4>Vehicle</h4>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>{{ application['vehicle'] }}</h5>
-                        </div>
                     </div>
                 </div>
+                <div class="col">
+                    <form action="{{ url_for('ModDriversToApprove', _external=True) }}" method="post">
+                        <input type="hidden" name="username" value="{{ application['username'] }}">
+                        <button type="submit" role="button" class="btn btn-success mx-2 my-1" name="action" value="accept">
+                            Approve
+                        </button>
+                        <button type="submit" role="button" class="btn btn-danger mx-2 my-1" name="action" value="reject">
+                            Reject
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
         {% endfor %}
 
     </div>

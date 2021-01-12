@@ -2156,7 +2156,7 @@ def ModDriversToApprove():
             return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
         applications = response['applications']
 
-        return render_template('modApproveDrivers.html', title='Approve Drivers', applications=applications)
+        return render_template('modApproveDrivers.html', applications=applications)
 
 
 @app.route('/mod/index', methods=['GET'])
