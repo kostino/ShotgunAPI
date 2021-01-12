@@ -1010,7 +1010,6 @@ def PeopleToRate(username, ride_id):
             DriverRatingTable, RideTable.driver_username == DriverRatingTable.ratee, isouter=True).filter(
             RideTable.ride_id == ride_id, DriverRatingTable.rater == username).count()
 
-        print(driverQuery)
         if driverQuery != 0:
             driver_to_rate = False
         else:
