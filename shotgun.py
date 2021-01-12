@@ -1335,7 +1335,11 @@ def EditUserProfile(username):
             # Get user data
             userData = requests.get(url_for('User', username=username, _external=True)).json()
             if 'error' in userData:
-                return render_template('systemMessage.html', messageTitle='Error', message=userData['error'])
+                return render_template('systemMessage.html', messageTitle='Error', message=userData['error'],
+                                       context={
+                                            'button_text': 'Back to Profile',
+                                            'redirect_link': url_for('UserProfile', username=session['username'], _external=True)
+                                       })
 
             # Check if user is a driver and get data
             driverData = requests.get(url_for('Driver', username=username, _external=True)).json()
