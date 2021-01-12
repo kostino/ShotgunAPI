@@ -1297,7 +1297,11 @@ def EditUserProfile(username):
                                    driverData=driverData)
         else:
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
-                                   message="User does not exist or unauthorized edit was attempted.")
+                                   message="You tried to edit someone else's profile. Let's edit yours.",
+                                   context={
+                                       'button_text': 'Edit your Profile',
+                                       'redirect_link': url_for("EditUserProfile", username=session['username'], _external=True)
+                                   })
 
     elif request.method == 'POST':
         # Check if user logged in

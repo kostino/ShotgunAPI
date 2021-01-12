@@ -5,15 +5,24 @@
 
 {% block content %}
 
-    <div class="container-md py-5 my-5 text-center">
-        <div class="row">
-            <div class="col-md"></div>
-            <div class="col-md container py-4"  style="background-color: white; border-radius: 15px">
+    <div class="container-md py-5 my-5 text-center" style="background-color: white; border-radius: 15px">
+        <div class="row justify-content-center">
+
+            <div class="col-md-8 container py-4" >
                 <h2>{{ messageTitle }}</h2>
                 <p>{{ message }}</p>
             </div>
-            <div class="col-md"></div>
+
         </div>
+
+        <!-- If redirect context is defined -->
+        {% if context is defined %}
+        <div class="row justify-content-center">
+            <a href="{{ context['redirect_link'] }}">
+                <button type="button" class="btn btn-primary">{{ context['button_text'] }}</button>
+            </a>
+        </div>
+        {% endif %}
     </div>
 
 
