@@ -33,6 +33,7 @@ python3 -m venv shotgunenv
 source shotgunenv/bin/activate
 
 # Install dependencies
+pip3 install wheel
 pip3 install -r requirements.txt
 ```
 
