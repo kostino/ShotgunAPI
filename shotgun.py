@@ -2062,8 +2062,8 @@ def ModEventsToApprove():
         event_id = request.form['event_id']
         if action == 'accept':
             put_data = {'status': 'accepted'}
-            response = requests.put(url_for('Event', event_id=event_id, _external=True),data=put_data)
-            if 'error' in response:
+            response = requests.put(url_for('Event', event_id=event_id, _external=True), data=put_data)
+            if 'error' in response.json():
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
         elif action == 'reject':
