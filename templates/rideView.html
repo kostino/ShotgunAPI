@@ -64,7 +64,11 @@
 
         <!-- If user is logged in and is not a driver with a ride in this event show application form-->
         {% if 'username' in session %}
-            {% if driverWithRideFlag %}
+            {% if rideInfo['available_seats'] == 0 %}
+                <div class="alert alert-primary" role="alert" style="text-align: center">
+                    Ride Full
+                </div>
+            {% elif driverWithRideFlag %}
                 <div class="alert alert-primary" role="alert" style="text-align: center">
                     You are driving another ride for this event!
                 </div>

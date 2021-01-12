@@ -745,6 +745,24 @@ def Ride(ride_id):
             return {'error': 'Ride does not exist'}
 
 
+@app.route('/api/ride/<int:ride_id>/add_passenger', methods=['PUT'])
+def RideAddPassenger(ride_id):
+    if request.method == 'PUT':
+        ride = db_session.query(RideTable).filter_by(ride_id=ride_id).first()
+        if not ride:
+            return {'error': 'Ride does not exist'}, 404
+
+        # Update ride data
+        if ride.available_seats > 0:
+            ride.available_seats = ride.available_seats - 1
+            if ride.available_seats == 0:
+                applications = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, status='pending').all()
+                for application in applications:
+                    application.status = 'rejected'
+        db_session.commit()
+        return {'status': 'success'}, 200
+
+
 @app.route('/api/ride/<int:ride_id>/users', methods=['GET'])
 def RideUsers(ride_id):
     if request.method == 'GET':
@@ -1796,6 +1814,12 @@ def ManageMyRides():
         }
         response = requests.put(url_for("Application", ride_id=request.form['ride_id'],
                                         username=request.form['username'], _external=True), data=putData)
+        if 'error' in response.json():
+            # Render error page
+            return render_template("systemMessage.html", messageTitle="An error occurred",
+                                   message="An error occurred while processing application. Please try again later.")
+
+        response = requests.put(url_for("RideAddPassenger", ride_id=request.form['ride_id'], _external=True))
         if 'error' in response.json():
             # Render error page
             return render_template("systemMessage.html", messageTitle="An error occurred",
