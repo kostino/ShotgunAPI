@@ -1368,14 +1368,22 @@ def EditUserProfile(username):
             # Request user info via API call
             user = requests.get(url_for('User', username=username, _external=True)).json()
             if 'error' in user:
-                return render_template('systemMessage.html', messageTitle='Error', message=user['error'])
+                return render_template('systemMessage.html', messageTitle='Error', message=user['error'],
+                                       context={
+                                            'button_text': 'Back to Edit',
+                                            'redirect_link': url_for('EditUserProfile', username=session['username'], _external=True)
+                                       })
 
             # If a new profile picture is added, update the existing one
             f = request.files['profile_picture']
             if f.filename != '':
                 if not check_image_ext(f.filename):
                     return render_template('systemMessage.html', messageTitle='Invalid image format',
-                                           message='The profile picture must be a JPEG image.')
+                                           message='The profile picture must be a JPEG image.',
+                                           context={
+                                                'button_text': 'Back to Edit',
+                                                'redirect_link': url_for('EditUserProfile', username=session['username'], _external=True)
+                                           })
                 updatedData['profile_picture'] = b64encode(f.read()).decode('ascii')
 
             # If a new first name is sent, update the one in the database
@@ -1401,7 +1409,11 @@ def EditUserProfile(username):
 
         else:
             return render_template("systemMessage.html", messageTitle="Edit user profile error",
-                                   message="User does not exist or unauthorized edit was attempted.")
+                                   message="User does not exist or unauthorized edit was attempted.",
+                                   context={
+                                                'button_text': 'Back to Edit',
+                                                'redirect_link': url_for('EditUserProfile', username=session['username'], _external=True)
+                                   })
 
 
 @app.route('/paymentmethods', methods=['GET'])
@@ -1415,7 +1427,11 @@ def PaymentMethods():
         username = session['username']
         response = requests.get(url_for('UserPaymentInfo', username=username, _external=True)).json()
         if 'credit_cards' not in response or 'paypal_accounts' not in response:
-            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                       'button_text': 'Back to Homepage',
+                                       'redirect_link': url_for('Index',_external=True)
+                                   })
 
         creditCards = response['credit_cards']
         paypalAccounts = response['paypal_accounts']
@@ -1440,7 +1456,11 @@ def UserSetPrimary():
                                 params={'payment_id': request.form['payment_id']})
         if 'error' in response.json():
             return render_template("systemMessage.html", messageTitle="Error",
-                                   message="An error occurred while setting the primary payment method.")
+                                   message="An error occurred while setting the primary payment method.",
+                                   context={
+                                       'button_text': 'Back to PaymentMethods',
+                                       'redirect_link': url_for('PaymentMethods', _external=True)
+                                   })
 
         return redirect(url_for('PaymentMethods'))
 
@@ -1480,8 +1500,11 @@ def AddPaymentMethod():
         if 'error' not in response:
             return redirect(url_for('PaymentMethods'))
         else:
-            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
-        return
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'],
+                                   context={
+                                                'button_text': 'Back to PaymentMethods',
+                                                'redirect_link': url_for('PaymentMethods', _external=True)
+                                   })
 
 
 @app.route('/events', methods=['GET', 'POST'])
