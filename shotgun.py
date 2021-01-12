@@ -1723,10 +1723,11 @@ def VehicleImage(filename):
     return send_from_directory(VEHICLE_DIR, filename)
 
 
-@app.route('/data/docs/<filename>')
-def Documents(filename):
+@app.route('/data/docs/<userdir>/<filename>')
+def Documents(userdir, filename):
+    userdir = secure_filename(userdir)
     filename = secure_filename(filename)
-    return send_from_directory(DOCS_DIR, filename)
+    return send_from_directory(DOCS_DIR, os.path.join(userdir, filename))
 
 
 @app.route('/events/<int:event_id>/rides', methods=['GET'])
