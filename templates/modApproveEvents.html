@@ -36,13 +36,16 @@
                             <br>
                             {{ event['location_name'] }}
                         </p>
-                        <!-- TODO: KOSTA EDW -->
-                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary me-2">
-                            Approve
-                        </a>
-                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary me-2">
-                            Deny
-                        </a>
+
+                        <form action="{{ url_for('ModDriversToApprove', _external=True) }}" method="post">
+                            <input type="hidden" name="event_id" value="{{ event['event_id'] }}">
+                            <button type="submit" role="button" class="btn btn-success mx-2 my-1" name="action" value="accept">
+                                Approve
+                            </button>
+                            <button type="submit" role="button" class="btn btn-danger mx-2 my-1" name="action" value="reject">
+                                Reject
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
