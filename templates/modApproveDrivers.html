@@ -23,7 +23,7 @@
         {% endif %}
 
         {% for application in applications %}
-            <!-- Modal -->
+            <!-- Documents Preview Modal -->
             <div class="modal fade" id="{{ application['username'] }}Modal" tabindex="-1" aria-labelledby="{{ application['username'] }}ModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
@@ -34,28 +34,34 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                            <div id="carouselIndicators" class="carousel slide" data-bs-ride="carousel">
                                 <ol class="carousel-indicators">
-                                    <li data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"></li>
-                                    <li data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"></li>
-                                    <li data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"></li>
+                                    <li data-bs-target="#carouselIndicators" data-bs-slide-to="0" class="active"></li>
+                                    <li data-bs-target="#carouselIndicators" data-bs-slide-to="1"></li>
+                                    <li data-bs-target="#carouselIndicators" data-bs-slide-to="2"></li>
                                 </ol>
                                 <div class="carousel-inner">
                                     <div class="carousel-item active">
-                                        <img src="https://www.pcgamesn.com/wp-content/uploads/2018/10/the-witcher-3-final-boss-header.png" class="d-block w-100" alt="...">
+                                        <img src="{{ url_for('Documents', userdir=application['license'].split('/')[0],
+                                                filename=application['license'].split('/')[1]) }}"
+                                             class="d-block w-100" alt="{{ application['username'] }}'s License">
                                     </div>
                                     <div class="carousel-item">
-                                        <img src="https://www.pcgamesn.com/wp-content/uploads/2018/10/the-witcher-3-final-boss-header.png" class="d-block w-100" alt="...">
+                                        <img src="{{ url_for('Documents', userdir=application['registration'].split('/')[0],
+                                                filename=application['registration'].split('/')[1]) }}"
+                                             class="d-block w-100" alt="{{ application['username'] }}'s Registration">
                                     </div>
                                     <div class="carousel-item">
-                                        <img src="https://www.pcgamesn.com/wp-content/uploads/2018/10/the-witcher-3-final-boss-header.png" class="d-block w-100" alt="...">
+                                        <img src="{{ url_for('Documents', userdir=application['identity'].split('/')[0],
+                                                filename=application['identity'].split('/')[1]) }}"
+                                             class="d-block w-100" alt="{{ application['username'] }}'s ID">
                                     </div>
                                 </div>
-                                <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-bs-slide="prev">
+                                <a class="carousel-control-prev" href="#carouselIndicators" role="button" data-bs-slide="prev">
                                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                     <span class="visually-hidden">Previous</span>
                                 </a>
-                                <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-bs-slide="next">
+                                <a class="carousel-control-next" href="#carouselIndicators" role="button" data-bs-slide="next">
                                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                     <span class="visually-hidden">Next</span>
                                 </a>
@@ -71,7 +77,8 @@
             <div class="row align-items-center my-3 mx-1"
                  style="border-style: solid; border-radius: 16px; border-width: thin; border-color: darkgray">
                 <div class="col-md-4 px-0">
-                        <img src="{{ url_for('Documents', filename=application['vehicle_image']) }}" class=""
+                        <img src="{{ url_for('Documents', userdir=application['vehicle_image'].split('/')[0],
+                                                filename=application['vehicle_image'].split('/')[1]) }}" class=""
                              alt="{{ application['username'] }}'s vehicle"
                              style="width: 100%; height:100%; max-height: 200px; object-fit: cover; border-radius: 15px;">
                 </div>
@@ -93,7 +100,7 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <h4>🚗 Vehicle</h4>
+                                <h4>Vehicle</h4>
                             </div>
                             <div class="col-md-6">
                                 <h5>{{ application['vehicle'] }}</h5>
@@ -109,16 +116,18 @@
 
                     </div>
                 </div>
-                <div class="col">
-                    <form action="{{ url_for('ModDriversToApprove', _external=True) }}" method="post">
-                        <input type="hidden" name="username" value="{{ application['username'] }}">
-                        <button type="submit" role="button" class="btn btn-success mx-2 my-1" name="action" value="accept">
-                            Approve
-                        </button>
-                        <button type="submit" role="button" class="btn btn-danger mx-2 my-1" name="action" value="reject">
-                            Reject
-                        </button>
-                    </form>
+                <div class="col-md-6">
+                    <div class="container my-2">
+                        <form action="{{ url_for('ModDriversToApprove', _external=True) }}" method="post">
+                            <input type="hidden" name="username" value="{{ application['username'] }}">
+                            <button type="submit" role="button" class="btn btn-success mx-2 my-1" name="action" value="accept">
+                                Approve
+                            </button>
+                            <button type="submit" role="button" class="btn btn-danger mx-2 my-1" name="action" value="reject">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
