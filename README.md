@@ -38,4 +38,4 @@ To start the development server, activate the virtual environment and run
 export FLASK_APP=shotgun.py
 flask run
 ```
-You can access the application at [http://127.0.0.1:5000/].
+You can access the application at http://127.0.0.1:5000/.
