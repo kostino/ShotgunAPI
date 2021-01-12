@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-Before starting, we need to install the required system packages. On an Ubuntu
-system we need to run the following commands.
+Before starting, we need to install the required system packages. On Ubuntu
+we need to run the following commands.
 ```
 sudo apt install python3 python3-pip python3-venv
 sudo apt install mariadb-server libmysqlclient-dev
@@ -17,6 +17,9 @@ mysql
 MariaDB [(none)]> source dbSetup/dbDump-28-12-20.sql;
 MariaDB [(none)]> source dbSetup/Users.sql;
 ```
+
+If MariaDB is not running, you can start it with the command
+`sudo systemctl start mariadb`.
 
 ## Development
 
