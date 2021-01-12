@@ -2066,9 +2066,8 @@ def ModEventsToApprove():
             if 'error' in response.json():
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
-        elif action == 'reject':
-            put_data = {'status': 'rejected'}
-            response = requests.put(url_for('Event', event_id=event_id, _external=True),data=put_data)
+        elif action == 'reject'.json():
+            response = requests.delete(url_for('Event', event_id=event_id, _external=True))
             if 'error' in response:
                 return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
             return redirect(url_for('ModEventsToApprove'))
