@@ -103,6 +103,11 @@
                         </div>
 
                     </div>
+
+                {% else %}
+                    <a href="{{ url_for("Login") }}">
+                        <button class="btn btn-primary ms-2" type="button">Login</button>
+                    </a>
                 {% endif %}
 
             </div>

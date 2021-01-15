@@ -1213,10 +1213,7 @@ def Driver(username):
 @app.route('/', methods=['GET'])
 def Index():
     if request.method == 'GET':
-        if 'username' in session:
-            return render_template("home.html", username=session['username'])
-        else:
-            return render_template("index.html")
+        return render_template("home.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -1245,7 +1242,7 @@ def Login():
             session['profile_picture'] = user['profile_picture']
 
             # Redirect to user profile route (yet to be implemented) and render profile page
-            return render_template("home.html", username=username)
+            return render_template("home.html")
         else:
             # Render error page
             return render_template("systemMessage.html", messageTitle="Login Failed",
@@ -1258,7 +1255,7 @@ def Login():
     # Browser login page
     elif request.method == 'GET':
         if 'username' in session:
-            return render_template("home.html", username=session['username'])
+            return render_template("home.html")
         else:
             return render_template("login.html")
 
