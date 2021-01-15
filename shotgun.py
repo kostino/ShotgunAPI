@@ -24,6 +24,7 @@ DATA_ROOT = config.data_root
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
 VEHICLE_DIR = os.path.join(DATA_ROOT, 'vehicle')
 DOCS_DIR = os.path.join(DATA_ROOT, 'docs')
+EVENT_PICS_DIR = os.path.join(DATA_ROOT, config.event_pics_dir)
 
 
 # Initialize SQL Alchemy
@@ -62,6 +63,8 @@ if not os.path.exists(VEHICLE_DIR):
     os.makedirs(VEHICLE_DIR)
 if not os.path.exists(DOCS_DIR):
     os.makedirs(DOCS_DIR)
+if not os.path.exists(EVENT_PICS_DIR):
+    os.makedirs(EVENT_PICS_DIR)
 
 
 def haversine(lon1, lat1, lon2, lat2):
