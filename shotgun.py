@@ -1797,7 +1797,8 @@ def EventRides(event_id):
 
         location_in_session = 'longitude' in session and 'latitude' in session
         location_valid = session['longitude'] != '' and session['latitude'] != '' if location_in_session else False
-        rides = sorted(rides, key=lambda r: haversine(
+        if location_valid:
+            rides = sorted(rides, key=lambda r: haversine(
                             float(session['longitude']), float(session['latitude']),
                             float(r['longitude']), float(r['latitude'])
                             )
