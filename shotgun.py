@@ -17,13 +17,14 @@ from uuid import uuid4
 from math import radians, cos, sin, asin, sqrt
 from shotgunconfig import ShotgunConfig
 
-DATA_ROOT = './data'
+CONFIG_DIR = './config.ini'
+config = ShotgunConfig(CONFIG_DIR)
+
+DATA_ROOT = config.data_root
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
 VEHICLE_DIR = os.path.join(DATA_ROOT, 'vehicle')
 DOCS_DIR = os.path.join(DATA_ROOT, 'docs')
-CONFIG_DIR = './config.ini'
 
-config = ShotgunConfig(CONFIG_DIR)
 
 # Initialize SQL Alchemy
 engine = create_engine('mysql://admin:adminPassword@localhost/shotgundb?charset=utf8mb4')
