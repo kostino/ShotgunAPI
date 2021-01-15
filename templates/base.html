@@ -76,37 +76,32 @@
                     <button class="btn btn-outline-success me-2" type="submit">Search</button>
                 </form>
 
-                <!-- User Profile & Logout button -->
+                <!-- User Menu -->
                 {% if 'username' in session %}
-                    <div class="" style="border-left-style: solid; border-color: darkgray; border-width: thin;">
-                        <div class="nav-item dropdown">
-
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img class="ms-2" src="{{ url_for('ProfilePicture', filename=session['profile_picture']) }}"
-                                     style="border-radius: 50%; max-height: 35px" alt="User icon">
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item disabled" href="{{ session['username'] }}">{{ session['username'] }}</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('UserProfile', username=session['username']) }}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('PaymentMethods') }}">Payment Methods</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('MyRideApplications') }}">My Ride Applications</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('RateRides') }}">Rate Previous Rides</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <!-- Driver only options -->
-                                {% if session['driver'] == True %}
-                                <li><a class="dropdown-item" href="{{ url_for('ManageMyRides') }}">Manage My Rides</a></li>
-                                {% else %}
-                                <!-- Non driver only options -->
-                                <li><a class="dropdown-item" href="{{ url_for('DriverCertification') }}">Become a driver</a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('Logout') }}">Logout</a></li>
-                            </ul>
-                        </div>
-
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ url_for('ProfilePicture', filename=session['profile_picture']) }}"
+                                 style="border-radius: 50%; max-height: 35px" alt="User icon">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item disabled" href="{{ session['username'] }}">{{ session['username'] }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('UserProfile', username=session['username']) }}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('PaymentMethods') }}">Payment Methods</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('MyRideApplications') }}">My Ride Applications</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('RateRides') }}">Rate Previous Rides</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <!-- Driver only options -->
+                            {% if session['driver'] == True %}
+                            <li><a class="dropdown-item" href="{{ url_for('ManageMyRides') }}">Manage My Rides</a></li>
+                            {% else %}
+                            <!-- Non driver only options -->
+                            <li><a class="dropdown-item" href="{{ url_for('DriverCertification') }}">Become a driver</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('Logout') }}">Logout</a></li>
+                        </ul>
                     </div>
-
                 {% else %}
                     <a href="{{ url_for("Login") }}">
                         <button class="btn btn-primary ms-2" type="button">Login</button>
