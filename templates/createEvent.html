@@ -21,16 +21,9 @@
                         <span class="input-group-text" id="basic-addon1">Event Type</span>
                         <select class="form-select mb-3" aria-label="Event Type" name="type">
                             <option selected>Select Event Type</option>
-                            <option value="Sports">Sports</option>
-                            <option value="Music">Music</option>
-                            <option value="Theatre">Theatre</option>
-                            <option value="Dance">Dance</option>
-                            <option value="Film">Film</option>
-                            <option value="Fitness">Fitness</option>
-                            <option value="Food">Food</option>
-                            <option value="Networking">Networking</option>
-                            <option value="Education">Education</option>
-                            <option value="Outdoors">Outdoors</option>
+                            {% for type in event_types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                            {% endfor %}
                             <option value="Other">Other</option>
                         </select>
                     </div>

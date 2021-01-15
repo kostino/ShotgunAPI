@@ -1674,7 +1674,7 @@ def CreateEvent():
             return redirect(url_for('Login'))
 
         # Render template
-        return render_template("createEvent.html")
+        return render_template("createEvent.html", event_types=config.event_types)
     elif request.method == 'POST':
         # Check if user logged in
         if 'username' not in session:
