@@ -14,6 +14,7 @@ import re
 import requests
 import os
 from uuid import uuid4
+from math import radians, cos, sin, asin, sqrt
 
 DATA_ROOT = './data'
 PROFILE_DIR = os.path.join(DATA_ROOT, 'profile')
@@ -56,6 +57,23 @@ if not os.path.exists(VEHICLE_DIR):
     os.makedirs(VEHICLE_DIR)
 if not os.path.exists(DOCS_DIR):
     os.makedirs(DOCS_DIR)
+
+
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
 
 
 def is_past_date(date_string):
@@ -2210,3 +2228,38 @@ def ModDriversToApprove():
 @app.route('/mod/index', methods=['GET'])
 def ModIndex():
     return render_template('modIndex.html')
+
+
+@app.route('/events/nearby', methods=['GET'])
+def NearbyEvents():
+    if request.method == 'GET':
+        # DEBUG default location LEFKOS PIRGOS
+        if 'latitude' not in session.keys() or 'longitude' not in session.keys():
+            session['latitude'] = '40.6234131'
+            session['longitude'] = '22.9482666'
+        # Get future events and then their info via API call
+        response = requests.get(url_for('EventAddList', _external=True)).json()
+        if 'events' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        events = sorted(response['events'],
+                        key=lambda event: haversine(
+                            float(session['longitude']), float(session['latitude']),
+                            float(event['longitude']), float(event['latitude'])
+                                                    )
+                        )
+
+        # Check if user is logged in and is a driver so he can create rides
+        driverFlag = False
+        userEventsWithRide = []
+        if 'username' in session:
+            driverCheck = requests.get(url_for('Driver', username=session['username'], _external=True))
+            driverFlag = 'error' not in driverCheck.json()
+
+            # Get user rides
+            response = requests.get(url_for('UserRides', username=session['username'], _external=True)).json()
+            if 'rides' not in response:
+                return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+            userEventsWithRide = [r['event_id'] for r in response['rides']]
+
+        # Render template
+        return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
