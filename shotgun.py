@@ -1268,6 +1268,10 @@ def Login():
 def Logout():
     if 'username' in session:
         session.pop('username', None)
+    if 'latitude' in session:
+        session.pop('latitude', None)
+    if 'longitude' in session:
+        session.pop('longitude', None)
     return redirect(url_for('Index'))
 
 
@@ -1791,6 +1795,14 @@ def EventRides(event_id):
                 return render_template('systemMessage.html', messageTitle='Error', message=driverInfo['error'])
             ride['vehicle_image'] = driverInfo['vehicle_image']
 
+        location_in_session = 'longitude' in session and 'latitude' in session
+        location_valid = session['longitude'] != '' and session['latitude'] != '' if location_in_session else False
+        rides = sorted(rides, key=lambda r: haversine(
+                            float(session['longitude']), float(session['latitude']),
+                            float(r['longitude']), float(r['latitude'])
+                            )
+                       )
+
         # Render template
         return render_template("eventRides.html", title="{}".format(event['title']), event=event, rides=rides,
                                driverFlag=driverFlag, createRideFlag=createRideFlag)
@@ -2236,8 +2248,8 @@ def NearbyEvents():
     if request.method == 'GET':
         # DEBUG default location LEFKOS PIRGOS
         if 'latitude' not in session.keys() or 'longitude' not in session.keys():
-            session['latitude'] = '40.6234131'
-            session['longitude'] = '22.9482666'
+            session['longitude'] = '40.6234131'
+            session['latitude'] = '22.9482666'
         # Get future events and then their info via API call
         response = requests.get(url_for('EventAddList', _external=True)).json()
         if 'events' not in response:
