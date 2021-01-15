@@ -1215,6 +1215,10 @@ def Login():
         # Authenticate user
         if ('error' not in user) and check_password_hash(user['password'], password):
             session['username'] = str(username)
+            if request.form['lat'] and request.form['lat'] != '':
+                session['latitude'] = str(request.form['lat'])
+            if request.form['long'] and request.form['long'] != '':
+                session['longitude'] = str(request.form['long'])
 
             #add driver check in session
             response = requests.get(url_for('Driver', username=session['username'], _external=True))

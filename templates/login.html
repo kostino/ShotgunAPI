@@ -22,6 +22,8 @@
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Password</span>
                         <input type="password" class="form-control" placeholder="Password" aria-label="Username" aria-describedby="basic-addon1" name="password" value="han.yoloPassword">
+                        <input id="lat" type="hidden" class="form-control" name="lat" value="">
+                        <input id="long" type="hidden" class="form-control" name="long" value="">
                     </div>
                     <button type="submit" class="btn btn-success">Login</button>
                     <a href="{{ url_for('Register') }}" class="btn btn-secondary">Register</a>
@@ -33,4 +35,24 @@
 
     </div>
 
+    <script>
+    window.onload = getPosition();
+    function error(err) {
+        console.warn('ERROR(' + err.code + '): ' + err.message);
+    }
+    function showPosition(position) {
+        let long = document.getElementById("long");
+        let lat = document.getElementById("lat");
+        lat.value = position.coords.latitude;
+        long.value = position.coords.longitude;
+    }
+    function getPosition() {
+        if(navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition,error);
+        } else {
+            alert("Sorry, your browser does not support HTML5 geolocation.");
+        }
+    }
+
+</script>
 {% endblock %}
