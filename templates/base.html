@@ -17,9 +17,12 @@
     <style>
         body{
             background-image: url("{{ url_for('static', filename='pexels-dominika-roseclay-1252500.jpg') }}");
-            height: 100%;
-            background-repeat: no-repeat;
+            min-height: 100vh;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
             background-size: cover;
+            background-repeat: no-repeat;
         }
     </style>
 
