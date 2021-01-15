@@ -3,14 +3,89 @@
 
 {% block content %}
 
-    <div class="container-md py-5 my-5 text-center">
-        <div class="row">
-            <div class="col-md"></div>
-            <div class="col-md container py-4"  style="background-color: white; border-radius: 15px">
-                <h1 style="color:green; text-align: center">Homepage</h1>
+    <!-- Fullscreen cover -->
+    <div class="container-fluid py-5"
+         style="background-image: url('https://images.pexels.com/photos/1684187/pexels-photo-1684187.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940'); background-size: cover;
+         min-height: 100vh;">
+
+        <!-- Search -->
+        <form action="{{ url_for('SearchEvents') }}" method="post">
+        <div class="row justify-content-center">
+            <div class="col-lg-5" style="background-color: #ffffff; border-radius: 15px">
+                <div class="row mt-4 justify-content-center mx-2">
+                    <div class="col-lg-9">
+                        <div class="row">
+                            <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
+                        </div>
+                        <div class="row justify-content-start mt-1">
+                            <div class="col-lg-4">
+                                <div class="form-check justify-content-center">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                        <p>Past Events</p>
+                                    </label>
+                                    <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="oldEvents">
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check justify-content-center">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                        <p>Near me</p>
+                                    </label>
+                                    <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="nearMe">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 mb-2">
+                        <button class="btn btn-success" style="width: 100%"type="submit">
+                            Search
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="col-md"></div>
         </div>
+        </form>
+
+        {% if events is defined %}
+        <div class="container-md">
+            <div class="row align-bottom" style="margin-top: 20vh;">
+                <h1>Featured Events</h1>
+            </div>
+
+            <div class="row">
+                {% for event in events %}
+                <div class="col">
+                    <div class="card">
+                        <a href="{{ url_for('EventRides', event_id=event['event_id']) }}">
+                            <img src="https://cdn.wallpapersafari.com/82/45/CwxrRY.jpg" class="card-img-top" alt="..." style="width: 100%; height:100%; max-height: 250px; object-fit: cover; ">
+                        </a>
+                        <div class="card-body px-auto">
+                            <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" style="text-decoration: none; color:black">
+                                <h4 class="card-title">{{ event['title'] }}</h4>
+                            </a>
+                            <p class="card-text">
+                                {{ event['datetime'][:16] }}
+                                <br>
+                                {{ event['location_name'] }}
+                            </p>
+                            <a href="{{ url_for('EventRides', event_id=event['event_id']) }}" role="button" class="btn btn-primary me-2">
+                                Find Rides
+                            </a>
+
+                            <!-- If user is a driver, place a 'Create Ride' button -->
+                            {% if driverFlag and event['event_id'] not in userEventsWithRide %}
+                                <a href="{{ url_for('CreateRide', event_id=event['event_id']) }}" role="button" class="btn btn-primary">
+                                    Create Ride
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 
 {% endblock %}

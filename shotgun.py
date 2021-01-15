@@ -1217,7 +1217,14 @@ def Driver(username):
 @app.route('/', methods=['GET'])
 def Index():
     if request.method == 'GET':
-        return render_template("home.html")
+
+        # Get future events and then their info via API call
+        response = requests.get(url_for('EventAddList', _external=True)).json()
+        if 'events' not in response:
+            return render_template('systemMessage.html', messageTitle='Error', message=response['error'])
+        events = response['events']
+
+        return render_template("home.html", events=events)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -1246,7 +1253,7 @@ def Login():
             session['profile_picture'] = user['profile_picture']
 
             # Redirect to user profile route (yet to be implemented) and render profile page
-            return render_template("home.html")
+            return redirect(url_for("Index", _external=True))
         else:
             # Render error page
             return render_template("systemMessage.html", messageTitle="Login Failed",
@@ -1259,7 +1266,7 @@ def Login():
     # Browser login page
     elif request.method == 'GET':
         if 'username' in session:
-            return render_template("home.html")
+            return redirect(url_for("Index", _external=True))
         else:
             return render_template("login.html")
 
