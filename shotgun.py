@@ -2243,7 +2243,7 @@ def NearbyEvents():
                             float(session['longitude']), float(session['latitude']),
                             float(event['longitude']), float(event['latitude'])
                                                     )
-                        )
+                        )[:10]
 
         # Check if user is logged in and is a driver so he can create rides
         driverFlag = False
@@ -2259,4 +2259,4 @@ def NearbyEvents():
             userEventsWithRide = [r['event_id'] for r in response['rides']]
 
         # Render template
-        return render_template("browseEvents.html", events=events, title="Browse Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
+        return render_template("browseEvents.html", events=events, title="Nearby Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
