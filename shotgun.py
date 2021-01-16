@@ -1761,6 +1761,12 @@ def VehicleImage(filename):
     return send_from_directory(VEHICLE_DIR, filename)
 
 
+@app.route('/data/event_pics/<event_type>')
+def EventPictures(event_type):
+    filename = secure_filename('{}.jpg'.format(event_type))
+    return send_from_directory(EVENT_PICS_DIR, filename)
+
+
 @app.route('/data/docs/<userdir>/<filename>')
 def Documents(userdir, filename):
     userdir = secure_filename(userdir)
