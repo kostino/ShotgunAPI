@@ -5,18 +5,44 @@
 
 {% block content %}
 
-    <div class="container-md px-4 py-3 my-4" style="background-color: #ffffff; border-radius: 15px">
-        <!-- Search -->
-        <form class="d-flex input-group-lg" action="{{ url_for('SearchEvents') }}" method="post">
-            <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
-            <div class="form-check justify-content-center">
-                <label class="form-check-label" for="flexCheckDefault">
-                    Include Past Events
-                </label>
-                <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="oldEvents">
+    <!-- Search -->
+    <div class="container">
+    <form action="{{ url_for('SearchEvents') }}" method="post">
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8" style="background-color: #ffffff; border-radius: 15px">
+                <div class="row mt-4 justify-content-center mx-2">
+                    <div class="col-md-9">
+                        <div class="row">
+                            <input class="form-control me-2" type="search" placeholder="Search for Events" name="searchQuery" aria-label="Search">
+                        </div>
+                        <div class="row justify-content-start mt-1">
+                            <div class="col-md-4">
+                                <div class="form-check justify-content-center">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                        <p>Past Events</p>
+                                    </label>
+                                    <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="oldEvents">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check justify-content-center">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                        <p>Near me</p>
+                                    </label>
+                                    <input class="form-check-input" type="checkbox" value="True" id="flexCheckDefault" name="nearMe">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-success" style="width: 100%"type="submit">
+                            Search
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-outline-success me-2" type="submit">Search</button>
-        </form>
+        </div>
+    </form>
     </div>
 
     <div class="container-md px-4 py-3 my-3" style="background-color: white; border-radius: 15px">
