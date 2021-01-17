@@ -169,6 +169,7 @@ def UserListAdd():
         if profile_picture_data:
             save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
 
+        db_session.commit()
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
@@ -304,6 +305,7 @@ def UserVerify(username):
         save_image(request.form['vehicle_image'], os.path.join(DOCS_DIR, vehicle_image_path))
         save_image(request.form['identity'], os.path.join(DOCS_DIR, identity_path))
 
+        db_session.commit()
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
@@ -581,6 +583,7 @@ def EventAddList():
                 # Retry
                 pass
 
+        db_session.commit()
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         # get list of future events
@@ -771,7 +774,7 @@ def RideList():
                          'location_name', 'cost','description', 'seats']
         if not (all(field in request.form.keys() for field in required_data)
                 and all(len(request.form[field]) > 0 for field in request.form.keys())):
-            return {'error': 'missing data'}, 400
+            return {'error': 'Missing data'}, 400
 
         # Get request data
         event_id = request.form['event_id']
@@ -823,6 +826,7 @@ def RideList():
                 # Retry
                 pass
 
+        db_session.commit()
         return {'status': 'success'}, 200
 
 
@@ -1090,7 +1094,7 @@ def UserRating(username):
         required_data = ['rater', 'ratee', 'stars', 'comment']
         if not (all(field in request.form.keys() for field in required_data)
                 and all(len(request.form[field]) > 0 for field in request.form.keys())):
-            return {'error': 'missing data'}, 400
+            return {'error': 'Missing data'}, 400
 
         # Get request data
         rater = request.form['rater']
@@ -1100,10 +1104,19 @@ def UserRating(username):
 
         # Validate data
         if not is_valid_rating(stars):
-            return {'error': 'invalid star rating'}, 400
-        # Insert event into database
+            return {'error': 'Invalid star rating'}, 400
+
+        # Create instance
         newUserRating = UserRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
-        db_session.add(newUserRating)
+
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(newUserRating)
+                db_session.flush()
+        except IntegrityError:
+            return {'error': 'User rating already exists.'}, 400
+
         db_session.commit()
         return {'status': 'success'}, 200
 
@@ -1162,7 +1175,8 @@ def DriverRating(username):
         required_data = ['rater', 'ratee', 'stars', 'comment']
         if not (all(field in request.form.keys() for field in required_data)
                 and all(len(request.form[field]) > 0 for field in request.form.keys())):
-            return {'error': 'missing data'}, 400
+            return {'error': 'Missing data'}, 400
+
         # Get request data
         rater = request.form['rater']
         ratee = request.form['ratee']
@@ -1171,10 +1185,19 @@ def DriverRating(username):
 
         # Validate data
         if not is_valid_rating(stars):
-            return {'error': 'invalid star rating'}, 400
+            return {'error': 'Invalid star rating'}, 400
+
         # Insert event into database
         newDriverRating = DriverRatingTable(rater=rater, ratee=ratee, stars=stars, comment=comment)
-        db_session.add(newDriverRating)
+
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(newDriverRating)
+                db_session.flush()
+        except IntegrityError:
+            return {'error': 'Driver rating already exists.'}, 400
+
         db_session.commit()
         return {'status': 'success'}, 200
 
@@ -2103,7 +2126,7 @@ def RateRides():
         elif ratingType == 'Driver':
             response = requests.post(url_for("DriverRating", username=ratee, _external=True), data=postData).json()
         else:
-            return render_template("systemMessage.html", messageTitle="Error Submitting ",
+            return render_template("systemMessage.html", messageTitle="Error Submitting",
                                    message="There was an error submitting your rating. Please try again later.",
                                    context={
                                        'button_text': 'Go Back',
@@ -2111,8 +2134,7 @@ def RateRides():
                                    })
 
         if 'error' in response:
-            return render_template("systemMessage.html", messageTitle="Error Submitting ",
-                                   message="There was an error submitting your rating. Please try again later.",
+            return render_template("systemMessage.html", messageTitle="Error Submitting", message=response['error'],
                                    context={
                                        'button_text': 'Go Back',
                                        'redirect_link': url_for("RateRides", _external=True)
