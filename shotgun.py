@@ -380,7 +380,8 @@ def PaymentInfoList(username):
                 # Get new payment ID
                 payment_id = db_session.query(
                         func.max(PaymentMethodTable.payment_id)).filter_by(username=username).scalar()
-                baseData.payment_id = payment_id + 1 if payment_id else 1
+                payment_id = payment_id + 1 if payment_id else 1
+                baseData.payment_id = payment_id
 
                 # Try to insert into database
                 with db_session.begin_nested():
