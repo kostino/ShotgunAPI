@@ -294,7 +294,6 @@ def UserVerify(username):
             with db_session.begin_nested():
                 db_session.add(newApplication)
                 db_session.flush()
-                break
         except IntegrityError:
             return {'error': 'User has already applied'}
 
