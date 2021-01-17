@@ -142,34 +142,32 @@ def UserListAdd():
         if not is_valid_password(password):
             return {'error': 'A password must be at least 6 characters long.'}
 
-        # Save profile picture
+        # Check if username is already taken
+        exists = db_session.query(UserTable).filter_by(username=username).first()
+        if exists:
+            return {'error': 'Username is already taken.'}
+
+        # Generate profile picture filename
         if profile_picture_data:
             profile_picture = '{}.jpg'.format(uuid4())
-            save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
         else:
             profile_picture = 'default.jpg'
 
         # Create instance
         pwd_hash = generate_password_hash(password)
         newUser = UserTable(username=username, password=pwd_hash, first_name=first_name,
-                surname=surname, profile_picture=profile_picture)
+                            surname=surname, profile_picture=profile_picture)
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(newUser)
+                db_session.flush()
+        except IntegrityError:
+            return {'error': 'Username is already taken.'}
 
-        while True:
-            try:
-                # Check if username is already taken
-                exists = db_session.query(UserTable).filter_by(username=username).first()
-                if exists:
-                    return {'error': 'Username is already taken.'}
-
-                # Try to insert into database
-                with db_session.begin_nested():
-                    db_session.add(newUser)
-                    db_session.flush()
-                    break
-
-            except IntegrityError:
-                # Retry
-                pass
+        # Save profile picture
+        if profile_picture_data:
+            save_image(profile_picture_data, os.path.join(PROFILE_DIR, profile_picture))
 
         return {'status': 'success'}, 200
     elif request.method == 'GET':
@@ -278,27 +276,35 @@ def UserVerify(username):
         if exists:
             return {'error': 'User has already applied'}
 
-        # Save images
+        # Generate image filenames
         rid = str(uuid4())
         driver_license_path = os.path.join(rid, 'license.jpg')
         registration_path = os.path.join(rid, 'registration.jpg')
         vehicle_image_path = os.path.join(rid, 'vehicle.jpg')
         identity_path = os.path.join(rid, 'identity.jpg')
 
+        # Create instance
+        vehicle = request.form['vehicle']
+        newApplication = DriverCertificationTable(username=username, license=driver_license_path,
+                                                  registration=registration_path,
+                                                  vehicle=vehicle, vehicle_image=vehicle_image_path,
+                                                  identification_document=identity_path)
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(newApplication)
+                db_session.flush()
+                break
+        except IntegrityError:
+            return {'error': 'User has already applied'}
+
+        # Save documents
         os.makedirs(os.path.join(DOCS_DIR, rid))
         save_image(request.form['driver_license'], os.path.join(DOCS_DIR, driver_license_path))
         save_image(request.form['registration'], os.path.join(DOCS_DIR, registration_path))
         save_image(request.form['vehicle_image'], os.path.join(DOCS_DIR, vehicle_image_path))
         save_image(request.form['identity'], os.path.join(DOCS_DIR, identity_path))
 
-        # Add to database
-        vehicle = request.form['vehicle']
-        newApplication = DriverCertificationTable(username=username, license=driver_license_path,
-                                                  registration=registration_path,
-                                                  vehicle=vehicle, vehicle_image=vehicle_image_path,
-                                                  identification_document=identity_path)
-        db_session.add(newApplication)
-        db_session.commit()
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
@@ -367,16 +373,26 @@ def PaymentInfoList(username):
         if method != 'credit_card' and method != 'paypal':
             return {'error': 'Invalid payment method type'}, 400
 
-        # Get new payment ID
-        payment_id = db_session.query(
-                func.max(PaymentMethodTable.payment_id)).filter_by(username=username).scalar()
-        payment_id = payment_id + 1 if payment_id else 1
+        # Create instance
+        baseData = PaymentMethodTable(username=username, name=name, is_primary=False)
 
-        # Insert PaymentMethod record
-        baseData = PaymentMethodTable(payment_id=payment_id, username=username,
-                                      name=name, is_primary=False)
-        db_session.add(baseData)
+        while True:
+            try:
+                # Get new payment ID
+                payment_id = db_session.query(
+                        func.max(PaymentMethodTable.payment_id)).filter_by(username=username).scalar()
+                baseData.payment_id = payment_id + 1 if payment_id else 1
 
+                # Try to insert into database
+                with db_session.begin_nested():
+                    db_session.add(baseData)
+                    db_session.flush()
+                    break
+            except IntegrityError:
+                # Retry
+                pass
+
+        # Insert payment method data
         if method == 'credit_card':
             number = request.form['number']
             exp_date = request.form['exp_date']
@@ -542,20 +558,29 @@ def EventAddList():
 
         # Validate data
         if not is_valid_geolocation(latitude, longitude):
-            return {'error': 'invalid geolocation'}, 400
+            return {'error': 'Invalid geolocation'}, 400
         if len(title) == 0 or len(date) == 0 or len(time) == 0 or len(location_name) == 0:
-            return {'error': 'empty data'}, 400
+            return {'error': 'Empty data'}, 400
 
-        # Get new event ID
-        event_id = db_session.query(func.max(EventTable.event_id)).scalar()
-        event_id = event_id + 1 if event_id else 1
+        # Create instance
+        newEvent = EventTable(title=title, type=event_type, status='pending', creator=creator,
+                datetime=datetime, latitude=latitude, longitude=longitude, location_name=location_name)
 
-        # Insert event into database
-        newEvent = EventTable(event_id=event_id, title=title, type=event_type,
-                              status='pending', creator=creator, datetime=datetime,
-                              latitude=latitude, longitude=longitude, location_name=location_name)
-        db_session.add(newEvent)
-        db_session.commit()
+        while True:
+            try:
+                # Get new event ID
+                event_id = db_session.query(func.max(EventTable.event_id)).scalar()
+                newEvent.event_id = event_id + 1 if event_id else 1
+
+                # Try to insert into database
+                with db_session.begin_nested():
+                    db_session.add(newEvent)
+                    db_session.flush()
+                    break
+            except IntegrityError:
+                # Retry
+                pass
+
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         # get list of future events
@@ -775,19 +800,29 @@ def RideList():
 
         # Validate data
         if not is_valid_geolocation(latitude, longitude):
-            return {'error': 'invalid geolocation'}, 400
-
-        # Get new ride ID
-        ride_id = db_session.query(func.max(RideTable.ride_id)).scalar()
-        ride_id = ride_id + 1 if ride_id else 1
+            return {'error': 'Invalid geolocation'}, 400
 
         # Insert event into database
-        newRide = RideTable(ride_id=ride_id, event_id=event_id, start_datetime=start_datetime,
+        newRide = RideTable(event_id=event_id, start_datetime=start_datetime,
                             return_datetime=return_datetime, cost=cost, driver_username=driver_username,
                             latitude=latitude, longitude=longitude, location_name=location_name,
                             description=description, seats=seats, available_seats=available_seats)
-        db_session.add(newRide)
-        db_session.commit()
+
+        while True:
+            try:
+                # Get new ride ID
+                ride_id = db_session.query(func.max(RideTable.ride_id)).scalar()
+                newRide.ride_id = ride_id + 1 if ride_id else 1
+
+                # Try to insert into database
+                with db_session.begin_nested():
+                    db_session.add(newRide)
+                    db_session.flush()
+                    break
+            except IntegrityError:
+                # Retry
+                pass
+
         return {'status': 'success'}, 200
 
 
