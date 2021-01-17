@@ -2,6 +2,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 import datetime as DT
 
@@ -142,11 +143,6 @@ def UserListAdd():
         if not is_valid_password(password):
             return {'error': 'A password must be at least 6 characters long.'}
 
-        # Check if username is already taken
-        exists = db_session.query(UserTable).filter_by(username=username).first()
-        if exists:
-            return {'error': 'Username is already taken.'}
-
         # Generate profile picture filename
         if profile_picture_data:
             profile_picture = '{}.jpg'.format(uuid4())
@@ -272,11 +268,6 @@ def User(username):
 @app.route('/api/user/<string:username>/verify', methods=['GET', 'POST', 'DELETE'])
 def UserVerify(username):
     if request.method == 'POST':
-        # Check if the user has already applied
-        exists = db_session.query(DriverCertificationTable).filter_by(username=username).first()
-        if exists:
-            return {'error': 'User has already applied'}
-
         # Generate image filenames
         rid = str(uuid4())
         driver_license_path = os.path.join(rid, 'license.jpg')
@@ -951,12 +942,6 @@ def RideApplication(ride_id):
         if query:
             return {'error': 'You are a driver with a ride for this event.'}, 400
 
-        # Check if user has already applied for this ride
-        query = db_session.query(ApplicationTable).filter_by(
-                ride_id=ride_id, username=username, status='pending').first()
-        if query:
-            return {'error': 'You have already applied for this ride.'}, 400
-
         # Check if user has already been accepted for this ride
         query = db_session.query(ApplicationTable).filter_by(
                 ride_id=ride_id, username=username, status='accepted').first()
@@ -974,9 +959,16 @@ def RideApplication(ride_id):
         # Get request data
         message = request.form['message']
 
-        # Insert event into database
+        # Create instance
         newApplication = ApplicationTable(ride_id=ride_id, username=username, message=message, status='pending')
-        db_session.add(newApplication)
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(newApplication)
+                db_session.flush()
+        except IntegrityError:
+            return {'error': 'You have already applied for this ride.'}, 400
+
         db_session.commit()
         return {'status': 'success'}, 200
 
@@ -1215,18 +1207,22 @@ def DriverAdd():
         if not query:
             return {'error': 'User does not exist'}, 400
 
-        # Check if user is already a driver
-        query = db_session.query(DriverTable).filter_by(username=username).first()
-        if query:
-            return {'error': 'User is already a driver'}
-
-        # Save vehicle image
+        # Generate vehicle image filename
         vehicle_image = '{}.jpg'.format(uuid4())
-        save_image(vehicle_image_data, os.path.join(VEHICLE_DIR, vehicle_image))
 
         # Insert driver data into database
         data = DriverTable(username=username, vehicle=vehicle, vehicle_image=vehicle_image)
-        db_session.add(data)
+        try:
+            # Try to insert into database
+            with db_session.begin_nested():
+                db_session.add(data)
+                db_session.flush()
+        except IntegrityError:
+            return {'error': 'User is already a driver'}, 400
+
+        # Save vehicle image
+        save_image(vehicle_image_data, os.path.join(VEHICLE_DIR, vehicle_image))
+
         db_session.commit()
         return {'status': 'success'}, 200
 
