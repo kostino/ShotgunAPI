@@ -142,11 +142,6 @@ def UserListAdd():
         if not is_valid_password(password):
             return {'error': 'A password must be at least 6 characters long.'}
 
-        # Check if username is already taken
-        exists = db_session.query(UserTable).filter_by(username=username).first()
-        if exists:
-            return {'error': 'Username is already taken.'}
-
         # Save profile picture
         if profile_picture_data:
             profile_picture = '{}.jpg'.format(uuid4())
@@ -154,14 +149,28 @@ def UserListAdd():
         else:
             profile_picture = 'default.jpg'
 
-        # Hash password
+        # Create instance
         pwd_hash = generate_password_hash(password)
+        newUser = UserTable(username=username, password=pwd_hash, first_name=first_name,
+                surname=surname, profile_picture=profile_picture)
 
-        # Insert user into database
-        newUser = UserTable(username=username, password=pwd_hash,
-                            first_name=first_name, surname=surname, profile_picture=profile_picture)
-        db_session.add(newUser)
-        db_session.commit()
+        while True:
+            try:
+                # Check if username is already taken
+                exists = db_session.query(UserTable).filter_by(username=username).first()
+                if exists:
+                    return {'error': 'Username is already taken.'}
+
+                # Try to insert into database
+                with db_session.begin_nested():
+                    db_session.add(newUser)
+                    db_session.flush()
+                    break
+
+            except IntegrityError:
+                # Retry
+                pass
+
         return {'status': 'success'}, 200
     elif request.method == 'GET':
         try:
