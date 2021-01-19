@@ -51,7 +51,7 @@ AvgDriverRatingView = Table("avg_driver_rating", metadata, autoload=True, autolo
 AvgUserRatingView = Table("avg_user_rating", metadata, autoload=True, autoload_with=engine)
 
 # Start
-db_session = Session(engine)
+db_session = Session(engine, autoflush=True)
 app = Flask(__name__)
 
 # Set the secret key to some random bytes. Keep this really secret!
