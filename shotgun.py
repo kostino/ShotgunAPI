@@ -129,6 +129,7 @@ def check_image_ext(filename):
 
 @app.route('/api/user', methods=['POST', 'GET'])
 def UserListAdd():
+    db_session.expire_all()
     if request.method == 'POST':
         # Get request data
         username = request.form['username']
@@ -191,6 +192,7 @@ def UserListAdd():
 
 @app.route('/api/user/<string:username>', methods=['PUT', 'GET', 'DELETE'])
 def User(username):
+    db_session.expire_all()
     if request.method == 'PUT':
         user = db_session.query(UserTable).filter_by(username=username).first()
         if not user:
@@ -267,6 +269,7 @@ def User(username):
 
 @app.route('/api/user/<string:username>/verify', methods=['GET', 'POST', 'DELETE'])
 def UserVerify(username):
+    db_session.expire_all()
     if request.method == 'POST':
         # Generate image filenames
         rid = str(uuid4())
@@ -325,6 +328,7 @@ def UserVerify(username):
 
 @app.route('/api/verification_applications', methods=['GET'])
 def VerificationApplicationList():
+    db_session.expire_all()
     if request.method == 'GET':
         try:
             # all pending applications
@@ -351,6 +355,7 @@ def VerificationApplicationList():
 
 @app.route('/api/user/<string:username>/payment_info', methods=['GET', 'POST'])
 def PaymentInfoList(username):
+    db_session.expire_all()
     if request.method == 'POST':
         # Check if user exists
         query = db_session.query(UserTable).filter_by(username=username).first()
@@ -443,6 +448,7 @@ def PaymentInfoList(username):
 
 @app.route('/api/user/<string:username>/payment_info/<int:payment_id>', methods=['GET', 'DELETE'])
 def PaymentInfo(username, payment_id):
+    db_session.expire_all()
     if request.method == 'GET':
         # Get base info
         query = db_session.query(PaymentMethodTable).filter_by(username=username, payment_id=payment_id).first()
@@ -485,6 +491,7 @@ def PaymentInfo(username, payment_id):
 
 @app.route('/api/user/<string:username>/set_primary_pm', methods=['PUT'])
 def SetPrimary(username):
+    db_session.expire_all()
     if request.method == 'PUT':
         # useful api for setting primary payment methods
         # autochanges every other to non primary
@@ -507,6 +514,7 @@ def SetPrimary(username):
 
 @app.route('/api/user/<string:username>/rides', methods=['GET'])
 def UserRides(username):
+    db_session.expire_all()
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
@@ -536,6 +544,7 @@ def UserRides(username):
 
 @app.route('/api/event', methods=['POST', 'GET'])
 def EventAddList():
+    db_session.expire_all()
     if request.method == 'POST':
         # Get request data
         title = request.form['title'] if 'title' in request.form.keys() else ''
@@ -604,6 +613,7 @@ def EventAddList():
 
 @app.route('/api/event/search', methods=['GET'])
 def EventSearchAPI():
+    db_session.expire_all()
     if request.method == 'GET':
         # perform search on events
         old_events = (request.args.get('old') == '1')
@@ -639,6 +649,7 @@ def EventSearchAPI():
 
 @app.route('/api/event/<int:event_id>', methods=['PUT', 'GET', 'DELETE'])
 def Event(event_id):
+    db_session.expire_all()
     if request.method == 'PUT':
         event = db_session.query(EventTable).filter_by(event_id=event_id).first()
         if not event:
@@ -700,6 +711,7 @@ def Event(event_id):
 
 @app.route('/api/event/<int:event_id>/rides', methods=['GET'])
 def EventRidesAPI(event_id):
+    db_session.expire_all()
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
@@ -734,6 +746,7 @@ def EventRidesAPI(event_id):
 
 @app.route('/api/ride', methods=['GET', 'POST'])
 def RideList():
+    db_session.expire_all()
     if request.method == 'GET':
         # get ride data for a preview list
         # return json
@@ -823,6 +836,7 @@ def RideList():
 
 @app.route('/api/ride/<int:ride_id>', methods=['GET', 'DELETE'])
 def Ride(ride_id):
+    db_session.expire_all()
     if request.method == 'GET':
         # return a ride's data
         try:
@@ -861,6 +875,7 @@ def Ride(ride_id):
 
 @app.route('/api/ride/<int:ride_id>/users', methods=['GET'])
 def RideUsers(ride_id):
+    db_session.expire_all()
     if request.method == 'GET':
         # return a ride's list of users
         try:
@@ -883,6 +898,7 @@ def RideUsers(ride_id):
 
 @app.route('/api/user/<string:username>/application', methods=['GET'])
 def UserApplicationList(username):
+    db_session.expire_all()
     if request.method == 'GET':
         # get list of user applications
         try:
@@ -907,6 +923,7 @@ def UserApplicationList(username):
 
 @app.route('/api/ride/<int:ride_id>/application', methods=['GET', 'POST'])
 def RideApplication(ride_id):
+    db_session.expire_all()
     if request.method == 'GET':
         # get list of ride applications
         try:
@@ -975,6 +992,7 @@ def RideApplication(ride_id):
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>', methods=['PUT', 'DELETE', 'GET'])
 def Application(ride_id, username):
+    db_session.expire_all()
     if request.method == 'GET':
         # Get application data
         try:
@@ -1013,6 +1031,7 @@ def Application(ride_id, username):
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>/accept', methods=['POST'])
 def ApplicationAccept(ride_id, username):
+    db_session.expire_all()
     if request.method == 'POST':
         application = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).first()
         if not application:
@@ -1052,6 +1071,7 @@ def ApplicationAccept(ride_id, username):
 
 @app.route('/api/ride/<int:ride_id>/application/<string:username>/reject', methods=['POST'])
 def ApplicationReject(ride_id, username):
+    db_session.expire_all()
     if request.method == 'POST':
         application = db_session.query(ApplicationTable).filter_by(ride_id=ride_id, username=username).first()
         if not application:
@@ -1067,6 +1087,7 @@ def ApplicationReject(ride_id, username):
 
 @app.route('/api/user/<string:username>/userrating', methods=['GET', 'POST'])
 def UserRating(username):
+    db_session.expire_all()
     if request.method == 'GET':
         # get list of user ratings for user
         try:
@@ -1115,6 +1136,7 @@ def UserRating(username):
 
 @app.route('/api/user/<string:username>/ride/<int:ride_id>/people_to_rate', methods=['GET'])
 def PeopleToRate(username, ride_id):
+    db_session.expire_all()
     if request.method == 'GET':
         passengersQuery = db_session.query(ApplicationTable).filter(
             ApplicationTable.ride_id == ride_id, ApplicationTable.username != username,
@@ -1143,6 +1165,7 @@ def PeopleToRate(username, ride_id):
 
 @app.route('/api/user/<string:username>/driverrating', methods=['GET', 'POST'])
 def DriverRating(username):
+    db_session.expire_all()
     if request.method == 'GET':
         # Check if user is a driver
         query = db_session.query(DriverTable).filter_by(username=username).first()
@@ -1196,6 +1219,7 @@ def DriverRating(username):
 
 @app.route('/api/driver', methods=['POST'])
 def DriverAdd():
+    db_session.expire_all()
     if request.method == 'POST':
         # Get request data
         username = request.form['username']
@@ -1229,6 +1253,7 @@ def DriverAdd():
 
 @app.route('/api/driver/<string:username>', methods=['PUT', 'GET', 'DELETE'])
 def Driver(username):
+    db_session.expire_all()
     if request.method == 'PUT':
         driver = db_session.query(DriverTable).filter_by(username=username).first()
         if not driver:
