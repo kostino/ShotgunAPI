@@ -2380,3 +2380,9 @@ def NearbyEvents():
 
         # Render template
         return render_template("browseEvents.html", events=events, title="Nearby Events", driverFlag=driverFlag, userEventsWithRide=userEventsWithRide)
+
+
+@app.route('/about', methods=['GET'])
+def About():
+    if request.method == 'GET':
+        return render_template('about.html')
