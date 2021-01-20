@@ -51,19 +51,13 @@
                             Events
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item disabled" href="#">Concerts</a></li>
-                            <li><a class="dropdown-item disabled" href="#">Theatre</a></li>
-                            <li><a class="dropdown-item disabled" href="#">Sports</a></li>
-                            <li><a class="dropdown-item disabled" href="#">Theatre</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('NearbyEvents') }}">Nearby Events</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('BrowseEvents') }}">Browse All</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('ModIndex') }}">Mod Page</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Help</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('About') }}">About Us</a>
