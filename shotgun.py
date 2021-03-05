@@ -133,6 +133,7 @@ def UserListAdd():
         # Get request data
         username = request.form['username']
         password = request.form['password']
+        email = request.form['email']
         first_name = request.form['first_name']
         surname = request.form['surname']
         profile_picture_data = request.form.get('profile_picture')
@@ -151,7 +152,7 @@ def UserListAdd():
 
         # Create instance
         pwd_hash = generate_password_hash(password)
-        newUser = UserTable(username=username, password=pwd_hash, first_name=first_name,
+        newUser = UserTable(username=username, password=pwd_hash, email=email, first_name=first_name,
                             surname=surname, profile_picture=profile_picture)
         try:
             # Try to insert into database
@@ -159,7 +160,7 @@ def UserListAdd():
                 db_session.add(newUser)
                 db_session.flush()
         except IntegrityError:
-            return {'error': 'Username is already taken.'}
+            return {'error': 'Username or email already used.'}
 
         # Save profile picture
         if profile_picture_data:
@@ -1382,6 +1383,7 @@ def Register():
         # Submitted info
         username = request.form['username']
         password = request.form['password']
+        email = request.form['email']
         first_name = request.form['first_name']
         surname = request.form['surname']
 
@@ -1399,8 +1401,8 @@ def Register():
             profile_picture = b64encode(f.read()).decode('ascii')
 
         # Insert user into database by posting on /api/user
-        requestData = {'username': username, 'password': password, 'first_name': first_name, 'surname': surname,
-                       'profile_picture': profile_picture}
+        requestData = {'username': username, 'password': password, 'email': email, 'first_name': first_name,
+                       'surname': surname, 'profile_picture': profile_picture}
         response = requests.post(url_for('UserListAdd', _external=True), data=requestData).json()
         if 'error' not in response:
             return render_template('systemMessage.html', messageTitle='Success',

@@ -14,23 +14,27 @@
                 <form action="{{ url_for('Register') }}" method="post" enctype="multipart/form-data">
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Username</span>
-                        <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" name="username">
+                        <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" name="username" required>
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Password</span>
-                        <input type="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" name="password">
+                        <input type="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" name="password" required>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">Email</span>
+                        <input type="email" class="form-control" placeholder="username@example.com" aria-label="Email" aria-describedby="basic-addon1" name="email" required>
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">First Name</span>
-                        <input type="text" class="form-control" placeholder="First Name" aria-label="First Name" aria-describedby="basic-addon1" name="first_name">
+                        <input type="text" class="form-control" placeholder="First Name" aria-label="First Name" aria-describedby="basic-addon1" name="first_name" required>
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Surname</span>
-                        <input type="text" class="form-control" placeholder="Surname" aria-label="Surname" aria-describedby="basic-addon1" name="surname">
+                        <input type="text" class="form-control" placeholder="Surname" aria-label="Surname" aria-describedby="basic-addon1" name="surname" required>
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1">Profile Picture Link</span>
-                        <input type="file" class="form-control" placeholder="Profile Picture" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture">
+                        <input type="file" class="form-control" placeholder="Profile Picture" aria-label="Profile Picture" aria-describedby="basic-addon1" name="profile_picture" required>
                     </div>
                     <button type="submit" class="btn btn-success">Register</button>
                 </form>
